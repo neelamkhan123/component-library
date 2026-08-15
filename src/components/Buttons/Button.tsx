@@ -2,7 +2,7 @@ import { ButtonHTMLAttributes, forwardRef, type ReactNode } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-xl border font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-white disabled:text-slate-300 loading:cursor-wait loading:opacity-80 dark:focus-visible:outline-white dark:disabled:border-slate-700 dark:disabled:bg-slate-900 dark:disabled:text-slate-600",
+  "flex items-center justify-center gap-2 rounded-xl border font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-white disabled:text-slate-300 loading:cursor-wait loading:opacity-80 dark:focus-visible:outline-white dark:disabled:border-slate-700 dark:disabled:bg-slate-900 dark:disabled:text-slate-600",
   {
     variants: {
       variant: {

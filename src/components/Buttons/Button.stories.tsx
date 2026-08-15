@@ -36,24 +36,24 @@ type Story = StoryObj<typeof Button>;
 
 // One story per VARIANT (style) — size defaults to md via Controls
 export const Default: Story = {
-  args: { children: "Button", variant: "default" },
+  args: { children: "Default", variant: "default" },
 };
 export const Secondary: Story = {
-  args: { children: "Button", variant: "secondary" },
+  args: { children: "Secondary", variant: "secondary" },
 };
 export const Outline: Story = {
-  args: { children: "Button", variant: "outline" },
+  args: { children: "Outline", variant: "outline" },
 };
 export const Destructive: Story = {
-  args: { children: "Delete", variant: "destructive" },
+  args: { children: "Destructive", variant: "destructive" },
 };
-export const Ghost: Story = { args: { children: "Button", variant: "ghost" } };
-export const Link: Story = { args: { children: "Button", variant: "link" } };
+export const Ghost: Story = { args: { children: "Ghost", variant: "ghost" } };
+export const Link: Story = { args: { children: "Link", variant: "link" } };
 
 // One story per SIZE
-export const Small: Story = { args: { children: "Button", size: "sm" } };
-export const Medium: Story = { args: { children: "Button", size: "md" } };
-export const Large: Story = { args: { children: "Button", size: "lg" } };
+export const Small: Story = { args: { children: "Small", size: "sm" } };
+export const Medium: Story = { args: { children: "Medium", size: "md" } };
+export const Large: Story = { args: { children: "Large", size: "lg" } };
 
 // One story per STATE
 export const Disabled: Story = {
