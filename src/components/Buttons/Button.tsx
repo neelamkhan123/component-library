@@ -2,19 +2,21 @@ import { ButtonHTMLAttributes, forwardRef, type ReactNode } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-xl border font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-white disabled:text-slate-300 loading:cursor-wait loading:opacity-80",
+  "inline-flex items-center justify-center gap-2 rounded-xl border font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-white disabled:text-slate-300 loading:cursor-wait loading:opacity-80 dark:focus-visible:outline-white dark:disabled:border-slate-700 dark:disabled:bg-slate-900 dark:disabled:text-slate-600",
   {
     variants: {
       variant: {
-        default: "border-slate-950 bg-slate-950 text-white hover:bg-slate-800",
+        default:
+          "border-slate-950 bg-slate-950 text-white hover:bg-slate-800 dark:border-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200",
         secondary:
-          "border-transparent bg-slate-100 text-slate-950 hover:bg-slate-200",
-        outline: "border-slate-200 bg-white text-slate-950 hover:bg-slate-50",
+          "border-transparent bg-slate-100 text-slate-950 hover:bg-slate-200 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700",
+        outline:
+          "border-slate-200 bg-white text-slate-950 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900",
         destructive:
-          "border-transparent bg-red-50 text-red-600 hover:bg-red-100",
+          "border-transparent bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900",
         ghost:
-          "border-transparent bg-transparent text-slate-950 hover:bg-slate-100",
-        link: "border-transparent bg-transparent px-0 text-slate-950 underline underline-offset-4 hover:text-slate-600",
+          "border-transparent bg-transparent text-slate-950 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800",
+        link: "border-transparent bg-transparent px-0 text-slate-950 underline underline-offset-4 hover:text-slate-600 dark:text-white dark:hover:text-slate-300",
       },
       size: {
         sm: "h-8 px-3 text-xs",
