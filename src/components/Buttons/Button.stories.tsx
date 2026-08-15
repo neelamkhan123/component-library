@@ -5,9 +5,18 @@ import { Image, Loader } from "lucide-react";
 const meta: Meta<typeof Button> = {
   title: "Components/Button",
   component: Button,
+  tags: ["autodocs"],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          "A versatile, accessible button. Choose a `variant` for visual style, a `size` for dimensions, and optionally pass an `icon` or set `loading`.",
+      },
+    },
+  },
   decorators: [
     (Story) => (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex items-center justify-center">
         <Story />
       </div>
     ),
@@ -15,6 +24,7 @@ const meta: Meta<typeof Button> = {
   argTypes: {
     variant: {
       control: "select",
+      description: "Visual style of the button.",
       options: [
         "default",
         "secondary",
@@ -26,7 +36,16 @@ const meta: Meta<typeof Button> = {
     },
     size: {
       control: "select",
+      description: "Size of the button, including a square icon-only size.",
       options: ["sm", "md", "lg", "icon"],
+    },
+    icon: {
+      control: false,
+      description: "Icon or image rendered before the label.",
+    },
+    loading: {
+      control: "boolean",
+      description: "Shows a busy state and disables the button.",
     },
   },
 };
@@ -61,7 +80,8 @@ export const Disabled: Story = {
 };
 export const Loading: Story = {
   args: {
-    children: <Loader className="animate-spin [animation-duration:3s]" />,
+    children: "Loading",
+    icon: <Loader className="animate-spin [animation-duration:3s]" size={16} />,
     loading: true,
   },
 };

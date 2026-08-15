@@ -24,7 +24,7 @@ const preview: Preview = {
       return (
         <div
           className={[
-            "min-h-screen bg-white text-slate-950 transition-colors dark:bg-slate-950 dark:text-white",
+            "bg-white text-slate-950 transition-colors dark:bg-slate-950 dark:text-white",
             isDark ? "dark" : "",
           ]
             .filter(Boolean)

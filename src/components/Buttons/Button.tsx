@@ -13,7 +13,7 @@ const buttonVariants = cva(
         outline:
           "border-slate-200 bg-white text-slate-950 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:bg-slate-900",
         destructive:
-          "border-transparent bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900",
+          "border-transparent bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900",
         ghost:
           "border-transparent bg-transparent text-slate-950 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800",
         link: "border-transparent bg-transparent px-0 text-slate-950 underline underline-offset-4 hover:text-slate-600 dark:text-white dark:hover:text-slate-300",
@@ -36,10 +36,17 @@ export interface ButtonProps
   extends
     ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
+  /** Content rendered before the label, e.g. an icon or image. Hidden from assistive tech. */
   icon?: ReactNode;
+  /** Shows a busy state and disables the button. */
   loading?: boolean;
 }
 
+/**
+ * A versatile, accessible button supporting multiple visual variants, sizes,
+ * an optional icon slot, and a loading state. Built with `class-variance-authority`
+ * and supports light/dark themes via Tailwind's `dark:` variant.
+ */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
