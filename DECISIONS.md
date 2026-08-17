@@ -1,5 +1,35 @@
 # Accessibility Decisions Log
 
+## Accordion
+
+- Unlike `Dialog`, there's no native element that cleanly covers this: `<details>`/
+  `<summary>` only gets exclusive-open grouping via the `name` attribute, has no
+  built-in way to animate open/closed, and doesn't map onto a controlled
+  `value`/`onValueChange` API without fighting the UA's own open-state handling.
+  So `Accordion` instead hand-implements the WAI-ARIA Accordion pattern:
+  `AccordionHeader` renders an `h3` wrapping an `AccordionTrigger` button with
+  `aria-expanded`/`aria-controls`, and `AccordionContent` is a
+  `div[role="region"]` linked back to the trigger via `aria-labelledby`.
+- `AccordionContent`'s open/close is animated via a `grid-template-rows`
+  transition (`0fr` ↔ `1fr` on a wrapper, `overflow-hidden` on the row inside
+  it) rather than transitioning `height`, since `height: auto` isn't a
+  transitionable value but `1fr` on a single-track grid resolves to the
+  content's natural size and *is*. `motion-reduce:` drops the transition
+  entirely, same as `Dialog`/`Drawer` (WCAG 2.3.3).
+- A closed item's content stays mounted (at zero height) rather than being
+  unmounted, so it's still there to animate open again — but that leaves its
+  focusable descendants reachable by Tab and exposed to assistive tech even
+  though they're visually clipped by the grid-rows trick, so `AccordionContent`
+  sets `inert` on itself while closed. That removes it from both the tab order
+  and the accessibility tree without touching `display` (which would fight the
+  transition), and is dropped the moment the item opens.
+- `type="single"` (default) keeps at most one item open, matching the common
+  FAQ/settings-list accordion shape; `collapsible` (default `false`) chooses
+  whether activating the already-open item closes it, mirroring `Dialog`'s
+  approach of an explicit opt-in prop over a surprising default. `type="multiple"`
+  switches to independent per-item state for cases like a multi-section reading
+  view where more than one panel should stay open together.
+
 ## Button
 
 - Used a native `<button>` element rather than a `<div>` with `role="button"`,
@@ -59,33 +89,3 @@
   which would otherwise just shrink-wrap the content instead of filling the
   edge) rather than centering, and slides in/out with the same
   `@starting-style` + `allow-discrete` + `motion-reduce:` pattern as `Dialog`.
-
-## Accordion
-
-- Unlike `Dialog`, there's no native element that cleanly covers this: `<details>`/
-  `<summary>` only gets exclusive-open grouping via the `name` attribute, has no
-  built-in way to animate open/closed, and doesn't map onto a controlled
-  `value`/`onValueChange` API without fighting the UA's own open-state handling.
-  So `Accordion` instead hand-implements the WAI-ARIA Accordion pattern:
-  `AccordionHeader` renders an `h3` wrapping an `AccordionTrigger` button with
-  `aria-expanded`/`aria-controls`, and `AccordionContent` is a
-  `div[role="region"]` linked back to the trigger via `aria-labelledby`.
-- `AccordionContent`'s open/close is animated via a `grid-template-rows`
-  transition (`0fr` ↔ `1fr` on a wrapper, `overflow-hidden` on the row inside
-  it) rather than transitioning `height`, since `height: auto` isn't a
-  transitionable value but `1fr` on a single-track grid resolves to the
-  content's natural size and *is*. `motion-reduce:` drops the transition
-  entirely, same as `Dialog`/`Drawer` (WCAG 2.3.3).
-- A closed item's content stays mounted (at zero height) rather than being
-  unmounted, so it's still there to animate open again — but that leaves its
-  focusable descendants reachable by Tab and exposed to assistive tech even
-  though they're visually clipped by the grid-rows trick, so `AccordionContent`
-  sets `inert` on itself while closed. That removes it from both the tab order
-  and the accessibility tree without touching `display` (which would fight the
-  transition), and is dropped the moment the item opens.
-- `type="single"` (default) keeps at most one item open, matching the common
-  FAQ/settings-list accordion shape; `collapsible` (default `false`) chooses
-  whether activating the already-open item closes it, mirroring `Dialog`'s
-  approach of an explicit opt-in prop over a surprising default. `type="multiple"`
-  switches to independent per-item state for cases like a multi-section reading
-  view where more than one panel should stay open together.
