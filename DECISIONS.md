@@ -76,6 +76,8 @@
   an unhidden separator glyph between every pair of items would be
   redundant noise on top of that, not new information.
 
+## Button
+
 - Used a native `<button>` element rather than a `<div>` with `role="button"`,
   so keyboard support (Enter/Space activation, focus handling) comes for free
   from the browser instead of being hand-rolled.
@@ -84,6 +86,40 @@
   which alone isn't reliably announced.
 - `disabled` is applied during loading too, preventing duplicate submissions
   from repeated activation while an action is in flight.
+
+## Carousel
+
+- Built on native CSS scroll-snap (`overflow-x-auto` + `snap-x snap-mandatory`
+  on `CarouselContent`, `snap-start` on each `CarouselItem`) rather than a
+  drag/transform-based carousel library or hand-rolled pointer-event slide
+  logic, so swipe, trackpad scrolling, and momentum all come from the
+  browser — the same "let the platform do it" reasoning behind `Dialog`
+  using the native `<dialog>` element instead of a hand-rolled modal.
+- Which slide counts as "current" is derived from an `IntersectionObserver`
+  watching each `CarouselItem` against the scroll container, not computed
+  from `scrollLeft` divided by an assumed item width, so it stays correct
+  even when `CarouselItem`s aren't all the same size (e.g. a "1.5 slides
+  visible" layout via a fractional `basis-*` override).
+- The scroll container's native scrollbar is hidden (`scrollbar-width: none`
+  + `::-webkit-scrollbar { display: none }`). `CarouselPrevious`,
+  `CarouselNext`, and `CarouselDots` already provide the same navigation
+  affordance visually, so the browser's own scrollbar chrome is redundant
+  clutter on top of them — swiping, trackpad scrolling, and the arrow keys
+  all still work identically; only its rendering is suppressed.
+- `Carousel` renders `role="region" aria-roledescription="carousel"` and
+  each `CarouselItem` renders `role="group" aria-roledescription="slide"`,
+  per the WAI-ARIA Carousel pattern, so assistive tech announces the
+  structure even though none of it is native HTML semantics.
+- Arrow-key navigation is wired to a `keydown` handler on the `Carousel`
+  root rather than giving the root its own `tabIndex` — it fires once focus
+  bubbles up from something already focusable inside (a nav button, a dot,
+  or interactive slide content), so keyboard users get ArrowLeft/ArrowRight
+  navigation without the region picking up an extra, unlabeled stop in the
+  tab order that wasn't there before.
+- `CarouselPrevious`/`CarouselNext` disable themselves at the ends
+  (derived from the container's `scrollLeft` vs. `scrollWidth`/`clientWidth`)
+  rather than hiding, so their position in the layout — and in the tab
+  order — stays stable as the carousel scrolls.
 
 ## Dialog
 
