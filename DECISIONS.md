@@ -50,6 +50,32 @@
   fast-loading image replaces it — mirroring Radix's Avatar, which added the
   same option for the same reason.
 
+## Breadcrumb
+
+- Purely presentational — every other compound component in this library
+  (`Accordion`, `Avatar`, `Dialog`) coordinates shared state through context,
+  but a breadcrumb trail has none to coordinate: each `BreadcrumbItem` is
+  independent, so the pieces are plain styled elements with no provider.
+- `Breadcrumb` renders a native `<nav aria-label="breadcrumb">` around a
+  `BreadcrumbList` `<ol>`, per the WAI-ARIA Breadcrumb pattern — an ordered
+  list because the trail is a strict hierarchy, and the `nav` landmark plus
+  label let assistive tech users jump straight to it and distinguish it from
+  a page's primary navigation.
+- `BreadcrumbPage` (the trail's last, current item) renders a plain `<span
+  aria-current="page">` rather than a link standing in for one. Other
+  breadcrumb implementations reach for `role="link" aria-disabled="true"` on
+  a span to keep it visually and structurally uniform with the real links
+  around it, but that fabricates link semantics for something you can't
+  actually activate — the current page has nowhere to navigate to — which
+  is exactly the kind of hand-rolled-role substitute this library avoids
+  elsewhere (see `Dialog`, `Button`) in favor of the plain element that
+  already means what's intended.
+- `BreadcrumbSeparator` and `BreadcrumbEllipsis` are marked
+  `role="presentation"` and `aria-hidden="true"`. Screen readers already
+  announce each item's position from the `<ol>` itself (e.g. "2 of 3"), so
+  an unhidden separator glyph between every pair of items would be
+  redundant noise on top of that, not new information.
+
 - Used a native `<button>` element rather than a `<div>` with `role="button"`,
   so keyboard support (Enter/Space activation, focus handling) comes for free
   from the browser instead of being hand-rolled.
