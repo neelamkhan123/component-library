@@ -153,6 +153,81 @@
   uncontrolled `checked`/`defaultChecked` handling is reused directly
   rather than reimplemented.
 
+## ContextMenu
+
+- `ContextMenuContent` is a native popover (`popover="auto"`) rather than a
+  hand-rolled floating `<div>` positioned with a portal — the same
+  native-element-first reasoning as `Dialog`'s `<dialog>`. Top-layer
+  rendering, Escape-to-close, and outside-click light-dismiss all come from
+  the browser; none of it is reimplemented here. The one thing `<dialog>`
+  gives `Dialog` for free that popovers don't is auto-focusing something on
+  open, so `ContextMenuContent` focuses the first item itself.
+- `showPopover()` is called from inside a `requestAnimationFrame` callback,
+  not synchronously in the effect that reacts to the triggering
+  `contextmenu` event. This isn't stylistic — verified directly against a
+  real, unpatched `npm run storybook` dev server (Playwright driving actual
+  trusted mouse input, not `fireEvent`) that calling it synchronously, or
+  even deferred by a microtask via `queueMicrotask`, opens the popover only
+  for the browser's *own* internal handling of that same contextmenu
+  gesture to silently close it again around 100ms later — `:popover-open`
+  never even matches in between, so the menu just never visibly appears.
+  Deferring past the next paint is what actually avoids the race, which is
+  also why positioning and the initial-focus call live inside that same
+  callback rather than a separate effect: by the time it runs, the popover
+  has genuinely finished opening, so `getBoundingClientRect()` reflects its
+  real size instead of a still-hidden zero rect.
+- Popovers expose their open state as the `:popover-open` CSS pseudo-class,
+  not a reflected `[open]` attribute the way `<dialog>`/`<details>` do — so
+  unlike `Dialog`/`Accordion`, this can't use Tailwind's built-in `open:`
+  variant and spells out `[&:popover-open]` instead. Likewise, the native
+  `close` event `Dialog` treats as its source of truth for closing doesn't
+  exist on popovers; the equivalent here is the `toggle` event, checked for
+  `newState === "closed"`.
+- Position is computed from the triggering `contextmenu` event's
+  `clientX`/`clientY`, then clamped to the viewport after the popover is
+  shown (so its real, laid-out dimensions are known) rather than guessed at
+  beforehand — this is plain `position: fixed` math, not CSS anchor
+  positioning (`anchor-name`/`position-anchor`): there's no persistent DOM
+  anchor at an arbitrary cursor point for that to attach to, and the
+  feature's browser support doesn't yet clear the bar this library holds
+  other native-platform choices to.
+- Background scroll is locked (`document.body.style.overflow = "hidden"`)
+  while the menu is open, the same treatment and the same reasoning as
+  `Dialog`: the menu's `position: fixed` coordinates are pinned to wherever
+  the cursor was on open, not to whatever ends up under them, so a page
+  that keeps scrolling underneath is disorienting rather than just visually
+  busy — a scroll lock protects a positioning invariant, not merely a
+  modal's usual "nothing else moves" convention.
+- `ContextMenuItem` renders a native `<button role="menuitem">` rather than
+  a `<div>` with click handling bolted on, so Enter/Space activation and
+  focusability come from the browser — its role is recategorized into the
+  composite `menu` widget per the WAI-ARIA Menu pattern, the same
+  interactive-element-plus-role-override approach `AccordionTrigger` uses.
+- Item highlighting uses `focus:` rather than `focus-visible:`, unlike every
+  other interactive control in this library (`Button`, `AccordionTrigger`,
+  `CarouselPrevious`, …). A menu's current item is the primary way it shows
+  "you're here" — the same way OS context menus highlight the hovered or
+  focused item unconditionally — not just an accessibility nicety for
+  keyboard users, so it isn't restricted to keyboard-only focus the way
+  those controls' focus rings are.
+- Submenus and checkbox/radio items are intentionally not included in this
+  pass — each adds real complexity (nested popovers with hover-intent
+  timing, or extra ARIA state to track) beyond what a first version needs,
+  rather than being an oversight.
+- Escape/outside-click dismissal is browser behavior this component's own
+  code never touches, so `Checkbox.test.tsx`-style jsdom unit tests can't
+  verify it — and it turns out real Chromium can't either, at least not
+  through `@testing-library/user-event`: pressing `{Escape}` there dispatches
+  a synthetic, non-trusted `keydown`, and this engine's native popover
+  light-dismiss doesn't respond to it (confirmed directly — swapping the
+  assertion to close via a `ContextMenuItem` click, which runs through this
+  component's own `hidePopover()` call instead of the browser's native
+  dismissal, passes immediately). So the "Interactive" story's `play`
+  function verifies everything this component's code *is* responsible for
+  against real Chromium (opening at the cursor, auto-focus, roving focus,
+  closing via an item), and Escape/outside-click are left to manual
+  verification in Storybook's UI, where real keyboard/mouse input is trusted.
+
 ## Dialog
 
 - Built on the native `<dialog>` element (shown via `showModal()`) instead of
