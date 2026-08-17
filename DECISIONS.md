@@ -352,3 +352,41 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   component is actually used, and the native attribute has no visual
   effect once a `width` is already set via `className` anyway (which is
   the norm here, given `Input` has no default width itself).
+
+## Pagination
+
+- Deliberately presentational, like `Breadcrumb`: there's no internal
+  "current page" state or context to coordinate, since a real app's
+  current page virtually always already lives in a URL or query state a
+  caller owns. Forcing an internal state model here would just fight that
+  external source of truth instead of simplifying anything — unlike
+  `Accordion`/`Carousel`/`ContextMenu`, where owning state genuinely does
+  simplify usage because there's no equally-natural external owner for it.
+- `getPaginationRange({ currentPage, totalPages, siblingCount })` is
+  exported alongside the components — a pure function, not a hook, since
+  it's a plain computation with no DOM or lifecycle involved. It's the one
+  piece of this component that *isn't* purely presentational, because it's
+  fiddly enough, and easy enough to get subtly wrong at the boundaries
+  (off-by-one truncation, jumps between "contiguous near the edge" and
+  "ellipsis" modes), that it's worth providing rather than leaving every
+  consumer to re-derive — the same reasoning `Carousel`'s `IntersectionObserver`-driven
+  current-slide tracking gets built in rather than left to guesswork from
+  scroll position.
+- `PaginationLink` renders a native `<button>`, not an `<a>` the way
+  `BreadcrumbLink` does. A breadcrumb trail is reasonably assumed to
+  represent real navigable URLs, but whether changing pages here should
+  actually navigate (vs. update local or query state without a URL change)
+  genuinely varies by app — and an `<a>` with no `href` isn't
+  keyboard-focusable, which would be an easy, silent accessibility
+  regression for the (very common) apps that use pagination as pure local
+  state. A `<button>` sidesteps that trap entirely; add `href` handling
+  yourself if your pagination does navigate.
+- `PaginationEllipsis` is marked `role="presentation"`/`aria-hidden="true"`,
+  the same treatment `BreadcrumbEllipsis` gets and for the same reason:
+  it's a stand-in for skipped page numbers, not information assistive tech
+  needs to announce on its own.
+- `PaginationPrevious`/`PaginationNext` take no `disabled`-deriving
+  page-count props of their own — same as the rest of this component,
+  that's state this component doesn't own, so `disabled` is just forwarded
+  through `ButtonHTMLAttributes` for a caller to set from `currentPage`/
+  `totalPages` however it already tracks them.
