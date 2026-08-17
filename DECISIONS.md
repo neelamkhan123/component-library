@@ -319,3 +319,36 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   content's measured size fed back into which *side* to open on, not just
   where to clamp to, which is a deliberate scope cut, not an oversight —
   the same spirit as `ContextMenu` leaving out submenus.
+
+## Input
+
+- Renders a native `<input>`, with `size`/visual language matching
+  `Button`'s, rather than a wrapper that shadows an inner native input the
+  way some component libraries do — `type` (`email`, `password`, `search`,
+  `number`, …), typing, selection, and native `<form>` participation all
+  come from the browser as a result, with nothing about typing itself
+  reimplemented here.
+- Invalid state is styled off `aria-invalid` directly (an
+  `aria-invalid:border-red-500` variant, no plain-CSS-selector equivalent
+  needed since it's a real attribute), rather than a separate `invalid` or
+  `error` boolean prop. A caller already needs to set `aria-invalid="true"`
+  for assistive tech to announce the field as invalid — adding a parallel
+  prop would just be a second, easy-to-forget place that same fact has to
+  be kept in sync, for a purely visual difference that comes for free once
+  the accessible one is set correctly.
+- No bundled label or helper/error-text component. An ordinary `<label>`
+  wrapping (or `htmlFor`-linked to) an `Input` already associates the two
+  and makes clicking the label text focus the input, natively — the same
+  reasoning `Checkbox`'s decisions above give for not having a
+  `CheckboxLabel`. A `Label`/`FormField`-style component that also wires up
+  helper and error text via `aria-describedby` would be a reasonable next
+  addition, but is a distinct component in its own right, not something an
+  `Input` needs to bundle to be complete on its own.
+- Native `InputHTMLAttributes` already has a `size` attribute (the
+  character-width one, rarely used), which collides with this component's
+  own `size` variant (`"sm"`/`"md"`/`"lg"`, matching `Button`) — the native
+  one is omitted from `InputProps` rather than the variant renamed, since
+  `size="sm"`/`"md"`/`"lg"` is the more useful meaning for how this
+  component is actually used, and the native attribute has no visual
+  effect once a `width` is already set via `className` anyway (which is
+  the norm here, given `Input` has no default width itself).

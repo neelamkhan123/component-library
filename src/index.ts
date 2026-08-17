@@ -9,3 +9,4 @@ export * from "./components/ContextMenu";
 export * from "./components/Dialog";
 export * from "./components/Drawer";
 export * from "./components/DropdownMenu";
+export * from "./components/Input";
