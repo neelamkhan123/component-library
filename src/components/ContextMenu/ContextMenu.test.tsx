@@ -44,10 +44,14 @@ beforeEach(() => {
     openPopovers.delete(this);
     this.style.removeProperty("display");
   };
+  // Cast through `typeof originalMatches` — `matches` is an overloaded
+  // method (narrowing to known tag names via type predicates for some
+  // signatures), and a plain replacement function doesn't structurally
+  // satisfy every overload on its own.
   Element.prototype.matches = function (this: Element, selector: string) {
     if (selector === ":popover-open") return openPopovers.has(this);
     return originalMatches.call(this, selector);
-  };
+  } as typeof originalMatches;
 });
 
 afterEach(() => {

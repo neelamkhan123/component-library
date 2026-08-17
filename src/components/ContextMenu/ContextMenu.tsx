@@ -32,6 +32,8 @@ function mergeRefs<T>(...refs: Array<Ref<T> | undefined>) {
 interface Position {
   x: number;
   y: number;
+  /** Which item to focus once the menu opens at this position. Defaults to `"first"`. */
+  initialFocus?: "first" | "last";
 }
 
 interface ContextMenuContextValue {
@@ -49,6 +51,17 @@ function useContextMenuContext(component: string): ContextMenuContextValue {
     throw new Error(`<${component} /> must be rendered inside a <ContextMenu>.`);
   }
   return context;
+}
+
+/**
+ * Reads the current open state and exposes a setter, for wiring up a
+ * custom trigger — one that opens at a position other than the cursor —
+ * that `ContextMenuTrigger` doesn't cover. `DropdownMenuTrigger` is built
+ * on this.
+ */
+export function useContextMenu(): Pick<ContextMenuContextValue, "open" | "onOpenChange"> {
+  const { open, onOpenChange } = useContextMenuContext("useContextMenu()");
+  return { open, onOpenChange };
 }
 
 export interface ContextMenuProps {
@@ -160,7 +173,8 @@ export const ContextMenuContent = forwardRef<HTMLDivElement, ContextMenuContentP
         const margin = 8;
         el.style.left = `${Math.max(margin, Math.min(position.x, window.innerWidth - rect.width - margin))}px`;
         el.style.top = `${Math.max(margin, Math.min(position.y, window.innerHeight - rect.height - margin))}px`;
-        el.querySelector<HTMLElement>('[role="menuitem"]:not(:disabled)')?.focus();
+        const items = el.querySelectorAll<HTMLElement>('[role="menuitem"]:not(:disabled)');
+        (position.initialFocus === "last" ? items[items.length - 1] : items[0])?.focus();
       });
       return () => cancelAnimationFrame(frame);
     }, [open, position, contentRef]);

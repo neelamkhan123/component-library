@@ -14,7 +14,7 @@
   transition (`0fr` ↔ `1fr` on a wrapper, `overflow-hidden` on the row inside
   it) rather than transitioning `height`, since `height: auto` isn't a
   transitionable value but `1fr` on a single-track grid resolves to the
-  content's natural size and *is*. `motion-reduce:` drops the transition
+  content's natural size and _is_. `motion-reduce:` drops the transition
   entirely, same as `Dialog`/`Drawer` (WCAG 2.3.3).
 - A closed item's content stays mounted (at zero height) rather than being
   unmounted, so it's still there to animate open again — but that leaves its
@@ -62,7 +62,7 @@
   label let assistive tech users jump straight to it and distinguish it from
   a page's primary navigation.
 - `BreadcrumbPage` (the trail's last, current item) renders a plain `<span
-  aria-current="page">` rather than a link standing in for one. Other
+aria-current="page">` rather than a link standing in for one. Other
   breadcrumb implementations reach for `role="link" aria-disabled="true"` on
   a span to keep it visually and structurally uniform with the real links
   around it, but that fabricates link semantics for something you can't
@@ -101,11 +101,11 @@
   even when `CarouselItem`s aren't all the same size (e.g. a "1.5 slides
   visible" layout via a fractional `basis-*` override).
 - The scroll container's native scrollbar is hidden (`scrollbar-width: none`
-  + `::-webkit-scrollbar { display: none }`). `CarouselPrevious`,
-  `CarouselNext`, and `CarouselDots` already provide the same navigation
-  affordance visually, so the browser's own scrollbar chrome is redundant
-  clutter on top of them — swiping, trackpad scrolling, and the arrow keys
-  all still work identically; only its rendering is suppressed.
+  - `::-webkit-scrollbar { display: none }`). `CarouselPrevious`,
+    `CarouselNext`, and `CarouselDots` already provide the same navigation
+    affordance visually, so the browser's own scrollbar chrome is redundant
+    clutter on top of them — swiping, trackpad scrolling, and the arrow keys
+    all still work identically; only its rendering is suppressed.
 - `Carousel` renders `role="region" aria-roledescription="carousel"` and
   each `CarouselItem` renders `role="group" aria-roledescription="slide"`,
   per the WAI-ARIA Carousel pattern, so assistive tech announces the
@@ -153,7 +153,7 @@
   uncontrolled `checked`/`defaultChecked` handling is reused directly
   rather than reimplemented.
 
-## ContextMenu
+## Context Menu
 
 - `ContextMenuContent` is a native popover (`popover="auto"`) rather than a
   hand-rolled floating `<div>` positioned with a portal — the same
@@ -168,7 +168,7 @@
   real, unpatched `npm run storybook` dev server (Playwright driving actual
   trusted mouse input, not `fireEvent`) that calling it synchronously, or
   even deferred by a microtask via `queueMicrotask`, opens the popover only
-  for the browser's *own* internal handling of that same contextmenu
+  for the browser's _own_ internal handling of that same contextmenu
   gesture to silently close it again around 100ms later — `:popover-open`
   never even matches in between, so the menu just never visibly appears.
   Deferring past the next paint is what actually avoids the race, which is
@@ -223,7 +223,7 @@
   assertion to close via a `ContextMenuItem` click, which runs through this
   component's own `hidePopover()` call instead of the browser's native
   dismissal, passes immediately). So the "Interactive" story's `play`
-  function verifies everything this component's code *is* responsible for
+  function verifies everything this component's code _is_ responsible for
   against real Chromium (opening at the cursor, auto-focus, roving focus,
   closing via an item), and Escape/outside-click are left to manual
   verification in Storybook's UI, where real keyboard/mouse input is trusted.
@@ -247,7 +247,7 @@
   and a scrollable page behind a fixed-position modal is disorienting for
   sighted and screen-reader users alike.
 - The open/close fade+scale is pure CSS (`@starting-style` + `transition-behavior:
-  allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
+allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   utilities) rather than JS-timed classes, so it stays in sync with the
   browser's own top-layer/`display` handling instead of racing it. Every
   transitioned property is dropped under `motion-reduce:` so the dialog snaps
@@ -276,3 +276,46 @@
   which would otherwise just shrink-wrap the content instead of filling the
   edge) rather than centering, and slides in/out with the same
   `@starting-style` + `allow-discrete` + `motion-reduce:` pattern as `Dialog`.
+
+## Dropdown Menu
+
+- A dropdown menu is a `ContextMenu` triggered by clicking a real button
+  instead of right-clicking, positioned below that button instead of at the
+  cursor — the exact same relationship `Drawer` has to `Dialog`. Everything
+  about the menu panel itself (the native popover, its
+  `requestAnimationFrame`-deferred opening, roving keyboard focus, scroll
+  lock, light-dismiss) is identical, so `DropdownMenuContent`,
+  `DropdownMenuItem`, `DropdownMenuSeparator`, `DropdownMenuLabel`, and
+  `DropdownMenuShortcut` are the exact same components as their
+  `ContextMenu` counterparts, re-exported under dropdown-flavored names.
+  Only `DropdownMenuTrigger` (a real `<button>`, where `ContextMenuTrigger`
+  is a plain `<div>` listening for `contextmenu`) is genuinely new.
+- The shared open/position state and the `showPopover()`-timing fix live in
+  `ContextMenu.tsx` itself rather than a separately extracted hook, the same
+  choice `Dialog.tsx` made keeping `useDialogPanel` alongside `Dialog`
+  rather than in its own file: `ContextMenu` remains the canonical
+  implementation, and `DropdownMenu` builds on it by name, not on a
+  renamed-to-be-generic abstraction neither component would read as
+  "belonging" to. A new `useContextMenu()` hook (mirroring `useDialog()`)
+  is the one addition `DropdownMenuTrigger` needed to hook into that state
+  from outside `ContextMenuTrigger`.
+- `DropdownMenuTrigger` sets `aria-haspopup="menu"` and `aria-expanded`,
+  per the WAI-ARIA Menu Button pattern — `ContextMenuTrigger` has neither,
+  since a context menu isn't associated with a specific "opener" control in
+  the accessibility tree the way a dropdown's trigger button is.
+- ArrowDown/ArrowUp on the (closed) trigger open the menu with the
+  first/last item focused respectively, also per the Menu Button pattern.
+  This needed one small, backward-compatible addition to the shared
+  `Position` state — an optional `initialFocus: "first" | "last"` — since
+  `ContextMenuContent`'s auto-focus behavior on open otherwise always
+  targets the first item, which is right for `ContextMenuTrigger` (no
+  keyboard-driven "open with the last item" case exists for a right-click)
+  but not sufficient for the dropdown's ArrowUp case.
+- No `align`/flip-to-the-opposite-side placement in this pass —
+  `DropdownMenuTrigger` always positions the menu below-left-aligned to
+  itself, relying on `ContextMenuContent`'s existing viewport clamp to pull
+  it back on-screen near an edge rather than truly flipping sides. The
+  clamp already gets most of the practical benefit; real flipping needs the
+  content's measured size fed back into which *side* to open on, not just
+  where to clamp to, which is a deliberate scope cut, not an oversight —
+  the same spirit as `ContextMenu` leaving out submenus.
