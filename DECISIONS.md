@@ -30,7 +30,25 @@
   switches to independent per-item state for cases like a multi-section reading
   view where more than one panel should stay open together.
 
-## Button
+## Avatar
+
+- `AvatarImage` always mounts, even with a `src` that might 404 — its load
+  state is tracked in context (`idle`/`loading`/`loaded`/`error`) rather than
+  conditionally rendering the `<img>` itself, since the `load`/`error` events
+  that drive that state only fire on a mounted element. `AvatarFallback`
+  reads the same context and renders whenever the image isn't `loaded`, so a
+  missing `src`, a still-loading image, and a broken image all resolve to
+  the same visible state — initials or an icon — instead of a broken-image
+  icon or an empty circle.
+- `AvatarImage`'s `alt` is required (its `ImgHTMLAttributes` type is
+  narrowed to make the otherwise-optional `alt` mandatory), the same
+  non-optional treatment `Dialog` gives `DialogTitle`: an avatar conveys who
+  or what it represents, so it needs a text alternative every time, not just
+  when a caller remembers to add one.
+- `AvatarFallback` takes an optional `delayMs` so callers can defer it past
+  a brief loading window, avoiding an initials flash immediately before a
+  fast-loading image replaces it — mirroring Radix's Avatar, which added the
+  same option for the same reason.
 
 - Used a native `<button>` element rather than a `<div>` with `role="button"`,
   so keyboard support (Enter/Space activation, focus handling) comes for free
