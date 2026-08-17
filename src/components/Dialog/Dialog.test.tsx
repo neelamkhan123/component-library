@@ -4,6 +4,10 @@ import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { expect, test, vi } from "vitest";
+// Several assertions here (centering, transitions) depend on real computed
+// styles, so this file owns its own Tailwind import rather than relying on
+// it being injected by whatever else happens to be in the test run.
+import "../../styles.css";
 import {
   Dialog,
   DialogClose,
@@ -56,7 +60,10 @@ test("DialogTrigger opens a closed dialog", async () => {
 
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Open" }));
-  expect(screen.getByRole("dialog")).toBeVisible();
+  // `toBeVisible` checks computed opacity, which starts at 0 for the entry
+  // transition — give it a moment to animate in rather than asserting the
+  // instant after the click.
+  await waitFor(() => expect(screen.getByRole("dialog")).toBeVisible());
 });
 
 test("DialogTitle supplies the dialog's accessible name", async () => {
@@ -150,7 +157,7 @@ test("Dialog supports fully controlled open state", async () => {
   render(<Controlled />);
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Open" }));
-  expect(screen.getByRole("dialog")).toBeVisible();
+  await waitFor(() => expect(screen.getByRole("dialog")).toBeVisible());
 });
 
 test("DialogContent merges a custom className with its defaults", async () => {

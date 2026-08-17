@@ -57,6 +57,66 @@ export function useDialog(): Pick<DialogContextValue, "open" | "onOpenChange"> {
   return { open, onOpenChange };
 }
 
+interface DialogPanelOptions {
+  closeOnOutsideClick: boolean;
+  onClose?: (event: React.SyntheticEvent<HTMLDialogElement>) => void;
+  onClick?: React.MouseEventHandler<HTMLDialogElement>;
+}
+
+/**
+ * Wires up a native `<dialog>` to the Dialog context: shows/hides it via
+ * `showModal()`/`close()` as the open state changes, locks background
+ * scroll while open, and treats the native `close` event as the single
+ * source of truth for syncing state back. Shared by `DialogContent` and
+ * `Drawer`'s `DrawerContent`, which render their own panel markup on top of
+ * the same native `<dialog>` plumbing.
+ */
+export function useDialogPanel({
+  closeOnOutsideClick,
+  onClose,
+  onClick,
+}: DialogPanelOptions) {
+  const { open, onOpenChange, contentRef, titleId, descriptionId } =
+    useDialogContext("DialogContent");
+
+  useEffect(() => {
+    const dialogEl = contentRef.current;
+    if (!dialogEl) return;
+    if (open && !dialogEl.open) {
+      dialogEl.showModal();
+    } else if (!open && dialogEl.open) {
+      dialogEl.close();
+    }
+  }, [open, contentRef]);
+
+  // Prevent the page from scrolling behind the modal while it's open.
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
+  return {
+    contentRef,
+    titleId,
+    descriptionId,
+    handleClose: (event: React.SyntheticEvent<HTMLDialogElement>) => {
+      onClose?.(event);
+      // Syncs state when the dialog is closed natively (Escape key).
+      onOpenChange(false);
+    },
+    handleClick: (event: React.MouseEvent<HTMLDialogElement>) => {
+      onClick?.(event);
+      if (closeOnOutsideClick && event.target === contentRef.current) {
+        contentRef.current?.close();
+      }
+    },
+  };
+}
+
 export interface DialogProps {
   /** Controls the open state. Omit to let the dialog manage its own state. */
   open?: boolean;
@@ -164,45 +224,16 @@ export const DialogContent = forwardRef<HTMLDialogElement, DialogContentProps>(
     },
     ref,
   ) => {
-    const { open, onOpenChange, contentRef, titleId, descriptionId } =
-      useDialogContext("DialogContent");
-
-    useEffect(() => {
-      const dialogEl = contentRef.current;
-      if (!dialogEl) return;
-      if (open && !dialogEl.open) {
-        dialogEl.showModal();
-      } else if (!open && dialogEl.open) {
-        dialogEl.close();
-      }
-    }, [open, contentRef]);
-
-    // Prevent the page from scrolling behind the modal while it's open.
-    useEffect(() => {
-      if (!open) return;
-      const previousOverflow = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = previousOverflow;
-      };
-    }, [open]);
+    const { contentRef, titleId, descriptionId, handleClose, handleClick } =
+      useDialogPanel({ closeOnOutsideClick, onClose, onClick });
 
     return (
       <dialog
         ref={mergeRefs(contentRef, ref)}
         aria-labelledby={titleId}
         aria-describedby={descriptionId}
-        onClose={(event) => {
-          onClose?.(event);
-          // Syncs state when the dialog is closed natively (Escape key).
-          onOpenChange(false);
-        }}
-        onClick={(event) => {
-          onClick?.(event);
-          if (closeOnOutsideClick && event.target === contentRef.current) {
-            contentRef.current?.close();
-          }
-        }}
+        onClose={handleClose}
+        onClick={handleClick}
         className={mergeClassNames(
           // Base panel look.
           "m-auto w-[calc(100%-2rem)] max-w-md rounded-xl border border-slate-200 bg-white p-6 text-slate-950 shadow-[rgba(0,0,0,0.05)_0px_6px_24px_0px,_rgba(0,0,0,0.08)_0px_0px_0px_1px] dark:border-slate-800 dark:bg-slate-950 dark:text-white",
@@ -212,7 +243,7 @@ export const DialogContent = forwardRef<HTMLDialogElement, DialogContentProps>(
           // dialog rendered in the top layer for the exit transition instead of
           // yanking `display` the instant `close()` is called. `motion-reduce:`
           // drops the transition entirely for prefers-reduced-motion (WCAG 2.3.3).
-          "scale-95 opacity-0 transition-[opacity,transform,overlay,display] transition-discrete duration-200 ease-out open:scale-100 open:opacity-100 starting:open:scale-95 starting:open:opacity-0 motion-reduce:transition-none",
+          "scale-95 opacity-0 transition-[opacity,scale,overlay,display] transition-discrete duration-200 ease-out open:scale-100 open:opacity-100 starting:open:scale-95 starting:open:opacity-0 motion-reduce:transition-none",
           // Same fade, applied to the backdrop.
           "backdrop:bg-slate-950/50 backdrop:opacity-0 backdrop:backdrop-blur-xs backdrop:transition-[opacity,overlay,display] backdrop:transition-discrete backdrop:duration-100 backdrop:ease-out open:backdrop:opacity-100 starting:open:backdrop:opacity-0 backdrop:motion-reduce:transition-none dark:backdrop:bg-black/70",
           className,

@@ -35,3 +35,27 @@
   browser's own top-layer/`display` handling instead of racing it. Every
   transitioned property is dropped under `motion-reduce:` so the dialog snaps
   open/closed instantly for users who've asked for reduced motion (WCAG 2.3.3).
+- Note for anyone extending the transition: Tailwind v4 animates `scale`/
+  `translate`/`rotate` as their own standalone CSS properties, not through
+  `transform` — `transition-[opacity,transform,...]` compiles fine but silently
+  doesn't animate a `scale-*`/`translate-*` utility. List the specific property
+  (`scale`, `translate`) instead. This only shows up with real CSS loaded and
+  computed styles sampled mid-transition; DOM-only assertions won't catch it.
+
+## Drawer
+
+- A drawer is a `Dialog` with different `Content` panel styling — opening,
+  closing, focus handling, and labeling are all identical — so `Drawer`,
+  `DrawerTrigger`, `DrawerClose`, `DrawerHeader`, `DrawerTitle`,
+  `DrawerDescription`, and `DrawerFooter` are the exact same components as
+  their `Dialog` counterparts, re-exported under drawer-flavored names. Only
+  `DrawerContent` (the native `<dialog>`'s size/position/slide-direction, via
+  a `side` prop) is genuinely new. The shared native-`<dialog>` plumbing
+  (`showModal()`/`close()` effect, scroll lock, native-close sync) lives in
+  `useDialogPanel` in `Dialog.tsx` so both `Content` components stay
+  consistent instead of drifting.
+- Each `side` pins the panel flush against one edge via `inset`/explicit
+  sizing (overriding the `<dialog>` UA default of `width/height: fit-content`,
+  which would otherwise just shrink-wrap the content instead of filling the
+  edge) rather than centering, and slides in/out with the same
+  `@starting-style` + `allow-discrete` + `motion-reduce:` pattern as `Dialog`.
