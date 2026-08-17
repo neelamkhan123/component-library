@@ -121,6 +121,38 @@
   rather than hiding, so their position in the layout — and in the tab
   order — stays stable as the carousel scrolls.
 
+## Checkbox
+
+- Renders a real `<input type="checkbox">`, restyled with `appearance-none`
+  and Tailwind's `checked:`/`indeterminate:` variants, instead of a hidden
+  native input paired with a fake `div`-based visual (the approach some
+  other libraries use to get a fully custom look). Keyboard activation
+  (Space), focus, label association, and participation in a native
+  `<form>`'s submitted data all come from the browser for free — the same
+  native-element-first reasoning as `Dialog`'s `<dialog>` and `Button`'s
+  `<button>`.
+- No `CheckboxLabel` component: an ordinary `<label>` wrapping a `Checkbox`
+  and its text already toggles the checkbox when the text is clicked,
+  because that's native `<label>`/`<input>` behavior, not something this
+  library needs to reimplement. See the stories for the pattern.
+- `checked` accepts `true`, `false`, or `"indeterminate"` — mirroring Radix
+  Checkbox's tri-state API — but internally maps `"indeterminate"` to the
+  DOM's own `.indeterminate` property via a ref effect, since indeterminate
+  isn't a real HTML attribute or React prop and can only be set
+  imperatively. Passing `"indeterminate"` also forces the native `checked`
+  value to `false`, so a controlled "select all" checkbox's boolean state
+  and its indeterminate visual never fight each other.
+- The checkmark/dash icons layered over the box are `aria-hidden` and
+  `pointer-events-none` — purely visual, shown/hidden via `peer-checked`/
+  `peer-indeterminate` off the real input's pseudo-classes. The checkbox's
+  state is already communicated by the native input's own checked/
+  indeterminate properties (and its accessible name), so the icons add
+  nothing for assistive tech to announce.
+- No separate uncontrolled-state bookkeeping (unlike `Accordion`): because
+  the real element is a native `<input>`, React's own controlled/
+  uncontrolled `checked`/`defaultChecked` handling is reused directly
+  rather than reimplemented.
+
 ## Dialog
 
 - Built on the native `<dialog>` element (shown via `showModal()`) instead of
