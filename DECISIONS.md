@@ -573,6 +573,43 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   through `ButtonHTMLAttributes` for a caller to set from `currentPage`/
   `totalPages` however it already tracks them.
 
+## Progress
+
+- Rendered as `<div role="progressbar">` with `aria-valuenow`/`-min`/`-max`
+  wrapping a plain width-driven fill `<div>`, not the native `<progress>`
+  element — the one place in this library a native form control exists but
+  is deliberately passed over. `Switch`/`Checkbox` can style the native
+  input directly because the box itself *is* the whole visual; `<progress>`
+  draws its fill inside vendor-prefixed pseudo-elements
+  (`::-webkit-progress-value`, `::-moz-progress-bar`, with no equivalent in
+  every engine), which render inconsistently and can't be reached with a
+  plain Tailwind class the way everything else in this library is styled.
+  A `role="progressbar"` div is the same pattern Radix's (and by extension
+  shadcn's) Progress primitive uses, for the identical reason.
+- `value` is optional, not defaulted to `0` — omitting it renders an
+  indeterminate state (`aria-valuenow` absent entirely, per the ARIA spec's
+  own definition of indeterminate, plus a pulsing full-width fill) for
+  progress that genuinely has no known percentage yet, e.g. a file upload
+  before the server reports byte counts.
+- The indeterminate fill uses Tailwind's stock `animate-pulse` rather than a
+  sliding-stripe animation. A sliding stripe needs a custom `@keyframes`
+  block, which would be the first one anywhere in this codebase — everything
+  else (`Dialog`, `Drawer`, `ContextMenu`, `Toast`, ...) animates via
+  `@starting-style`/`transition-discrete` tied to real state changes, never
+  a looping keyframe animation independent of state. Reaching for the stock
+  utility instead of introducing that first bit of infrastructure for one
+  component is the same deliberate-scope-cut spirit as `Attachment` skipping
+  a lightbox.
+- `max` defaults to `100`, not `1` the way the native `<progress>` element
+  does — matching Radix/shadcn's Progress and the near-universal mental
+  model of "progress is a percentage" rather than the native element's
+  easy-to-forget default.
+- `value` is clamped to `[0, max]` before being written to `aria-valuenow`
+  and turned into a fill width, so an out-of-range value from a caller
+  (e.g. a byte count briefly exceeding a stale total) can't produce a
+  fill wider than the track or an `aria-valuenow` outside the range
+  `aria-valuemin`/`aria-valuemax` promise assistive tech.
+
 ## RadioGroup
 
 - `RadioGroupItem` renders a real `<input type="radio">`, restyled with

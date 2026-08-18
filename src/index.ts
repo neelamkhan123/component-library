@@ -15,6 +15,7 @@ export * from "./components/DropdownMenu";
 export * from "./components/Input";
 export * from "./components/Message";
 export * from "./components/Pagination";
+export * from "./components/Progress";
 export * from "./components/RadioGroup";
 export * from "./components/Select";
 export * from "./components/Switch";
