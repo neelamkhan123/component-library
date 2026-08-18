@@ -19,6 +19,7 @@ export * from "./components/Progress";
 export * from "./components/RadioGroup";
 export * from "./components/Resizable";
 export * from "./components/Select";
+export * from "./components/Sidebar";
 export * from "./components/Switch";
 export * from "./components/Table";
 export * from "./components/Tabs";

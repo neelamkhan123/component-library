@@ -819,6 +819,72 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   scope cut `ContextMenu` documents for submenus and `DropdownMenu` for
   `align`/flip placement, not an oversight.
 
+## Sidebar
+
+- `SidebarProvider` renders the outer flex row wrapper itself, not just
+  context — unlike `Dialog` (whose provider holds only context, since
+  `DialogContent` promotes itself to the native top layer and isn't a
+  normal layout sibling of anything), a docked `Sidebar` and the page's
+  main content genuinely are ordinary flex siblings that need a shared row
+  container. Composition is `<SidebarProvider><Sidebar>...</Sidebar><main
+  className="flex-1">...</main></SidebarProvider>`, with no `SidebarInset`
+  wrapper for that `<main>` — an ordinary element with `flex-1` does it,
+  the same "don't ship a wrapper around a single plain child" call
+  `Bubble`/`Message` made not needing a list component to stack in.
+- `Sidebar` sets its width via inline `style`, not a Tailwind `w-*` class —
+  directly informed by a real bug just found in `Resizable`: which of two
+  equal-specificity classes wins is decided by their order in the
+  *generated* stylesheet, not by anything in a `className` string, so a
+  component's own default class can silently outrank a caller's override of
+  the same CSS property. Width is exactly the kind of value a `Sidebar`
+  caller commonly wants to change, so it's a `width` prop applied via
+  `style`, which has no such ambiguity, rather than a `w-64` default a
+  caller would have to fight.
+- The open-state width collapse (`overflow-hidden`, `transition-[width]`
+  down to `0`) lives on the `<aside>` itself, but its children sit inside an
+  inner `<div>` held at a *constant* width instead of collapsing with it —
+  otherwise header/nav text would visibly reflow and wrap mid-transition as
+  the outer width crosses down toward `0`. This costs one extra wrapper
+  `<div>`, deliberately, for a purely cosmetic-during-animation reason.
+- Collapsed, the `<aside>` is also marked `inert` (React 19's native
+  support for the HTML attribute) — still present and shrinking for the
+  transition, but unreachable by keyboard or assistive tech the instant it
+  collapses, not just once fully invisible. Same problem `Dialog`/`Drawer`
+  solve by fully removing their content from the accessibility tree on
+  close, solved the same immediate-state-change-with-a-lagging-visual-transition
+  way, just via `inert` instead of `close()`.
+- `SidebarTrigger` is deliberately not rendered inside `Sidebar` itself in
+  any story — a trigger placed inside the panel it collapses would become
+  unreachable (thanks to that same `inert`) the moment it's needed most.
+  It belongs in the caller's own page header, wired to the same state via
+  `useSidebar()` if a caller needs a custom trigger `SidebarTrigger` itself
+  doesn't cover — the same relationship `useDialog()` has to `DialogTrigger`.
+- `SidebarMenuButton` renders a native `<a>`, the same call `BreadcrumbLink`
+  makes and for the same reason: sidebar entries overwhelmingly represent
+  real, distinct pages, arguably even more consistently than a breadcrumb
+  trail does. This is the opposite call `PaginationLink` makes rendering a
+  `<button>`, deliberately, because whether changing pages should navigate
+  genuinely varies by app there — both choices stand, for different
+  components, for reasons specific to each.
+- `SidebarGroupLabel` is plain presentational text, not wired to its
+  `SidebarGroup` as an accessible heading/region pair (no `aria-labelledby`,
+  no `role="group"`) — a deliberate simplicity cut, the same spirit as
+  `BreadcrumbSeparator` staying decorative rather than modeling a whole
+  extra relationship for what a sighted user already reads as "this line is
+  a heading for the list below it."
+- No mobile auto-collapse-to-an-overlay behavior, no viewport-width
+  detection, no cookie/`localStorage` persistence of open state, no
+  keyboard shortcut, and no icon-only collapsed mode (collapsing goes all
+  the way to hidden, not to a slim icon rail) — all genuinely separate
+  features a caller can layer on top (an overlay variant, in particular, is
+  just composing `Drawer` for narrow viewports rather than `Sidebar`
+  reimplementing it), the same "no upload progress, no lightbox" scope-cut
+  spirit as `Attachment`. Likewise, a caller wanting a *draggable* sidebar
+  width should reach for `Resizable` (`ResizablePanelGroup` wrapping
+  `Sidebar` and the main content as `ResizablePanel`s) rather than `Sidebar`
+  growing its own drag logic — resizing by dragging is `Resizable`'s job,
+  not something worth a second implementation here.
+
 ## Switch
 
 - `Switch` is `Checkbox`'s sibling, not a new invention: WAI-ARIA

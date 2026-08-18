@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /Users/admin/Documents/Projects/component-library *)",
+      "Bash(curl -s http://localhost:6006/index.json)",
+      "Bash(node -e ' *)",
+      "Bash(pkill -f \"storybook dev\" 2>/dev/null *)"
+    ],
+    "additionalDirectories": [
+      "/tmp",
+      "/private/tmp/claude-501/-Users-admin-Documents-Projects-component-library/be78eddc-c436-4a2e-8dd6-6ebdf8d02485/scratchpad"
+    ]
+  }
+}
