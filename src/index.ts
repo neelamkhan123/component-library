@@ -17,6 +17,7 @@ export * from "./components/Message";
 export * from "./components/Pagination";
 export * from "./components/Progress";
 export * from "./components/RadioGroup";
+export * from "./components/Resizable";
 export * from "./components/Select";
 export * from "./components/Switch";
 export * from "./components/Table";

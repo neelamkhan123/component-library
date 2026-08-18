@@ -646,6 +646,119 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   `<label>` wrapping a `RadioGroupItem` and its text already associates
   the two and makes clicking the text select the radio, natively.
 
+## Resizable
+
+- The handle originally sized its cross axis with `h-full`/`w-full`
+  (`height`/`width: 100%`) — reported by a user as "I don't see any
+  vertical line separators", and confirmed with real Chromium (Playwright
+  against a running Storybook, not just the automated suite — the same
+  direct-verification approach `ContextMenu`'s original popover-timing bug
+  needed) to render only ~16px tall inside a 162px-tall group, i.e. shrunk
+  to fit just its grip icon instead of spanning the panels beside it. Cause:
+  `ResizablePanelGroup`'s own height is intrinsic (sized to its panels'
+  content, not an explicit value), and a percentage measured against an
+  indefinite containing block resolves as `auto` per CSS2.1 §10.5 — but
+  that `auto` doesn't reliably get flexbox's stretch treatment the way an
+  actually-unset height would. Fixed by using `self-stretch` instead, which
+  stretches to the flex line's cross size directly and never goes through
+  percentage resolution at all. Worth remembering for any future flex-item
+  sizing in this codebase, not just here.
+- `ResizablePanelGroup` originally defaulted to `h-full w-full`. Fixing the
+  bullet above surfaced a second, more serious bug the same way: the
+  `Vertical` story's dragging didn't move anything, even though `Resizable`'s
+  own unit tests (which stub `getBoundingClientRect` — see below) all
+  passed. Direct Chromium inspection (again Playwright against a running
+  Storybook) showed the drag math itself was correct — the handle's
+  `flex-basis` percentage was updating in the DOM exactly as intended — but
+  nothing visibly moved, because the group's real height had silently
+  reverted to content-driven sizing (both panels always exactly matched
+  their own inner content's height, regardless of the percentage set on
+  either). Cause: `Vertical`'s own `h-80` className, meant to give the
+  group the definite height its children's percentage `flex-basis` needs to
+  resolve against, was silently losing to the component's built-in
+  `h-full`. Which of two same-specificity classes wins is decided by their
+  order in Tailwind's *generated stylesheet*, not by the order they appear
+  in a `className` string — and `.h-full` happened to be emitted after
+  `.h-80`. With no definite ancestor height above it either, `height: 100%`
+  then degraded to `auto` per the same CSS2.1 §10.5 rule as the bullet
+  above, and every descendant's percentage `flex-basis` failed right along
+  with it — not just cosmetically stuck, but functionally inert: no
+  percentage placed on any panel could ever resolve, so no drag or keypress
+  could ever visibly do anything, no matter how correct the JS computing it
+  was. Fixed by dropping `h-full` from the default entirely and keeping
+  only `w-full` — `w-full` never had a competing override to lose to in
+  either story, and it's `width`, not `height`, that's virtually always
+  wanted immediately regardless of orientation; a `direction="vertical"`
+  group instead *needs* to be told its height by the caller, which now
+  reaches the element uncontested. Recorded directly in `ResizablePanelGroup`'s
+  own doc comment so a future reader doesn't reach for a competing default
+  again. The general lesson — this library's plain string-concatenation
+  `mergeClassNames` has no `tailwind-merge`-style override resolution, so a
+  component's own default Tailwind class can silently outrank a consumer's
+  override of the *same CSS property* depending on unrelated build/scan
+  order — applies anywhere a component ships a same-property default a
+  caller might reasonably want to replace, not just here.
+- A `ResizableHandle` resizes only its immediate previous and next sibling,
+  reading and writing their sizes straight off the DOM by adjacency — the
+  same reasoning `Carousel` reads its slides from
+  `containerRef.current.children` rather than a separate id/registration
+  system. There's no group-wide context tracking every panel's size,
+  because a handle never needs to know about panels it isn't between; the
+  only thing panels put in context is the group's `orientation`, needed
+  purely for which CSS properties/keys to read (`width`/`height`,
+  `clientX`/`clientY`, `ArrowLeft`/`ArrowRight` vs `ArrowUp`/`ArrowDown`).
+- Panel resizing is applied by writing `flexGrow`/`flexShrink`/`flexBasis`
+  directly onto the panel DOM nodes during `pointermove`, not through React
+  state re-rendered every frame — a drag can fire many times a second, and
+  nothing about a resize needs a re-render (no other part of the tree reads
+  a panel's current size back). This is the same trade-off `Carousel` makes
+  calling `scrollIntoView` directly rather than animating a controlled
+  `scrollLeft` through state.
+- `minSize`/`maxSize` live on each `ResizablePanel` as `data-*` attributes,
+  read back by whichever handle ends up adjacent to it, rather than passed
+  down through context or read from a prop on the handle itself — a handle
+  shouldn't need to be told what its neighbors' constraints are; it should
+  just ask them, the same spirit as reading DOM adjacency instead of an
+  id system.
+- Constraint solving only ever considers the two panels adjacent to the
+  dragged/keyboard-activated handle — dragging a handle in a 3+ panel group
+  never cascades a resize past its immediate neighbors. This is a
+  deliberate scope cut, not an oversight: true cascading (where shrinking
+  one panel below its neighbor's capacity ripples further down the group)
+  needs a whole-group solver, and two-neighbor resizing is what every
+  common "sidebar + content" or "N-pane split" layout actually needs — the
+  same "handle the common case, cut the rest" call `DropdownMenu` makes
+  skipping flip-to-opposite-side placement.
+- `ResizableHandle` is `role="separator"`, focusable, and resizable with
+  the arrow keys (a step per press) and Home/End (jump to the resolved
+  min/max) — the WAI-ARIA window splitter pattern. Dragging is one input
+  method for the same underlying resize, not a separate parallel feature,
+  so both paths go through the same `applyDelta` clamping logic; keyboard
+  interaction isn't a lesser-effort afterthought bolted on top of a
+  pointer-only implementation.
+- `aria-valuenow`/`-min`/`-max` are required on a focusable separator from
+  first render, not only after the first drag — axe caught this directly:
+  setting them lazily inside the drag/keydown handlers left a freshly
+  mounted, never-yet-touched handle failing `aria-required-attr`. Fixed
+  with a `useLayoutEffect` that measures neighbors once at mount and
+  applies a zero-delta "resize" purely to populate those attributes,
+  reusing `applyDelta`'s clamping instead of re-deriving the bounds math
+  a second time.
+- No persistence (e.g. to `localStorage`), no imperative resize API, and no
+  double-click-to-reset-to-`defaultSize` — all genuinely separate features
+  a caller can layer on top (persistence in particular is trivially a
+  `defaultSize` computed from whatever a caller already reads/writes), the
+  same "no upload progress, no lightbox" scope-cut spirit as `Attachment`.
+- Verified this component's own tests need `getBoundingClientRect()`
+  stubbed to reflect committed inline styles (not fixed values) in
+  `Resizable.test.tsx` — jsdom has no layout engine, so without that a
+  second interaction in the same test (e.g. two consecutive keypresses)
+  would always measure the *initial* render instead of the result of the
+  first interaction, unlike a real browser. Same underlying jsdom
+  limitation `Drawer`'s pinned-edge test hit, addressed the same way:
+  assert what the mechanism actually produces rather than something jsdom
+  fundamentally can't compute.
+
 ## Select
 
 - Not built on a native `<select>` — the one place in this library where
