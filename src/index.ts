@@ -12,3 +12,4 @@ export * from "./components/DropdownMenu";
 export * from "./components/Input";
 export * from "./components/Pagination";
 export * from "./components/RadioGroup";
+export * from "./components/Select";

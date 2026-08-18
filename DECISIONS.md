@@ -426,3 +426,63 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
 - No bundled label component, matching `Checkbox`/`Input`: an ordinary
   `<label>` wrapping a `RadioGroupItem` and its text already associates
   the two and makes clicking the text select the radio, natively.
+
+## Select
+
+- Not built on a native `<select>` — the one place in this library where
+  the usual "restyle the real native element" approach (`Checkbox`,
+  `RadioGroup`, `Input`) doesn't hold up: most browsers don't let CSS
+  reach the open dropdown's own `<option>` list at all (padding, hover
+  color, radius are outside its control), so getting the sleek, consistent
+  look the rest of this library has means a trigger button plus a popup
+  listbox instead.
+- Not built *on* `ContextMenu` either, unlike `DropdownMenu`. It draws on
+  the exact same proven techniques (native popover, `requestAnimationFrame`-
+  deferred `showPopover()`, scroll lock, roving keyboard focus via real DOM
+  focus) — but as a fresh, self-contained implementation, because a
+  listbox's semantics (`role="listbox"`/`"option"`, `aria-selected`, a
+  persistent single selection) differ from a menu's (`role="menu"`/
+  `"menuitem"`, activate-and-close) enough that reusing `ContextMenu`'s
+  components directly would mean parameterizing their roles and item
+  selectors to serve a second, meaningfully different pattern — more
+  indirection than the reuse would actually save. `DropdownMenu` reuses
+  `ContextMenu` precisely because it *is* structurally identical (same
+  role, same item selector, just re-triggered); `Select` isn't.
+- Verified directly via axe that `role="listbox"` doesn't permit a
+  `role="separator"` child the way `role="menu"` does (the ARIA spec's
+  required-owned-elements differ between the two patterns) — `SelectSeparator`
+  therefore renders with no ARIA role at all, unlike `ContextMenuSeparator`.
+  This surfaced only by actually running the accessibility check, not from
+  reasoning about the two patterns' surface similarity beforehand.
+- Also verified directly via axe: `SelectTrigger`'s `role="combobox"`
+  doesn't get "name from content" the way a plain `<button>` does, so
+  visible text alone (via `SelectValue`) isn't a sufficient accessible
+  name — it needs a wrapping `<label>` or `aria-label`, exactly like a
+  native `<select>` does. This is a real requirement of the role, not a
+  gap in this component to fix, so every story wraps `SelectTrigger` in a
+  `<label>` to model that rather than the component trying to supply a
+  name on a caller's behalf.
+- `SelectContent` measures the trigger's width when opening and applies it
+  as the panel's `min-width` — a native `<select>`'s dropdown is never
+  narrower than the closed control, and a listbox that's narrower than its
+  own trigger reads as visually broken in a way a menu positioned at a
+  cursor point doesn't have an equivalent expectation for.
+- On open, focus resumes on the already-selected option (falling back to
+  the first) rather than always the first, the same way a native
+  `<select>`'s dropdown opens scrolled to your last choice — `DropdownMenu`
+  has no equivalent concept, since its items don't represent a persistent
+  selection.
+- Selecting an option, and dismissing without one (Escape, an outside
+  click), both return focus to the trigger — handled in one place
+  (`SelectContent`'s `onToggle` handler) since native `hidePopover()`
+  fires a `toggle` event regardless of which of those closed it, rather
+  than duplicating a `.focus()` call at each call site. `ContextMenu`/
+  `DropdownMenu` don't do this, since returning focus to "whatever was
+  right-clicked" or "the menu button" isn't expected there the way
+  returning to a select control after choosing a value is.
+- Typeahead (jumping to an option by typing its first letter, standard
+  native `<select>` behavior) isn't included in this pass — it needs a
+  buffered, timeout-reset input model that's a genuinely separate chunk of
+  complexity from arrow-key roving focus, the same kind of deliberate
+  scope cut `ContextMenu` documents for submenus and `DropdownMenu` for
+  `align`/flip placement, not an oversight.
