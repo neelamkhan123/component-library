@@ -660,3 +660,28 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   oversight. The exit animation is a plain fade in place (no directional
   slide) specifically so it doesn't visually imply a swipe affordance that
   isn't actually implemented.
+
+## Toggle
+
+- A distinct primitive from `Switch`, not a restyled version of it: a
+  toggle button is for a toolbar-style on/off *action* (bold/italic
+  formatting, a view filter) rather than a persistent form value, so it
+  renders a native `<button aria-pressed>` instead of `Switch`'s
+  `<input type="checkbox" role="switch">`. Per WAI-ARIA, a button with
+  `aria-pressed` already *is* a complete toggle button — unlike every
+  other state-driven control in this library, there's no role to
+  recategorize (a `<button>`'s implicit role is already right) and no
+  native form element being restyled underneath; it's just a `<button>`
+  with one attribute carrying both the accessibility state and, via
+  Tailwind's built-in `aria-pressed:` variant, the pressed styling too —
+  the same "let the real attribute drive the look" approach `Input`'s
+  `aria-invalid:` and `Checkbox`'s `checked:` use.
+- Tracks `pressed` with its own `useState`, unlike `Checkbox`/`Switch`,
+  which defer their controlled/uncontrolled `checked` to the native
+  `<input>` itself. A plain `<button>` has no built-in notion of a
+  persistent pressed state the way a checkbox input does, so there's no
+  native mechanism here to defer to in the first place.
+- `size="icon"` (matching `Button`'s own icon-size variant exactly) is
+  included from the start rather than treated as an add-on, since a
+  `Toggle`'s single most common real shape — a lone icon in a formatting
+  toolbar — is an icon-only button, not one with a visible text label.
