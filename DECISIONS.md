@@ -588,3 +588,75 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   the JS alternative — measuring `scrollHeight` and resizing on every
   input — is a meaningfully separate feature, not a natural extension of
   what's here, so it's a deliberate scope cut rather than an oversight.
+
+## Toast
+
+- The one component in this library that isn't composed declaratively in
+  JSX: `toast()` is a plain function, callable from anywhere — a click
+  handler, a promise's `.catch()`, code with no component above it at all
+  — which is the whole point of a toast (the thing that tells you an
+  action succeeded or failed generally isn't rendered by the same
+  component that triggered the action). That rules out React context or
+  component state as the source of truth, since neither is reachable from
+  outside a component tree; the toast list lives in a plain module-level
+  store instead, and `Toaster` reads it via `useSyncExternalStore` — the
+  API React itself provides specifically for a component to subscribe to
+  state that isn't React's.
+- `Toaster` renders into a `createPortal(..., document.body)` — the one
+  component here that uses a portal. Every other "floats above everything"
+  component got that from a native platform feature instead (`Dialog`'s
+  `<dialog>` top layer, `ContextMenu`/`Select`'s `popover` top layer), but
+  there's no equivalently clean native primitive for a passive,
+  non-modal notification stack — a portal plus fixed positioning and a
+  high `z-index` is the standard, pragmatic answer real toast libraries
+  reach for in that gap, not a first choice being passed over.
+- Also the one component needing an SSR-safety mount guard (rendering
+  `null` until a `useEffect` confirms the client has mounted, before
+  calling `createPortal`) — `document.body` doesn't exist during server
+  rendering, and unlike every other component here, a portal needs it at
+  render time, not just inside an effect the way `Dialog`'s
+  `document.body.style.overflow` does.
+- Each toast gets its own `role="status"` (or `role="alert"` for
+  `variant="destructive"`) rather than one shared live region wrapping the
+  whole stack — both roles already imply the right `aria-live` politeness
+  level on their own, and a screen reader announces content the moment
+  it's inserted into either kind of region, so a freshly-mounted toast
+  gets announced simply by existing. A single shared region covering
+  every toast would need to diff "what actually changed" itself to get
+  the same result.
+- The enter animation uses `@starting-style` on a plain, freshly-inserted
+  `<div>` — no popover or `<dialog>` involved, unlike everywhere else this
+  library uses that CSS feature. `@starting-style` applies to any element
+  on its first successful style update, not only elements toggling out of
+  `display: none`, so a brand-new toast being appended to the list
+  qualifies on its own.
+- The exit removal is the classic two-phase technique instead — flag the
+  toast `closing`, let its CSS transition play, then actually drop it from
+  the array after a `setTimeout` matched to that transition's duration.
+  There's no discrete native toggle to hook into here the way `<dialog>`'s
+  `close` event or a popover's `toggle` event give `Dialog`/`ContextMenu`
+  their removal timing for free, since a toast is just a plain array
+  entry with no browser-native open/closed state of its own.
+- Hovering a toast pauses its auto-dismiss timer, restarting it with the
+  full `duration` on mouse-leave rather than precisely tracking and
+  resuming the remaining time. That's a deliberate, minor simplification
+  — it means hovering briefly then leaving resets the countdown a little
+  more generously than the strictest reading of "paused" would, which
+  errs toward not dismissing a message out from under someone reading it
+  rather than the reverse.
+- Reusing an `id` across `toast()` calls updates that toast in place
+  instead of stacking a duplicate, supporting a "Loading…" → "Done!"
+  pattern as one continuous notification rather than two. This mirrors
+  Sonner's real-world API shape deliberately: for the one component here
+  that's an imperative function rather than a set of composable elements,
+  following an established, widely-used API design is worth more than
+  inventing a new shape from scratch, the same instinct behind borrowing
+  the WAI-ARIA APG patterns verbatim for every ARIA-role-driven component
+  in this library.
+- Swipe-to-dismiss isn't included in this pass — a real gap next to mature
+  toast libraries, and a genuinely separate chunk of pointer-gesture
+  handling from anything else here, so it's a deliberate scope cut in the
+  same spirit as `ContextMenu`'s submenus or `Select`'s typeahead, not an
+  oversight. The exit animation is a plain fade in place (no directional
+  slide) specifically so it doesn't visually imply a swipe affordance that
+  isn't actually implemented.
