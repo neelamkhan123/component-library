@@ -390,3 +390,39 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   that's state this component doesn't own, so `disabled` is just forwarded
   through `ButtonHTMLAttributes` for a caller to set from `currentPage`/
   `totalPages` however it already tracks them.
+
+## RadioGroup
+
+- `RadioGroupItem` renders a real `<input type="radio">`, restyled with
+  `appearance-none`, the same treatment `Checkbox` gives its own input —
+  but radio inputs get *more* out of that choice than checkboxes do:
+  every item in a `RadioGroup` shares one `name` (generated via `useId()`
+  if a caller doesn't supply one), so mutual exclusivity comes from the
+  browser the way it always would for a plain HTML form, and arrow-key
+  navigation between options — moving both focus and selection together —
+  is native `<input type="radio">` behavior with a shared `name`, not
+  something this component implements. Verified directly that this holds
+  even under jsdom (unlike, notably, `ContextMenu`'s popover-related native
+  behaviors, which jsdom doesn't implement at all) — arrow-key navigation
+  between grouped radios is old, stable, universally-supported browser
+  behavior in a way the Popover API isn't yet, so it didn't need the same
+  real-Chromium verification `ContextMenu`'s "Interactive" story provides
+  for its own native-behavior claims.
+- Neither the group nor `RadioGroupItem` sets an explicit ARIA role: a
+  native `<input type="radio">` already has an implicit role of `radio`,
+  and its `checked` property is already the accessibility-tree-exposed
+  state — unlike `AccordionTrigger` or `ContextMenuItem`, which render a
+  `<button>` and need their role explicitly recategorized for the widget
+  they're part of, there's nothing to override here.
+- `RadioGroup` renders `<div role="radiogroup">` rather than a native
+  `<fieldset>`/`<legend>` pair, even though a `<fieldset>` is the more
+  purely "native" way to group and name a set of form controls. `<legend>`
+  is notoriously fiddly to style consistently, and `role="radiogroup"` +
+  a caller-supplied `aria-label`/`aria-labelledby` is a well-established,
+  fully accessible alternative other component libraries reach for for
+  exactly that reason — the same kind of pragmatic call `Breadcrumb`/
+  `Pagination` make using `nav` + `aria-label` rather than some more
+  exotic native list-of-links element.
+- No bundled label component, matching `Checkbox`/`Input`: an ordinary
+  `<label>` wrapping a `RadioGroupItem` and its text already associates
+  the two and makes clicking the text select the radio, natively.
