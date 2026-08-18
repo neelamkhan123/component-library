@@ -521,3 +521,40 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
 - No bundled label, matching `Checkbox`/`RadioGroup`/`Input`: an ordinary
   `<label>` wrapping a `Switch` and its text already associates the two
   and makes clicking the text toggle it, natively.
+
+## Tabs
+
+- Arrow keys move focus *and* switch the active tab together —
+  "automatic activation," in the WAI-ARIA Tabs pattern's own terms —
+  unlike the roving focus in `ContextMenu`/`Select`, where arrow keys only
+  move focus and a separate click/Enter confirms a choice. This is a
+  deliberate difference in kind, not an inconsistency to reconcile: tabs
+  switching as you arrow through them is the expected behavior (a browser's
+  own tab strip works the same way), whereas a menu or listbox option might
+  represent a destructive or otherwise consequential action you shouldn't
+  trigger just by passing through it on the way to what you actually meant
+  to pick.
+- Only the active tab has `tabIndex={0}`; every other `TabsTrigger` is
+  `tabIndex={-1}` — standard roving tabindex for this pattern, so pressing
+  Tab moves past the whole tab strip in one step (into the active panel,
+  since `TabsContent` is itself `tabIndex={0}`) rather than through every
+  tab in it. `ContextMenu`'s/`Select`'s popups use the simpler "just call
+  `.focus()` on the next item" approach instead, since Tab doesn't need to
+  skip past them the same way — closing them takes it out of the tab order
+  entirely.
+- `TabsContent` renders only the active panel — inactive ones return
+  `null`, not hidden-but-mounted the way `Accordion`'s closed content
+  stays mounted (there, to animate open again). Switching tabs isn't
+  animated here, so there's nothing to gain from keeping inactive panels
+  around, and unmounting is simpler than `Accordion`'s `inert`-while-closed
+  treatment. The trade-off is real and undocumented nowhere else but
+  here: a panel's own state (scroll position, an uncontrolled input's
+  value) is lost when you switch away and won't be there if you switch
+  back.
+- `orientation="vertical"` is supported (swapping ArrowLeft/Right for
+  ArrowUp/Down, and `TabsList`'s layout from a row to a column) rather than
+  deferred the way `DropdownMenu` defers `align` or `Select` defers
+  typeahead — the WAI-ARIA Tabs pattern documents vertical orientation as
+  a first-class variant, not a nice-to-have layered on top, so leaving it
+  out would make horizontal-only tabs feel like an incomplete
+  implementation of the pattern rather than a deliberately scoped one.
