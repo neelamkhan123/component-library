@@ -30,6 +30,65 @@
   switches to independent per-item state for cases like a multi-section reading
   view where more than one panel should stay open together.
 
+## Attachment
+
+- Written alongside `Bubble` and `Message`, for someone building a chat
+  UI — a purpose named directly rather than left implicit, since it
+  explains a few choices below that a generic "file display" component
+  wouldn't need to make.
+- Forwards its ref to a plain `<div>` unconditionally, never to the `<a>`
+  that appears inside it when `url` is given. `Attachment` renders two
+  structurally different things (an image wrapped in a link, or a file
+  row optionally wrapped in one) depending on props, and a `forwardRef`
+  can only ever point at one fixed element type — making that type an `<a>`
+  when a `url` happens to be present and a `<div>` otherwise would mean
+  the ref's own type depended on a prop's value, which isn't expressible
+  without an unsound cast. Keeping the outer element a `<div>` in every
+  case, with the real link nested inside it when there is one, sidesteps
+  that entirely instead of reaching for one.
+- The interactive element is a real `<a href>` — `download` for a file,
+  `target="_blank"` for an image — not a `<div>` with an `onClick`. Worth
+  knowing, and noted directly in the prop docs rather than left to be
+  discovered: browsers only honor the `download` attribute for same-origin
+  URLs (or ones a CORS response explicitly permits); for anything else,
+  clicking a file attachment opens it in a new tab instead of downloading
+  it, which is exactly what `target="_blank"` on the same link falls back
+  to doing.
+- `type` (`"image"` or `"file"`) is explicit, not inferred from the URL —
+  deliberately, even though guessing from a file extension is possible.
+  Real attachment URLs are routinely extension-less (signed cloud-storage
+  links, API endpoints), so inference would be right often enough to seem
+  reliable and then fail unpredictably on exactly the URLs a real chat
+  backend tends to produce — an explicit, always-correct prop beats a
+  usually-correct guess here.
+- No upload/download progress state, and no image lightbox (clicking an
+  image just opens it at full size in a new tab). Both are genuinely
+  separate features — progress needs to represent an in-flight operation
+  this component has no visibility into, and a proper lightbox is close
+  to its own small component — so both are deliberate scope cuts for this
+  pass, the same spirit as `ContextMenu`'s submenus or `DataTable`'s
+  filtering.
+- `onRemove` is the one prop that changes an image attachment's whole
+  layout: given it, the full-size linked photo becomes a small captioned
+  thumbnail (name and size below it, like a composer's upload picker)
+  with no `<a>` at all. That's deliberate rather than incidental — a
+  pending upload isn't something to click through to full size yet, and
+  the two states (posted vs. staged) never coexist for the same
+  attachment, so branching on `onRemove` avoids a separate `variant` prop
+  that would just track the same distinction `url`/`onRemove` already
+  makes.
+- The remove button is a sibling of the `<a>`, never nested inside it,
+  even on the file row where both sit in the same flex container — an
+  interactive element inside another interactive element is invalid HTML
+  and produces unpredictable activation behavior, the same reason
+  `SelectSeparator` lost its ARIA role earlier rather than nesting roles
+  that don't support each other.
+- No dedicated "attachment group" wrapper for laying out several pending
+  uploads side by side — a plain `flex gap-3` around a few `Attachment`s
+  does it, the same choice `Bubble` and `Message` already made for
+  stacking a conversation instead of shipping a list component around a
+  single child type.
+
 ## Avatar
 
 - `AvatarImage` always mounts, even with a `src` that might 404 — its load
@@ -75,6 +134,22 @@ aria-current="page">` rather than a link standing in for one. Other
   announce each item's position from the `<ol>` itself (e.g. "2 of 3"), so
   an unhidden separator glyph between every pair of items would be
   redundant noise on top of that, not new information.
+
+## Bubble
+
+- Self-aligning: an `"outgoing"` `Bubble` applies its own `margin-left:
+  auto` rather than expecting a wrapping layout component to position it.
+  This was a deliberate choice for approachability, not just economy — the
+  intended audience for this one (see `Attachment`'s entry) includes
+  someone building their first chat UI, and a plain `flex flex-col` of
+  bare `Bubble`s already looks like a working conversation with nothing
+  else to learn first. `Message` exists for when an avatar, sender name,
+  or timestamp is also needed, not because `Bubble` requires it.
+- No ARIA role beyond what a plain `<div>` already has. A chat bubble is
+  visual content, not a distinct interactive widget the way `role="alert"`
+  or `role="status"` mark `Toast`'s notifications as — reading it is just
+  reading the page, which native document flow and each bubble's own text
+  content already handle correctly on their own.
 
 ## Button
 
@@ -303,6 +378,20 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   doesn't animate a `scale-*`/`translate-*` utility. List the specific property
   (`scale`, `translate`) instead. This only shows up with real CSS loaded and
   computed styles sampled mid-transition; DOM-only assertions won't catch it.
+- jsdom (used by every `*.test.tsx` file, including this one) doesn't
+  implement `HTMLDialogElement.showModal()`/`.close()` at all — a known
+  upstream gap (jsdom/jsdom#3294) — even though it does support the
+  reflected `open` attribute. `vitest.setup.ts` polyfills both onto
+  `HTMLDialogElement.prototype` for the whole `unit` test project, since
+  `Drawer` sits on this same native `<dialog>` foundation and would hit the
+  identical gap. Worth knowing separately: this project's jsdom tests were
+  scaffolded but never actually wired into `vitest.config.ts` (the project
+  entry was left commented out from the initial Storybook init) until this
+  was noticed while verifying an unrelated `Attachment` change — every
+  `*.test.tsx` in the repo, this one included, had never actually run
+  before. All were fixed and are now genuinely green; see `vitest.setup.ts`
+  and the `Drawer` section above for the two real bugs that surfaced once
+  they finally ran.
 
 ## Drawer
 
@@ -321,6 +410,20 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   which would otherwise just shrink-wrap the content instead of filling the
   edge) rather than centering, and slides in/out with the same
   `@starting-style` + `allow-discrete` + `motion-reduce:` pattern as `Dialog`.
+- `side="top"` was documented and unit-tested from early on but the actual
+  `cva` variant was missing — undetected because `*.test.tsx` files were
+  excluded from `tsconfig.json`'s typecheck and, separately, the jsdom
+  project in `vitest.config.ts` was never wired into `projects` (see the
+  `vitest.config.ts`/`vitest.setup.ts` note below), so neither a type error
+  nor a failing test ever surfaced it. Implemented now, with a `Top` story
+  added alongside `Right`/`Left`/`Bottom`.
+- The per-`side` "pins flush against that edge" test asserts the
+  `cva`-generated positioning classes (`inset-x-0 top-0`, etc.) rather than
+  `getBoundingClientRect()` — jsdom has no layout engine, so a rect read
+  there is always all-zero regardless of the actual CSS. The
+  Storybook/Chromium project's stories render the real thing for real
+  layout; the jsdom test can only meaningfully check the mechanism that
+  produces it.
 
 ## Dropdown Menu
 
@@ -397,6 +500,40 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   component is actually used, and the native attribute has no visual
   effect once a `width` is already set via `className` anyway (which is
   the norm here, given `Input` has no default width itself).
+
+## Message
+
+- Written alongside `Bubble` and `Attachment` (see those entries) — the
+  third piece of the same chatbox-building trio.
+- Owns the row's *layout* only — avatar placement, alignment, the sender/
+  timestamp line — and takes its content as children rather than
+  rendering a `Bubble` internally. The same layout-versus-content split
+  `Card`'s `CardHeader` and `Dialog`'s `DialogHeader` draw for their own
+  families, chosen here for the same reason: it's what lets a "burst" of
+  several quick `Bubble`s, or a `Bubble` alongside an `Attachment`, sit
+  under one avatar and timestamp without `Message` needing to know
+  anything about either of those components. A version that rendered a
+  `Bubble` internally would be one line shorter to use for the single-
+  bubble case and unable to express either of those without a second,
+  bubble-less variant.
+- `avatar` is a plain `ReactNode` slot, not a `size` prop forwarded to an
+  internal `Avatar`. `Message` has no way to safely inject props into
+  arbitrary children (that's what a `cloneElement`-based API would
+  attempt, and it's fragile against whatever the child actually turns out
+  to be), so instead of a narrow, `Avatar`-specific integration, any
+  avatar — sized however the caller wants, or not an `Avatar` at all — is
+  equally well supported by just being handed the slot directly. The
+  `Avatar` composed into the stories uses `size="sm"`, which reads as the
+  natural chat-appropriate scale, but that's a documentation choice, not
+  something `Message` enforces.
+- `sender`/`timestamp` are also plain `ReactNode`, not a `Date` with
+  built-in formatting. Timestamp formatting (relative "2m ago" vs. an
+  absolute time, locale, 12- vs. 24-hour) is a real design decision every
+  chat app makes differently, and baking in one formatting opinion would
+  mean fighting it in every app that made a different one — passing
+  already-formatted content (a plain string, or a real `<time dateTime>`
+  for correct semantics, entirely up to the caller) sidesteps having an
+  opinion here at all.
 
 ## Pagination
 

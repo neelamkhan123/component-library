@@ -103,27 +103,23 @@ test("clicking the backdrop closes the drawer", async () => {
   );
 });
 
-test.each([["top"], ["right"], ["bottom"], ["left"]] as const)(
-  "side=%s pins the panel flush against that edge of the viewport",
-  async (side) => {
-    render(<FullDrawer side={side} />);
-    const dialog = await screen.findByRole("dialog");
-    await waitFor(() => expect(dialog).toBeVisible());
-
-    // The slide-in transition is still running for a moment after the
-    // dialog becomes visible, so poll the rect until it settles rather than
-    // reading it once.
-    await waitFor(() => {
-      const rect = dialog.getBoundingClientRect();
-      if (side === "top") expect(rect.top).toBeCloseTo(0, 0);
-      if (side === "bottom")
-        expect(rect.bottom).toBeCloseTo(window.innerHeight, 0);
-      if (side === "left") expect(rect.left).toBeCloseTo(0, 0);
-      if (side === "right")
-        expect(rect.right).toBeCloseTo(window.innerWidth, 0);
-    });
-  },
-);
+// jsdom has no layout engine — `getBoundingClientRect()` always returns an
+// all-zero rect, so real pinned-edge geometry can't be asserted here. What
+// actually pins the panel flush against an edge is `drawerContentVariants`'
+// per-`side` utility classes (see Drawer.tsx), so check those instead; the
+// Storybook/Chromium project's `Top`/`Right`/`Bottom`/`Left` stories are
+// what render this for real, in a browser with real layout.
+test.each([
+  ["top", ["inset-x-0", "top-0"]],
+  ["right", ["inset-y-0", "right-0"]],
+  ["bottom", ["inset-x-0", "bottom-0"]],
+  ["left", ["inset-y-0", "left-0"]],
+] as const)("side=%s pins the panel flush against that edge of the viewport", async (side, expectedClasses) => {
+  render(<FullDrawer side={side} />);
+  const dialog = await screen.findByRole("dialog");
+  await waitFor(() => expect(dialog).toBeVisible());
+  expect(dialog).toHaveClass(...expectedClasses);
+});
 
 test("DrawerContent merges a custom className with its defaults", async () => {
   render(

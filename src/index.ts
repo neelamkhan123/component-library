@@ -1,6 +1,8 @@
 export * from "./components/Accordion";
+export * from "./components/Attachment";
 export * from "./components/Avatar";
 export * from "./components/Breadcrumb";
+export * from "./components/Bubble";
 export * from "./components/Button";
 export * from "./components/Card";
 export * from "./components/Carousel";
@@ -11,6 +13,7 @@ export * from "./components/Dialog";
 export * from "./components/Drawer";
 export * from "./components/DropdownMenu";
 export * from "./components/Input";
+export * from "./components/Message";
 export * from "./components/Pagination";
 export * from "./components/RadioGroup";
 export * from "./components/Select";

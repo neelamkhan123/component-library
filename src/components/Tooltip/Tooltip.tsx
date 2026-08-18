@@ -132,10 +132,23 @@ export type TooltipTriggerProps = HTMLAttributes<HTMLSpanElement>;
  * hover alone.
  */
 export const TooltipTrigger = forwardRef<HTMLSpanElement, TooltipTriggerProps>(
-  ({ onMouseEnter, onMouseLeave, onFocus, onBlur, tabIndex, className, ...props }, ref) => {
+  (
+    {
+      onMouseEnter,
+      onMouseLeave,
+      onFocus,
+      onBlur,
+      tabIndex,
+      className,
+      ...props
+    },
+    ref,
+  ) => {
     const { onOpenChange, delayDuration, side, contentId, triggerRef } =
       useTooltipContext("TooltipTrigger");
-    const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+    const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+      undefined,
+    );
 
     const computePosition = useCallback((): Position => {
       const trigger = triggerRef.current;
@@ -163,7 +176,10 @@ export const TooltipTrigger = forwardRef<HTMLSpanElement, TooltipTriggerProps>(
         if (immediate) {
           onOpenChange(true, computePosition());
         } else {
-          timerRef.current = setTimeout(() => onOpenChange(true, computePosition()), delayDuration);
+          timerRef.current = setTimeout(
+            () => onOpenChange(true, computePosition()),
+            delayDuration,
+          );
         }
       },
       [onOpenChange, computePosition, delayDuration],
@@ -316,8 +332,12 @@ export const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
     useEffect(() => {
       if (!open) return;
       const handleScroll = () => onOpenChange(false);
-      window.addEventListener("scroll", handleScroll, { capture: true, passive: true });
-      return () => window.removeEventListener("scroll", handleScroll, { capture: true });
+      window.addEventListener("scroll", handleScroll, {
+        capture: true,
+        passive: true,
+      });
+      return () =>
+        window.removeEventListener("scroll", handleScroll, { capture: true });
     }, [open, onOpenChange]);
 
     if (!mounted) return null;
@@ -330,7 +350,7 @@ export const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
         popover="manual"
         style={{ top: position.y, left: position.x, ...style }}
         className={mergeClassNames(
-          "fixed inset-auto m-0 max-w-xs rounded-lg bg-slate-950 px-2.5 py-1.5 text-xs text-white shadow-[rgba(0,0,0,0.05)_0px_6px_24px_0px,_rgba(0,0,0,0.08)_0px_0px_0px_1px] dark:bg-white dark:text-slate-950",
+          "fixed inset-auto m-0 max-w-xs rounded-lg bg-slate-950 px-2.5 py-1.5 text-xs text-white shadow-[rgba(0,0,0,0.05)_0px_6px_24px_0px,rgba(0,0,0,0.08)_0px_0px_0px_1px] dark:bg-white dark:text-slate-950",
           "scale-95 opacity-0 transition-[opacity,scale,overlay,display] transition-discrete duration-100 ease-out motion-reduce:transition-none [&:popover-open]:scale-100 [&:popover-open]:opacity-100 starting:[&:popover-open]:scale-95 starting:[&:popover-open]:opacity-0",
           className,
         )}
