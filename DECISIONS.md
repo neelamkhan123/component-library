@@ -558,3 +558,33 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   a first-class variant, not a nice-to-have layered on top, so leaving it
   out would make horizontal-only tabs feel like an incomplete
   implementation of the pattern rather than a deliberately scoped one.
+
+## Textarea
+
+- `Input`'s sibling in every respect but the element: same border/focus/
+  disabled visual language, and invalid state is styled off `aria-invalid`
+  directly for the exact reasoning `Input`'s entry gives (it's already the
+  real signal a caller sets for assistive tech, so a separate `invalid`
+  prop would just be a second place to keep it in sync).
+- No `size` variant, unlike `Input`'s `"sm"`/`"md"`/`"lg"` — a text field's
+  height is a fixed, meaningful visual weight (`h-8`/`h-10`/`h-12`), but a
+  textarea's height is inherently content-driven (`rows`) and usually
+  meant to be resized by whoever's typing into it, so a preset height
+  scale would fight both of those rather than usefully describing the
+  control the way it does for `Input`.
+- Resizing is restricted to vertical only (`resize-y`, not the browser
+  default of both axes), and disabled entirely once the field itself is
+  `disabled` (`disabled:resize-none`) — horizontal resizing routinely
+  breaks a form's column layout in a way vertical resizing doesn't, and a
+  disabled field shouldn't invite an interaction (dragging a resize
+  handle) that looks like it does something.
+- `rows` defaults to `3` rather than leaving the unset native default of
+  `2`, which reads as noticeably cramped for a control whose entire reason
+  for existing (over `Input`) is holding more than one line.
+- Auto-grow-with-content isn't included in this pass. The modern CSS
+  answer, `field-sizing: content`, doesn't yet clear the browser-support
+  bar this library holds other native-platform choices to (see `ContextMenu`
+  on CSS anchor positioning for the same reasoning applied elsewhere), and
+  the JS alternative — measuring `scrollHeight` and resizing on every
+  input — is a meaningfully separate feature, not a natural extension of
+  what's here, so it's a deliberate scope cut rather than an oversight.
