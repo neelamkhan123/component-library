@@ -486,3 +486,38 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   complexity from arrow-key roving focus, the same kind of deliberate
   scope cut `ContextMenu` documents for submenus and `DropdownMenu` for
   `align`/flip placement, not an oversight.
+
+## Switch
+
+- `Switch` is `Checkbox`'s sibling, not a new invention: WAI-ARIA
+  describes the `switch` role as literally "a checkbox that can be used as
+  a switch," so this renders a real `<input type="checkbox" role="switch">`
+  — the same native-element-plus-role-override technique `ContextMenuItem`/
+  `AccordionTrigger` use for a `<button>`, applied here to a checkbox
+  instead. Keyboard toggling (Space), focus, label association, and native
+  `<form>` participation all come from the browser as a result, exactly as
+  they do for `Checkbox`.
+- No `indeterminate` equivalent, unlike `Checkbox` — a switch is always
+  simply on or off; there's no real-world "partially on" switch the way a
+  "select all" checkbox has a genuine mixed state to represent, so
+  `SwitchProps` doesn't carry the `boolean | "indeterminate"` shape
+  `CheckedState` gives `Checkbox`.
+- The sliding thumb needs `translate-x` (driven by `peer-checked`, on an
+  `aria-hidden` sibling span layered over the real input, the same overlay
+  structure `Checkbox`'s Check/Minus icons use) rather than `Checkbox`'s
+  opacity fade — a switch's whole visual language is "the thumb moved to
+  the other side," where a checkbox's is "a mark appeared," so the same
+  peer-driven-overlay technique animates a different property.
+- The thumb is a fixed white circle in almost every state, relying on a
+  small `shadow-sm` rather than color contrast to read against a light
+  "off" track — except in dark mode's "on" state, where the track itself
+  becomes white (matching the checked/active/selected "inverted
+  high-contrast color" language used everywhere else in this library —
+  `Checkbox`, `Button`'s default variant, `PaginationLink`'s `isActive`),
+  which would make a white thumb disappear against it. `dark:peer-checked:
+  bg-slate-950` is the one place the thumb's color changes, and it's there
+  specifically to stay visible against that one combination, not a
+  stylistic flourish.
+- No bundled label, matching `Checkbox`/`RadioGroup`/`Input`: an ordinary
+  `<label>` wrapping a `Switch` and its text already associates the two
+  and makes clicking the text toggle it, natively.
