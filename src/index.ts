@@ -18,3 +18,4 @@ export * from "./components/Tabs";
 export * from "./components/Textarea";
 export * from "./components/Toast";
 export * from "./components/Toggle";
+export * from "./components/Tooltip";

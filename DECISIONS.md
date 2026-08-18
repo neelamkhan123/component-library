@@ -685,3 +685,65 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   included from the start rather than treated as an add-on, since a
   `Toggle`'s single most common real shape — a lone icon in a formatting
   toolbar — is an icon-only button, not one with a visible text label.
+
+## Tooltip
+
+- Hover- and focus-triggered, not click-triggered — the one thing that
+  most separates this from `ContextMenu`/`DropdownMenu`/`Select`. It also
+  never receives focus itself, never traps focus, and — unlike every
+  other popover-based component in this library — does **not** lock
+  background scroll while open: a tooltip is a transient hint alongside
+  whatever you're already doing, not something you step into the way a
+  menu or a modal is, so treating it as if it were would be actively
+  wrong, not just unnecessary.
+- Focus shows the tooltip immediately; hover waits `delayDuration`
+  (default `300`ms). This is deliberate, not an inconsistency: focus is a
+  discrete, deliberate action a keyboard user took, where a mouse passing
+  over incidentally on its way elsewhere is exactly what the hover delay
+  exists to absorb.
+- `TooltipTrigger` renders a plain `<span tabIndex={0}>`, not a `<button>`
+  — unlike every other Trigger in this library. A tooltip's trigger is
+  often something with no click behavior at all (a truncated label, a
+  status icon, a piece of defined text mid-sentence), and claiming button
+  semantics for content that does nothing on click/Enter/Space would
+  misdescribe it. The `tabIndex` is what makes it focusable at all, which
+  is what satisfies the WAI-ARIA requirement that a tooltip be reachable
+  by keyboard, not mouse hover alone.
+- `TooltipContent` is a native popover (`popover="manual"`, not `"auto"`)
+  — top-layer rendering (escaping a scrolling ancestor's `overflow:hidden`
+  the way `ContextMenu`'s does) still comes from the browser, but light-
+  dismiss doesn't, since `"auto"`'s outside-click/Escape handling isn't
+  the right mechanism for how a tooltip actually needs to close (on
+  mouse-leave, on blur, and yes still on Escape and a scroll — just
+  triggered by this component's own code instead of the browser's).
+  `showPopover()` is still deferred a frame via `requestAnimationFrame`,
+  the same as `ContextMenu` — verified directly that it's not strictly
+  necessary for a hover/focus-triggered open the way it is for
+  `ContextMenu`'s `contextmenu`-triggered one (there's no competing native
+  handling of a `mouseenter`/`focus` event the way there is for
+  `contextmenu`), but kept anyway for consistency with the one proven
+  opening sequence this library uses for every popover.
+- `TooltipContent` also portals into `document.body` — the second
+  component here to do that, after `Toast`, and for a different reason.
+  Discovered directly, not anticipated: wrapping a `<Tooltip>` around a
+  word inside a `<p>` (a completely ordinary use — annotating a term
+  mid-sentence) produced a real React warning, `<p> cannot contain a
+  nested <div>`, because `TooltipContent`'s `<div>` landed as a literal
+  DOM descendant of the `<p>` it was written inside, regardless of being
+  visually promoted out of the page via `position: fixed` and the popover
+  top layer — HTML content-model validity is about where an element
+  *sits in the tree*, not where it's *drawn*. A portal is the only fix
+  that addresses that at the place it's actually wrong; CSS positioning
+  was never going to touch it, no matter how thoroughly.
+- Position is computed once, at show time — not tracked continuously — so
+  it won't follow the trigger if the page scrolls. Rather than reposition
+  on every scroll event (real complexity for a transient element that's
+  fine to just go away), scrolling dismisses the tooltip instead, the
+  same trade-off `Toast`'s hover-pause makes in the other direction:
+  simple and honest about what it does, over precise and complex.
+- No `TooltipProvider`-style shared "skip the delay if you were just
+  looking at another tooltip" behavior (Radix's Tooltip has this). Each
+  `Tooltip` manages its own delay timer independently. A real, nameable
+  UX polish being left out, not an oversight — deliberately scoped the
+  same way `ContextMenu` leaves out submenus and `Select` leaves out
+  typeahead.

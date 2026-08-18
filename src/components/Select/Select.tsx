@@ -16,7 +16,9 @@ import {
 } from "react";
 import { Check, ChevronDown } from "lucide-react";
 
-function mergeClassNames(...classNames: Array<string | undefined | false>): string {
+function mergeClassNames(
+  ...classNames: Array<string | undefined | false>
+): string {
   return classNames.filter(Boolean).join(" ");
 }
 
@@ -134,7 +136,11 @@ export function Select({
   );
 
   const registerLabel = useCallback((itemValue: string, label: string) => {
-    setLabels((prev) => (prev.get(itemValue) === label ? prev : new Map(prev).set(itemValue, label)));
+    setLabels((prev) =>
+      prev.get(itemValue) === label
+        ? prev
+        : new Map(prev).set(itemValue, label),
+    );
   }, []);
 
   return (
@@ -162,16 +168,36 @@ export type SelectTriggerProps = ButtonHTMLAttributes<HTMLButtonElement>;
 
 /** Opens the listbox when clicked (or with ArrowDown/ArrowUp while closed). Renders a native `<button role="combobox">`, per the WAI-ARIA Select pattern. */
 export const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
-  ({ className, onClick, onKeyDown, type = "button", disabled, children, ...props }, ref) => {
-    const { open, onOpenChange, disabled: groupDisabled, triggerRef, contentId } =
-      useSelectContext("SelectTrigger");
+  (
+    {
+      className,
+      onClick,
+      onKeyDown,
+      type = "button",
+      disabled,
+      children,
+      ...props
+    },
+    ref,
+  ) => {
+    const {
+      open,
+      onOpenChange,
+      disabled: groupDisabled,
+      triggerRef,
+      contentId,
+    } = useSelectContext("SelectTrigger");
     const isDisabled = disabled ?? groupDisabled;
 
     const openListbox = useCallback(() => {
       const trigger = triggerRef.current;
       if (!trigger) return;
       const rect = trigger.getBoundingClientRect();
-      onOpenChange(true, { x: rect.left, y: rect.bottom + 4, width: rect.width });
+      onOpenChange(true, {
+        x: rect.left,
+        y: rect.bottom + 4,
+        width: rect.width,
+      });
     }, [onOpenChange, triggerRef]);
 
     return (
@@ -256,8 +282,15 @@ export type SelectContentProps = HTMLAttributes<HTMLDivElement>;
  */
 export const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
   ({ className, style, onKeyDown, ...props }, ref) => {
-    const { open, position, onOpenChange, contentRef, triggerRef, contentId, value } =
-      useSelectContext("SelectContent");
+    const {
+      open,
+      position,
+      onOpenChange,
+      contentRef,
+      triggerRef,
+      contentId,
+      value,
+    } = useSelectContext("SelectContent");
 
     useLayoutEffect(() => {
       const el = contentRef.current;
@@ -276,12 +309,16 @@ export const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
         el.style.top = `${Math.max(margin, Math.min(position.y, window.innerHeight - rect.height - margin))}px`;
         el.style.minWidth = `${position.width}px`;
 
-        const options = el.querySelectorAll<HTMLElement>('[role="option"]:not(:disabled)');
+        const options = el.querySelectorAll<HTMLElement>(
+          '[role="option"]:not(:disabled)',
+        );
         // Resume on the selected option, the same way a native <select>
         // opens focused where you left off, rather than always the first.
         const selected =
           value !== undefined
-            ? el.querySelector<HTMLElement>(`[role="option"][data-value="${CSS.escape(value)}"]:not(:disabled)`)
+            ? el.querySelector<HTMLElement>(
+                `[role="option"][data-value="${CSS.escape(value)}"]:not(:disabled)`,
+              )
             : null;
         (selected ?? options[0])?.focus();
       });
@@ -318,16 +355,24 @@ export const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
           onKeyDown?.(event);
           if (event.defaultPrevented) return;
           const options = Array.from(
-            contentRef.current?.querySelectorAll<HTMLElement>('[role="option"]:not(:disabled)') ?? [],
+            contentRef.current?.querySelectorAll<HTMLElement>(
+              '[role="option"]:not(:disabled)',
+            ) ?? [],
           );
           if (options.length === 0) return;
-          const currentIndex = options.indexOf(document.activeElement as HTMLElement);
+          const currentIndex = options.indexOf(
+            document.activeElement as HTMLElement,
+          );
           if (event.key === "ArrowDown") {
             event.preventDefault();
-            options[(currentIndex + 1 + options.length) % options.length]?.focus();
+            options[
+              (currentIndex + 1 + options.length) % options.length
+            ]?.focus();
           } else if (event.key === "ArrowUp") {
             event.preventDefault();
-            options[(currentIndex - 1 + options.length) % options.length]?.focus();
+            options[
+              (currentIndex - 1 + options.length) % options.length
+            ]?.focus();
           } else if (event.key === "Home") {
             event.preventDefault();
             options[0]?.focus();
@@ -336,12 +381,17 @@ export const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
             options[options.length - 1]?.focus();
           }
         }}
-        style={{ top: position.y, left: position.x, minWidth: position.width, ...style }}
+        style={{
+          top: position.y,
+          left: position.x,
+          minWidth: position.width,
+          ...style,
+        }}
         className={mergeClassNames(
           // Same `inset-auto`/`m-0` reasoning as ContextMenuContent: clears
           // the popover UA stylesheet's centering so the explicit top/left
           // above aren't fought by an implicit right/bottom/margin:auto.
-          "fixed inset-auto m-0 max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 text-slate-950 shadow-[rgba(0,0,0,0.05)_0px_6px_24px_0px,_rgba(0,0,0,0.08)_0px_0px_0px_1px] dark:border-slate-800 dark:bg-slate-950 dark:text-white",
+          "fixed inset-auto m-0 max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 text-slate-950 shadow-[rgba(0,0,0,0.05)_0px_6px_24px_0px,rgba(0,0,0,0.08)_0px_0px_0px_1px] dark:border-slate-800 dark:bg-slate-950 dark:text-white",
           "scale-95 opacity-0 transition-[opacity,scale,overlay,display] transition-discrete duration-150 ease-out motion-reduce:transition-none [&:popover-open]:scale-100 [&:popover-open]:opacity-100 starting:[&:popover-open]:scale-95 starting:[&:popover-open]:opacity-0",
           className,
         )}
@@ -363,8 +413,19 @@ export interface SelectItemProps extends ButtonHTMLAttributes<HTMLButtonElement>
  * approach `ContextMenuItem`/`AccordionTrigger` use.
  */
 export const SelectItem = forwardRef<HTMLButtonElement, SelectItemProps>(
-  ({ value: itemValue, className, children, onClick, type = "button", ...props }, ref) => {
-    const { value, onValueChange, onOpenChange, registerLabel } = useSelectContext("SelectItem");
+  (
+    {
+      value: itemValue,
+      className,
+      children,
+      onClick,
+      type = "button",
+      ...props
+    },
+    ref,
+  ) => {
+    const { value, onValueChange, onOpenChange, registerLabel } =
+      useSelectContext("SelectItem");
     const labelRef = useRef<HTMLSpanElement>(null);
     const isSelected = value === itemValue;
 
@@ -402,7 +463,9 @@ export const SelectItem = forwardRef<HTMLButtonElement, SelectItemProps>(
         <span ref={labelRef} className="flex-1 truncate">
           {children}
         </span>
-        {isSelected && <Check className="h-4 w-4 shrink-0" aria-hidden="true" />}
+        {isSelected && (
+          <Check className="h-4 w-4 shrink-0" aria-hidden="true" />
+        )}
       </button>
     );
   },
@@ -424,7 +487,10 @@ export const SelectSeparator = forwardRef<HTMLDivElement, SelectSeparatorProps>(
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={mergeClassNames("-mx-1 my-1 h-px bg-slate-200 dark:bg-slate-800", className)}
+      className={mergeClassNames(
+        "-mx-1 my-1 h-px bg-slate-200 dark:bg-slate-800",
+        className,
+      )}
       {...props}
     />
   ),

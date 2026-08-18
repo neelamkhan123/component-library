@@ -236,7 +236,7 @@ export const DialogContent = forwardRef<HTMLDialogElement, DialogContentProps>(
         onClick={handleClick}
         className={mergeClassNames(
           // Base panel look.
-          "m-auto w-[calc(100%-2rem)] max-w-md rounded-xl border border-slate-200 bg-white p-6 text-slate-950 shadow-[rgba(0,0,0,0.05)_0px_6px_24px_0px,_rgba(0,0,0,0.08)_0px_0px_0px_1px] dark:border-slate-800 dark:bg-slate-950 dark:text-white",
+          "m-auto w-[calc(100%-2rem)] max-w-md rounded-xl border border-slate-200 bg-white p-6 text-slate-950 shadow-[rgba(0,0,0,0.05)_0px_6px_24px_0px,rgba(0,0,0,0.08)_0px_0px_0px_1px] dark:border-slate-800 dark:bg-slate-950 dark:text-white",
           // Fade + scale the panel in on open and back out on close. `open:` targets
           // `[open]`, `starting:` is the `@starting-style` entry state, and
           // `transition-discrete` (allow-discrete) is what lets the browser keep the

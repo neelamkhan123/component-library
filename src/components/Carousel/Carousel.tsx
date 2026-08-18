@@ -50,7 +50,10 @@ function useCarouselContext(component: string): CarouselContextValue {
   return context;
 }
 
-export interface CarouselProps extends Omit<HTMLAttributes<HTMLDivElement>, "onSelect"> {
+export interface CarouselProps extends Omit<
+  HTMLAttributes<HTMLDivElement>,
+  "onSelect"
+> {
   /** Called with the new index whenever the current slide changes — from the nav buttons, `CarouselDots`, a swipe, or a scroll. */
   onSelect?: (index: number) => void;
 }
@@ -84,7 +87,9 @@ export const Carousel = forwardRef<HTMLDivElement, CarouselProps>(
       const el = containerRef.current;
       if (!el) return;
       setCanScrollPrev(el.scrollLeft > 1);
-      setCanScrollNext(Math.ceil(el.scrollLeft) < el.scrollWidth - el.clientWidth - 1);
+      setCanScrollNext(
+        Math.ceil(el.scrollLeft) < el.scrollWidth - el.clientWidth - 1,
+      );
     }, []);
 
     useEffect(() => {
@@ -104,7 +109,11 @@ export const Carousel = forwardRef<HTMLDivElement, CarouselProps>(
       const el = containerRef.current;
       const slide = el?.children[index];
       if (slide instanceof HTMLElement) {
-        slide.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+        slide.scrollIntoView({
+          behavior: "smooth",
+          inline: "start",
+          block: "nearest",
+        });
       }
     }, []);
 
@@ -188,7 +197,9 @@ export const CarouselContent = forwardRef<HTMLDivElement, CarouselContentProps>(
         (entries) => {
           const mostVisible = entries.reduce<IntersectionObserverEntry | null>(
             (best, entry) =>
-              !best || entry.intersectionRatio > best.intersectionRatio ? entry : best,
+              !best || entry.intersectionRatio > best.intersectionRatio
+                ? entry
+                : best,
             null,
           );
           if (mostVisible && mostVisible.intersectionRatio > 0.5) {
@@ -210,7 +221,7 @@ export const CarouselContent = forwardRef<HTMLDivElement, CarouselContentProps>(
           // CarouselDots already give the same navigation affordance visually;
           // swipe, trackpad scrolling, and the arrow keys are unaffected —
           // only the browser's own scrollbar chrome is suppressed.
-          "flex snap-x snap-mandatory overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+          "flex snap-x snap-mandatory overflow-x-auto scroll-smooth scrollbar-none [&::-webkit-scrollbar]:hidden",
           className,
         )}
         {...props}
@@ -231,7 +242,10 @@ export const CarouselItem = forwardRef<HTMLDivElement, CarouselItemProps>(
       ref={ref}
       role="group"
       aria-roledescription="slide"
-      className={mergeClassNames("w-full min-w-0 shrink-0 grow-0 basis-full snap-start", className)}
+      className={mergeClassNames(
+        "w-full min-w-0 shrink-0 grow-0 basis-full snap-start",
+        className,
+      )}
       {...props}
     />
   ),
@@ -244,27 +258,28 @@ const navButtonClassName =
 export type CarouselPreviousProps = ButtonHTMLAttributes<HTMLButtonElement>;
 
 /** Scrolls to the previous slide. Disables itself at the start. Renders a native `<button>`, absolutely positioned over the carousel's left edge. */
-export const CarouselPrevious = forwardRef<HTMLButtonElement, CarouselPreviousProps>(
-  ({ className, onClick, type = "button", disabled, ...props }, ref) => {
-    const { scrollPrev, canScrollPrev } = useCarouselContext("CarouselPrevious");
-    return (
-      <button
-        ref={ref}
-        type={type}
-        disabled={disabled ?? !canScrollPrev}
-        aria-label="Previous slide"
-        onClick={(event) => {
-          onClick?.(event);
-          if (!event.defaultPrevented) scrollPrev();
-        }}
-        className={mergeClassNames(navButtonClassName, "left-3", className)}
-        {...props}
-      >
-        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-      </button>
-    );
-  },
-);
+export const CarouselPrevious = forwardRef<
+  HTMLButtonElement,
+  CarouselPreviousProps
+>(({ className, onClick, type = "button", disabled, ...props }, ref) => {
+  const { scrollPrev, canScrollPrev } = useCarouselContext("CarouselPrevious");
+  return (
+    <button
+      ref={ref}
+      type={type}
+      disabled={disabled ?? !canScrollPrev}
+      aria-label="Previous slide"
+      onClick={(event) => {
+        onClick?.(event);
+        if (!event.defaultPrevented) scrollPrev();
+      }}
+      className={mergeClassNames(navButtonClassName, "left-3", className)}
+      {...props}
+    >
+      <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+    </button>
+  );
+});
 CarouselPrevious.displayName = "CarouselPrevious";
 
 export type CarouselNextProps = ButtonHTMLAttributes<HTMLButtonElement>;
@@ -298,11 +313,15 @@ export type CarouselDotsProps = HTMLAttributes<HTMLDivElement>;
 /** A row of dots, one per slide, showing (and letting you jump to) the current one. */
 export const CarouselDots = forwardRef<HTMLDivElement, CarouselDotsProps>(
   ({ className, ...props }, ref) => {
-    const { slideCount, selectedIndex, scrollTo } = useCarouselContext("CarouselDots");
+    const { slideCount, selectedIndex, scrollTo } =
+      useCarouselContext("CarouselDots");
     return (
       <div
         ref={ref}
-        className={mergeClassNames("flex items-center justify-center gap-2 pt-4", className)}
+        className={mergeClassNames(
+          "flex items-center justify-center gap-2 pt-4",
+          className,
+        )}
         {...props}
       >
         {Array.from({ length: slideCount }, (_, index) => {

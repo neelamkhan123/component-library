@@ -1,8 +1,15 @@
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import {
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
-function mergeClassNames(...classNames: Array<string | undefined | false>): string {
+function mergeClassNames(
+  ...classNames: Array<string | undefined | false>
+): string {
   return classNames.filter(Boolean).join(" ");
 }
 
@@ -100,15 +107,22 @@ function dismissToast(id: string) {
  * existing toast in place. Returns the toast's id (pass it to
  * `toast.dismiss()` or a later `toast()` call to update it).
  */
-export function toast(titleOrOptions: string | ToastOptions, moreOptions?: Omit<ToastOptions, "title">): string {
+export function toast(
+  titleOrOptions: string | ToastOptions,
+  moreOptions?: Omit<ToastOptions, "title">,
+): string {
   const options: ToastOptions =
-    typeof titleOrOptions === "string" ? { ...moreOptions, title: titleOrOptions } : titleOrOptions;
+    typeof titleOrOptions === "string"
+      ? { ...moreOptions, title: titleOrOptions }
+      : titleOrOptions;
   const id = options.id ?? `toast-${++nextId}`;
   const duration = options.duration ?? 5000;
 
   const exists = toasts.some((t) => t.id === id);
   const record: ToastRecord = { ...options, id, duration, closing: false };
-  toasts = exists ? toasts.map((t) => (t.id === id ? record : t)) : [...toasts, record];
+  toasts = exists
+    ? toasts.map((t) => (t.id === id ? record : t))
+    : [...toasts, record];
   notify();
   scheduleDismiss(id, duration);
   return id;
@@ -149,7 +163,7 @@ function ToastItem({ record }: { record: ToastRecord }) {
       onMouseEnter={() => clearTimer(id)}
       onMouseLeave={() => scheduleDismiss(id, duration)}
       className={mergeClassNames(
-        "pointer-events-auto flex w-full items-start gap-3 rounded-xl border p-4 shadow-[rgba(0,0,0,0.05)_0px_6px_24px_0px,_rgba(0,0,0,0.08)_0px_0px_0px_1px] transition-[opacity,translate] duration-200 motion-reduce:transition-none",
+        "pointer-events-auto flex w-full items-start gap-3 rounded-xl border p-4 shadow-[rgba(0,0,0,0.05)_0px_6px_24px_0px,rgba(0,0,0,0.08)_0px_0px_0px_1px] transition-[opacity,translate] duration-200 motion-reduce:transition-none",
         "starting:translate-y-2 starting:opacity-0",
         closing ? "opacity-0" : "translate-y-0 opacity-100",
         variantClassNames[variant],
@@ -157,7 +171,9 @@ function ToastItem({ record }: { record: ToastRecord }) {
     >
       <div className="flex-1 space-y-1">
         {title ? <p className="text-sm font-medium">{title}</p> : null}
-        {description ? <p className="text-sm opacity-80">{description}</p> : null}
+        {description ? (
+          <p className="text-sm opacity-80">{description}</p>
+        ) : null}
         {action ? (
           <button
             type="button"
