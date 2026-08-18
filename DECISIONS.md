@@ -228,6 +228,51 @@ aria-current="page">` rather than a link standing in for one. Other
   closing via an item), and Escape/outside-click are left to manual
   verification in Storybook's UI, where real keyboard/mouse input is trusted.
 
+## Data Table
+
+- Built *on* `Table` (for markup/styling) and `Pagination` (for page
+  controls) rather than reinventing either — the same "compose what
+  already exists" instinct behind `DropdownMenu` building on `ContextMenu`.
+  Sorting is the one piece of real logic that's new here.
+- Deliberately scoped to sorting and pagination — no filtering, global
+  search, row selection, or column resizing/reordering. A fully-featured
+  data grid is a genuinely different, much larger component: shadcn/ui's
+  own docs are explicit that they don't ship one at all, pointing instead
+  to a headless table library (TanStack Table) for anyone who needs the
+  full feature set. This library has taken on no new runtime dependency
+  for any other component, and sorting plus pagination cover the large
+  majority of "I just want a nicer table" needs on their own — the same
+  kind of bounded, honest scope as `ContextMenu` leaving out submenus or
+  `Select` leaving out typeahead, just declared up front rather than
+  discovered by omission.
+- `DataTableColumn<T>`'s `key` is typed as `keyof T & string`, not a bare
+  `string` — a column referencing a key that doesn't exist on the row type
+  is a compile error and gets autocomplete, rather than a silently-`undefined`
+  cell discovered at runtime. The one place this can't stay fully type-safe
+  is the sort comparison itself: a column's value type isn't statically
+  known to be sortable (`string | number`), so reading it for comparison
+  needs one explicit, narrow cast — `sortValue` exists specifically so a
+  column whose displayed value isn't sortable on its own (a formatted date
+  string, say) can supply a real comparable value instead of fighting that
+  cast.
+- Sort state cycles ascending → descending → unsorted (a third click clears
+  it), not a two-state toggle — returning to the original data order is
+  itself useful, and is what most real table implementations that support
+  click-to-sort actually do.
+- A sortable header's clickable control is a `<button>` *inside* the
+  `<th>`, not the `<th>` itself — a `<th>` isn't natively interactive, so
+  this is the same interactive-element-inside-a-non-interactive-container
+  approach `ContextMenuItem`/`AccordionTrigger` use elsewhere. `aria-sort`
+  (`"ascending"`/`"descending"`/`"none"`) is set on the `<th>` per the
+  WAI-ARIA table-sorting convention, not on the inner button.
+- No `onRowClick`/clickable-row support in this pass. Making a `<tr>`
+  properly keyboard-accessible as a unit needs either real interactive
+  elements inside its cells or promoting the whole table to `role="grid"`
+  with its own roving-tabindex/arrow-key model — meaningfully more
+  machinery than a `cell?: (row) => ReactNode` slot already provides a
+  perfectly good escape hatch for (wrap your own cell content in a
+  `<button>`/`<a>` if a row needs to navigate somewhere).
+
 ## Dialog
 
 - Built on the native `<dialog>` element (shown via `showModal()`) instead of
@@ -521,6 +566,38 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
 - No bundled label, matching `Checkbox`/`RadioGroup`/`Input`: an ordinary
   `<label>` wrapping a `Switch` and its text already associates the two
   and makes clicking the text toggle it, natively.
+
+## Table
+
+- Renders a native `<table>`, restyled — row/column/header associations
+  and a screen reader's table-navigation commands all come from the
+  browser, nothing about that reimplemented here. Purely presentational,
+  like `Breadcrumb`/`Pagination`: no state to coordinate, just styled
+  wrappers around `<thead>`/`<tbody>`/`<tfoot>`/`<tr>`/`<th>`/`<td>`/
+  `<caption>`.
+- `Table` wraps the `<table>` itself in a horizontally scrolling `<div>`.
+  A table's columns don't reflow the way text wraps — without the
+  wrapper, a wide table on a narrow viewport would overflow the page
+  itself rather than scrolling in place, the same category of problem
+  `Carousel`'s content strip solves with `overflow-x-auto`, just applied
+  to a table instead of a set of slides.
+- `TableHead` defaults `scope="col"` — the native attribute that lets
+  assistive tech announce which column a data cell belongs to when
+  navigating the table, easy to forget by hand and free to default here
+  since the overwhelming majority of `<th>`s in a typical table *are*
+  column headers. `scope="row"` is still available by passing it
+  explicitly, for the (rarer) row-header case.
+- `TableCaption` renders a native `<caption>` — the correct, native way to
+  give a table an accessible name/summary, the same non-optional-name
+  reasoning `DialogTitle` gets for dialogs, except here the browser
+  already has a purpose-built element for it rather than needing
+  `aria-labelledby` wired up by hand. `caption-bottom` (set on `Table`,
+  since `caption-side` is a property of the table, not the caption)
+  positions it below the table rather than the browser's above-table
+  default, matching where most real designs put a table's caption.
+- See `DataTable`'s own entry for the sortable, paginated layer built on
+  top of these primitives, and for why that layer stops well short of a
+  full data grid.
 
 ## Tabs
 
