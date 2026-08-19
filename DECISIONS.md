@@ -30,6 +30,32 @@
   switches to independent per-item state for cases like a multi-section reading
   view where more than one panel should stay open together.
 
+## Aspect Ratio
+
+- `ratio` is a plain number, applied via the native CSS `aspect-ratio`
+  property through inline `style` rather than a Tailwind `aspect-[...]`
+  class — a caller-supplied _continuous_ value (any ratio, not a fixed set
+  of variants) is exactly what `style` is for, the same reasoning
+  `Progress`'s fill width and `Sidebar`'s panel width are set inline.
+- The value is written as `` `${ratio} / 1` ``, not the bare number —
+  discovered directly from this component's own tests: jsdom accepts
+  `aspect-ratio: 16/9` (the explicit ratio syntax) but silently drops the
+  entire declaration for a bare `aspect-ratio: 1.777...` (no slash), even
+  though a real browser accepts both. Confirmed in real Chromium that the
+  bare form does render correctly there — this is purely a gap in jsdom's
+  `aspect-ratio` grammar validation, not a real-browser bug — but writing
+  the explicit `/ 1` form is valid everywhere and costs nothing, so there's
+  no reason to depend on a real browser's more lenient parsing when a
+  strictly-valid string works in both.
+- No default `object-fit`/`<img>` handling baked in — a caller supplies
+  their own media as `children`, styled `absolute inset-0 h-full w-full
+object-cover` (the exact technique `AvatarImage` already uses to fill
+  `Avatar`'s own fixed-size box). Baking an `<img>` slot directly into
+  `AspectRatio` would coincidentally solve the single most common case at
+  the cost of not fitting video, a map embed, or anything else shaped like
+  "content that should be clipped to a ratio" — a deliberate cut in the
+  same spirit as `Attachment` leaving out a lightbox.
+
 ## Attachment
 
 - Written alongside `Bubble` and `Message`, for someone building a chat
@@ -109,6 +135,24 @@
   fast-loading image replaces it — mirroring Radix's Avatar, which added the
   same option for the same reason.
 
+## Badge
+
+- Renders a plain `<span>`, not a `<button>` — a badge is informational (a
+  count, a tag, a state label), not an action, the same non-interactive
+  default `Card` and `Avatar` themselves take. Nothing stops a caller
+  nesting a `Badge` inside something clickable when they genuinely need
+  that, but it isn't the default.
+- `variant` reuses `Button`'s own vocabulary — `default`/`secondary`/
+  `outline`/`destructive` — for a consistent visual language between the
+  two rather than inventing a parallel one, minus `ghost`/`link`, which are
+  about interaction states (hover/focus feedback on something clickable) a
+  static badge doesn't have.
+- No built-in dismiss button in this pass. `Attachment`'s `onRemove` is the
+  established pattern to reach for if a caller needs a removable badge (a
+  filter chip) — it wasn't duplicated into `Badge` speculatively, the same
+  restraint `Progress`/`Skeleton` show not pre-building for a need nothing
+  yet in this library has.
+
 ## Breadcrumb
 
 - Purely presentational — every other compound component in this library
@@ -138,7 +182,7 @@ aria-current="page">` rather than a link standing in for one. Other
 ## Bubble
 
 - Self-aligning: an `"outgoing"` `Bubble` applies its own `margin-left:
-  auto` rather than expecting a wrapping layout component to position it.
+auto` rather than expecting a wrapping layout component to position it.
   This was a deliberate choice for approachability, not just economy — the
   intended audience for this one (see `Attachment`'s entry) includes
   someone building their first chat UI, and a plain `flex flex-col` of
@@ -305,7 +349,7 @@ aria-current="page">` rather than a link standing in for one. Other
 
 ## Data Table
 
-- Built *on* `Table` (for markup/styling) and `Pagination` (for page
+- Built _on_ `Table` (for markup/styling) and `Pagination` (for page
   controls) rather than reinventing either — the same "compose what
   already exists" instinct behind `DropdownMenu` building on `ContextMenu`.
   Sorting is the one piece of real logic that's new here.
@@ -334,7 +378,7 @@ aria-current="page">` rather than a link standing in for one. Other
   it), not a two-state toggle — returning to the original data order is
   itself useful, and is what most real table implementations that support
   click-to-sort actually do.
-- A sortable header's clickable control is a `<button>` *inside* the
+- A sortable header's clickable control is a `<button>` _inside_ the
   `<th>`, not the `<th>` itself — a `<th>` isn't natively interactive, so
   this is the same interactive-element-inside-a-non-interactive-container
   approach `ContextMenuItem`/`AccordionTrigger` use elsewhere. `aria-sort`
@@ -464,7 +508,7 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   itself, relying on `ContextMenuContent`'s existing viewport clamp to pull
   it back on-screen near an edge rather than truly flipping sides. The
   clamp already gets most of the practical benefit; real flipping needs the
-  content's measured size fed back into which *side* to open on, not just
+  content's measured size fed back into which _side_ to open on, not just
   where to clamp to, which is a deliberate scope cut, not an oversight —
   the same spirit as `ContextMenu` leaving out submenus.
 
@@ -505,7 +549,7 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
 
 - Written alongside `Bubble` and `Attachment` (see those entries) — the
   third piece of the same chatbox-building trio.
-- Owns the row's *layout* only — avatar placement, alignment, the sender/
+- Owns the row's _layout_ only — avatar placement, alignment, the sender/
   timestamp line — and takes its content as children rather than
   rendering a `Bubble` internally. The same layout-versus-content split
   `Card`'s `CardHeader` and `Dialog`'s `DialogHeader` draw for their own
@@ -547,7 +591,7 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
 - `getPaginationRange({ currentPage, totalPages, siblingCount })` is
   exported alongside the components — a pure function, not a hook, since
   it's a plain computation with no DOM or lifecycle involved. It's the one
-  piece of this component that *isn't* purely presentational, because it's
+  piece of this component that _isn't_ purely presentational, because it's
   fiddly enough, and easy enough to get subtly wrong at the boundaries
   (off-by-one truncation, jumps between "contiguous near the edge" and
   "ellipsis" modes), that it's worth providing rather than leaving every
@@ -579,7 +623,7 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   wrapping a plain width-driven fill `<div>`, not the native `<progress>`
   element — the one place in this library a native form control exists but
   is deliberately passed over. `Switch`/`Checkbox` can style the native
-  input directly because the box itself *is* the whole visual; `<progress>`
+  input directly because the box itself _is_ the whole visual; `<progress>`
   draws its fill inside vendor-prefixed pseudo-elements
   (`::-webkit-progress-value`, `::-moz-progress-bar`, with no equivalent in
   every engine), which render inconsistently and can't be reached with a
@@ -614,7 +658,7 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
 
 - `RadioGroupItem` renders a real `<input type="radio">`, restyled with
   `appearance-none`, the same treatment `Checkbox` gives its own input —
-  but radio inputs get *more* out of that choice than checkboxes do:
+  but radio inputs get _more_ out of that choice than checkboxes do:
   every item in a `RadioGroup` shares one `name` (generated via `useId()`
   if a caller doesn't supply one), so mutual exclusivity comes from the
   browser the way it always would for a plain HTML form, and arrow-key
@@ -677,7 +721,7 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   group the definite height its children's percentage `flex-basis` needs to
   resolve against, was silently losing to the component's built-in
   `h-full`. Which of two same-specificity classes wins is decided by their
-  order in Tailwind's *generated stylesheet*, not by the order they appear
+  order in Tailwind's _generated stylesheet_, not by the order they appear
   in a `className` string — and `.h-full` happened to be emitted after
   `.h-80`. With no definite ancestor height above it either, `height: 100%`
   then degraded to `auto` per the same CSS2.1 §10.5 rule as the bullet
@@ -689,13 +733,13 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   only `w-full` — `w-full` never had a competing override to lose to in
   either story, and it's `width`, not `height`, that's virtually always
   wanted immediately regardless of orientation; a `direction="vertical"`
-  group instead *needs* to be told its height by the caller, which now
+  group instead _needs_ to be told its height by the caller, which now
   reaches the element uncontested. Recorded directly in `ResizablePanelGroup`'s
   own doc comment so a future reader doesn't reach for a competing default
   again. The general lesson — this library's plain string-concatenation
   `mergeClassNames` has no `tailwind-merge`-style override resolution, so a
   component's own default Tailwind class can silently outrank a consumer's
-  override of the *same CSS property* depending on unrelated build/scan
+  override of the _same CSS property_ depending on unrelated build/scan
   order — applies anywhere a component ships a same-property default a
   caller might reasonably want to replace, not just here.
 - A `ResizableHandle` resizes only its immediate previous and next sibling,
@@ -753,7 +797,7 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   stubbed to reflect committed inline styles (not fixed values) in
   `Resizable.test.tsx` — jsdom has no layout engine, so without that a
   second interaction in the same test (e.g. two consecutive keypresses)
-  would always measure the *initial* render instead of the result of the
+  would always measure the _initial_ render instead of the result of the
   first interaction, unlike a real browser. Same underlying jsdom
   limitation `Drawer`'s pinned-edge test hit, addressed the same way:
   assert what the mechanism actually produces rather than something jsdom
@@ -768,7 +812,7 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   color, radius are outside its control), so getting the sleek, consistent
   look the rest of this library has means a trigger button plus a popup
   listbox instead.
-- Not built *on* `ContextMenu` either, unlike `DropdownMenu`. It draws on
+- Not built _on_ `ContextMenu` either, unlike `DropdownMenu`. It draws on
   the exact same proven techniques (native popover, `requestAnimationFrame`-
   deferred `showPopover()`, scroll lock, roving keyboard focus via real DOM
   focus) — but as a fresh, self-contained implementation, because a
@@ -778,7 +822,7 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   components directly would mean parameterizing their roles and item
   selectors to serve a second, meaningfully different pattern — more
   indirection than the reuse would actually save. `DropdownMenu` reuses
-  `ContextMenu` precisely because it *is* structurally identical (same
+  `ContextMenu` precisely because it _is_ structurally identical (same
   role, same item selector, just re-triggered); `Select` isn't.
 - Verified directly via axe that `role="listbox"` doesn't permit a
   `role="separator"` child the way `role="menu"` does (the ARIA spec's
@@ -819,6 +863,32 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   scope cut `ContextMenu` documents for submenus and `DropdownMenu` for
   `align`/flip placement, not an oversight.
 
+## Separator
+
+- Renders a native `<hr>`, which already carries an implicit `separator`
+  role — a meaningful (non-`decorative`) instance needs no ARIA of its own
+  beyond `aria-orientation` for the vertical case, since the role's implied
+  default orientation is horizontal and `<hr>`'s own name and semantics
+  are, too. Layering `aria-orientation="vertical"` on top of that implicit
+  role is legitimate per the ARIA spec (author-supplied refinement of
+  native semantics), the same spirit as adding behavior on top of the
+  native `<dialog>` element rather than treating "native" as all-or-nothing.
+- `decorative` (whether this is purely visual rather than a meaningful
+  break between sections) defaults to `true` — most separators in a real
+  UI divide visually related things (two toolbar buttons, a card's header
+  from its body) rather than marking a genuine thematic shift worth
+  announcing, the same bias `BreadcrumbSeparator` and `CarouselDots` already
+  take for their own purely-decorative marks. `decorative`, not `true`,
+  hides it from assistive tech via `aria-hidden`, rather than the reverse.
+- `orientation="vertical"` stretches with `self-stretch`, not `h-full` —
+  directly informed by the real bug found in `Resizable`: a percentage
+  height can't resolve against a flex container whose own height is
+  intrinsic rather than an explicit value, while `self-stretch` sidesteps
+  percentage resolution entirely. Outside a flex row (`self-stretch` only
+  does anything inside one), a vertical separator has no height to stretch
+  to and needs one set explicitly via `className` — a known, disclosed
+  limitation, not a silent one.
+
 ## Sidebar
 
 - `SidebarProvider` renders the outer flex row wrapper itself, not just
@@ -827,14 +897,14 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   normal layout sibling of anything), a docked `Sidebar` and the page's
   main content genuinely are ordinary flex siblings that need a shared row
   container. Composition is `<SidebarProvider><Sidebar>...</Sidebar><main
-  className="flex-1">...</main></SidebarProvider>`, with no `SidebarInset`
+className="flex-1">...</main></SidebarProvider>`, with no `SidebarInset`
   wrapper for that `<main>` — an ordinary element with `flex-1` does it,
   the same "don't ship a wrapper around a single plain child" call
   `Bubble`/`Message` made not needing a list component to stack in.
 - `Sidebar` sets its width via inline `style`, not a Tailwind `w-*` class —
   directly informed by a real bug just found in `Resizable`: which of two
   equal-specificity classes wins is decided by their order in the
-  *generated* stylesheet, not by anything in a `className` string, so a
+  _generated_ stylesheet, not by anything in a `className` string, so a
   component's own default class can silently outrank a caller's override of
   the same CSS property. Width is exactly the kind of value a `Sidebar`
   caller commonly wants to change, so it's a `width` prop applied via
@@ -842,7 +912,7 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   caller would have to fight.
 - The open-state width collapse (`overflow-hidden`, `transition-[width]`
   down to `0`) lives on the `<aside>` itself, but its children sit inside an
-  inner `<div>` held at a *constant* width instead of collapsing with it —
+  inner `<div>` held at a _constant_ width instead of collapsing with it —
   otherwise header/nav text would visibly reflow and wrap mid-transition as
   the outer width crosses down toward `0`. This costs one extra wrapper
   `<div>`, deliberately, for a purely cosmetic-during-animation reason.
@@ -879,11 +949,35 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   features a caller can layer on top (an overlay variant, in particular, is
   just composing `Drawer` for narrow viewports rather than `Sidebar`
   reimplementing it), the same "no upload progress, no lightbox" scope-cut
-  spirit as `Attachment`. Likewise, a caller wanting a *draggable* sidebar
+  spirit as `Attachment`. Likewise, a caller wanting a _draggable_ sidebar
   width should reach for `Resizable` (`ResizablePanelGroup` wrapping
   `Sidebar` and the main content as `ResizablePanel`s) rather than `Sidebar`
   growing its own drag logic — resizing by dragging is `Resizable`'s job,
   not something worth a second implementation here.
+
+## Skeleton
+
+- Always `aria-hidden="true"` — a skeleton is a visual stand-in with
+  nothing for assistive tech to read, the same treatment
+  `BreadcrumbSeparator`'s and `CarouselDots`' own decorative marks get.
+  That deliberately leaves announcing the *loading* state itself
+  unhandled: a screen with several `Skeleton`s should wrap them in one
+  `role="status"` region with a single accessible label, not have every
+  individual skeleton announce redundantly on its own — and only the
+  caller knows how many there'll be or what the loading region as a whole
+  represents, the same reason `DataTable` doesn't try to own filtering it
+  can't see enough context to get right. The `role="status"` pattern is
+  shown directly in a story rather than left to be discovered.
+- No default size — a text line, an avatar circle, and a card block are
+  all shaped completely differently, so a default would be wrong as often
+  as it's right. Every instance is sized with `className`, the same
+  "the caller knows the shape, this component doesn't guess" restraint
+  `Progress` takes leaving its own width to fill its container rather than
+  picking a fixed one.
+- `motion-reduce:animate-none` drops the pulse for `prefers-reduced-motion`
+  users, the same treatment every other animation in this library gets
+  (`Dialog`'s transitions, `Progress`'s indeterminate fill). Color alone
+  (a gray block) still reads as "this is loading" without needing motion.
 
 ## Switch
 
@@ -913,7 +1007,7 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   high-contrast color" language used everywhere else in this library —
   `Checkbox`, `Button`'s default variant, `PaginationLink`'s `isActive`),
   which would make a white thumb disappear against it. `dark:peer-checked:
-  bg-slate-950` is the one place the thumb's color changes, and it's there
+bg-slate-950` is the one place the thumb's color changes, and it's there
   specifically to stay visible against that one combination, not a
   stylistic flourish.
 - No bundled label, matching `Checkbox`/`RadioGroup`/`Input`: an ordinary
@@ -937,7 +1031,7 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
 - `TableHead` defaults `scope="col"` — the native attribute that lets
   assistive tech announce which column a data cell belongs to when
   navigating the table, easy to forget by hand and free to default here
-  since the overwhelming majority of `<th>`s in a typical table *are*
+  since the overwhelming majority of `<th>`s in a typical table _are_
   column headers. `scope="row"` is still available by passing it
   explicitly, for the (rarer) row-header case.
 - `TableCaption` renders a native `<caption>` — the correct, native way to
@@ -954,7 +1048,7 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
 
 ## Tabs
 
-- Arrow keys move focus *and* switch the active tab together —
+- Arrow keys move focus _and_ switch the active tab together —
   "automatic activation," in the WAI-ARIA Tabs pattern's own terms —
   unlike the roving focus in `ContextMenu`/`Select`, where arrow keys only
   move focus and a separate click/Enter confirms a choice. This is a
@@ -1094,11 +1188,11 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
 ## Toggle
 
 - A distinct primitive from `Switch`, not a restyled version of it: a
-  toggle button is for a toolbar-style on/off *action* (bold/italic
+  toggle button is for a toolbar-style on/off _action_ (bold/italic
   formatting, a view filter) rather than a persistent form value, so it
   renders a native `<button aria-pressed>` instead of `Switch`'s
   `<input type="checkbox" role="switch">`. Per WAI-ARIA, a button with
-  `aria-pressed` already *is* a complete toggle button — unlike every
+  `aria-pressed` already _is_ a complete toggle button — unlike every
   other state-driven control in this library, there's no role to
   recategorize (a `<button>`'s implicit role is already right) and no
   native form element being restyled underneath; it's just a `<button>`
@@ -1158,11 +1252,11 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   Discovered directly, not anticipated: wrapping a `<Tooltip>` around a
   word inside a `<p>` (a completely ordinary use — annotating a term
   mid-sentence) produced a real React warning, `<p> cannot contain a
-  nested <div>`, because `TooltipContent`'s `<div>` landed as a literal
+nested <div>`, because `TooltipContent`'s `<div>` landed as a literal
   DOM descendant of the `<p>` it was written inside, regardless of being
   visually promoted out of the page via `position: fixed` and the popover
   top layer — HTML content-model validity is about where an element
-  *sits in the tree*, not where it's *drawn*. A portal is the only fix
+  _sits in the tree_, not where it's _drawn_. A portal is the only fix
   that addresses that at the place it's actually wrong; CSS positioning
   was never going to touch it, no matter how thoroughly.
 - Position is computed once, at show time — not tracked continuously — so
