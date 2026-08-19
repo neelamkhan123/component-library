@@ -423,7 +423,91 @@ auto` rather than expecting a wrapping layout component to position it.
     `mergeRefs(...)` result is handed to `ref` inline without
     memoization — it happened not to matter for `Select`/`ContextMenu`/etc.
     only because nothing else read their ref in the same commit the way
-    `ComboboxInput` reads `ComboboxContent`'s.
+    `ComboboxInput` reads `ComboboxContent`'s. (Building `Command` later
+    turned up a second, deeper layer of the same category of bug — see its
+    own entry. Memoization was the complete fix here specifically because
+    this effect only ever reads `contentRef` once `open` is already
+    `true`, which never happens on the very first render `Combobox` ever
+    produces.)
+
+## Command
+
+- Deliberately reuses `Combobox`'s proven mechanics — filtering, gating a
+  `CommandItem`'s rendering on a plain string known up front rather than
+  arbitrary `children`, `aria-activedescendant`-based keyboard highlighting
+  so real focus never leaves the input — rather than a parallel
+  implementation. The actual difference is what activating an item *means*:
+  `Combobox` commits a value, `CommandItem` runs an arbitrary `onSelect`
+  action instead, closer in spirit to `ContextMenuItem` than to
+  `ComboboxItem`.
+- `Command` itself has no modal/popover behavior — it's the embeddable
+  list alone, usable planted directly in a page. `CommandDialog` composes
+  it with `Dialog` for the Cmd+K-style overlay, rather than `Command`
+  growing dialog mechanics of its own — the same "compose, don't
+  duplicate" call `Sidebar` makes reaching for `Resizable` instead of
+  building its own drag logic.
+- **No global Cmd+K listener wired up anywhere in this component,
+  deliberately.** A `document`-level keydown listener registered by
+  something that's mounted whenever `CommandDialog` is in the tree — open
+  or not — is a real, opinionated side effect that would compete with
+  whatever shortcut handling an app already has (a different Cmd+K binding,
+  a keyboard-shortcut library, browser/OS-level bindings). Wiring it is one
+  `useEffect` in the caller's own code; shown directly in this component's
+  own "As a Cmd+K command palette" story rather than assumed here, the same
+  restraint `Popover` shows not adding its own dismiss-on-blur beyond what
+  the native popover API already gives for free.
+- `CommandDialog`'s `DialogTitle` is rendered `sr-only`, not omitted —
+  `DialogContent` requires one for an accessible name, and a command
+  palette still needs that name, it just doesn't display a visible heading
+  the way a normal `Dialog` does; jumping straight to the search input is
+  the whole point.
+- `CommandList`'s `role="listbox"` defaults `aria-label` to `"Results"` —
+  caught directly by axe: unlike a `<button>`, `role="listbox"` has no
+  "name from content," so with nothing here it had no accessible name at
+  all. `Select`'s own listbox has the identical gap and wasn't caught by
+  its own axe test only because that test happens not to exercise a code
+  path axe's rule keys off strongly enough to flag it — worth a closer
+  look there someday, not addressed in this pass since it's `Select`'s
+  problem to reopen, not `Command`'s.
+- `CommandGroup` hides itself entirely (heading included) once every item
+  inside it has been filtered out, rather than leaving a heading floating
+  over an empty section — the same instinct behind `PaginationEllipsis`
+  and `BreadcrumbSeparator` never appearing without something real on
+  either side of them.
+- Two real bugs surfaced building this:
+  - **`CommandInput`'s roving-active-item effect read `CommandList`'s ref
+    and got `null` on the very first render, every time — not a
+    re-render/memoization problem the way `Combobox`'s was, a deeper one.**
+    React attaches refs and fires `useLayoutEffect`s interleaved *per
+    fiber*, in tree order — not "attach every ref across the whole tree,
+    then run every layout effect." `CommandInput` appears before
+    `CommandList` in the JSX, so on any single commit (including the very
+    first), `CommandInput`'s layout effect could run *before*
+    `CommandList`, later in the tree, had attached its own ref at all —
+    reading `null` regardless of whether that ref's identity was memoized.
+    Diagnosed by logging both components' render and effect order directly
+    rather than guessing twice. Fixed by switching this one effect from
+    `useLayoutEffect` to plain `useEffect` — passive effects run strictly
+    after the *entire* tree's layout phase (all refs attached, all layout
+    effects fired) regardless of where either component sits in the JSX,
+    sidestepping the ordering question outright instead of depending on
+    it. The general lesson: a `useLayoutEffect` that reads a *sibling's*
+    ref (not its own) is fragile in a way a same-component read never is,
+    independent of memoization — reach for `useEffect` there unless the
+    read genuinely can't tolerate running a tick later.
+  - **The "as a command palette" story crashed the instant a query was
+    typed** (`children.toLowerCase is not a function`) — an icon element
+    mixed into a `CommandItem`'s `children` alongside its label text,
+    silently type-checked fine (stories aren't part of this repo's
+    typecheck) and even *rendered* fine, because filtering short-circuits
+    past the `.toLowerCase()` call entirely while the query is still
+    empty — only actually failing the moment someone types something,
+    caught by clicking through the live story in real Chromium rather than
+    trusting a green automated run alone (its `play` function-less "as a
+    palette" story never typed anything, so it never exercised the failing
+    path). Fixed two ways: an `icon` prop was added so an icon has
+    somewhere to go that isn't `children`, and the story itself was
+    corrected to use it.
 
 ## Context Menu
 
