@@ -380,6 +380,51 @@ auto` rather than expecting a wrapping layout component to position it.
   uncontrolled `checked`/`defaultChecked` handling is reused directly
   rather than reimplemented.
 
+## Combobox
+
+- The one place in this library that uses `aria-activedescendant` instead
+  of moving real DOM focus, and deliberately so — everywhere else
+  (`ContextMenu`/`Select`/now `Calendar`) real focus is the whole point,
+  since it's the browser's own accessibility machinery doing the work
+  instead of ARIA standing in for it. A combobox breaks that: focus has to
+  *stay on `ComboboxInput`* for typing to keep working while an option is
+  highlighted, so which option is "active" can only be communicated
+  virtually. This is exactly the case `aria-activedescendant` exists for,
+  not a shortcut taken instead of the real thing.
+- `ComboboxItem`'s `children` is typed as a plain `string`, not arbitrary
+  `ReactNode` the way `SelectItem` allows — deliberately narrower.
+  Filtering has to know an item's text *before* deciding whether to render
+  it at all (a non-matching item returns `null` outright), which only
+  works against a string known up front; `SelectItem`'s approach (deriving
+  a label from rendered children via a ref, after the fact) can't run
+  early enough to gate rendering on. The narrower type is the honest
+  reflection of that constraint, not an oversight.
+- Two real bugs surfaced building this, both worth remembering elsewhere:
+  - **Opening a `Combobox` that already has a value used to filter the
+    list down to just that value's own label**, hiding every other option
+    the instant you opened it — because the input's displayed text (the
+    selected value's label) was also what filtering matched against.
+    Fixed by splitting "what's displayed" (`query`) from "what's filtered
+    against" (`filterText`) into two separate pieces of state: opening
+    resets `filterText` to `""` (showing everything) while leaving `query`
+    showing the current selection, ready to be edited; only actually
+    typing updates both together.
+  - **`ComboboxContent`'s merged ref (`mergeRefs(contentRef, ref)`) was a
+    fresh closure every render.** React treats a changed `ref` prop
+    identity as a reason to detach the old ref and reattach the new one —
+    so on every single re-render (including the one after every keystroke),
+    `contentRef.current` went transiently `null` at exactly the moment a
+    sibling effect in `ComboboxInput` read it to recompute the active
+    option, silently finding zero options and never updating anything.
+    Traced by logging both components' render/effect timing directly
+    rather than guessing, then fixed by `useMemo`-wrapping both this and
+    `ComboboxInput`'s own merged ref so the callback identity stays stable
+    across renders. Worth double-checking anywhere else in this codebase a
+    `mergeRefs(...)` result is handed to `ref` inline without
+    memoization — it happened not to matter for `Select`/`ContextMenu`/etc.
+    only because nothing else read their ref in the same commit the way
+    `ComboboxInput` reads `ComboboxContent`'s.
+
 ## Context Menu
 
 - `ContextMenuContent` is a native popover (`popover="auto"`) rather than a

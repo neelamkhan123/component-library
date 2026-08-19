@@ -11,6 +11,7 @@ export * from "./components/Calendar";
 export * from "./components/Card";
 export * from "./components/Carousel";
 export * from "./components/Checkbox";
+export * from "./components/Combobox";
 export * from "./components/ContextMenu";
 export * from "./components/DataTable";
 export * from "./components/Dialog";
