@@ -617,6 +617,42 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   through `ButtonHTMLAttributes` for a caller to set from `currentPage`/
   `totalPages` however it already tracks them.
 
+## Popover
+
+- Built almost entirely on `Select`'s own proven plumbing — native popover,
+  `requestAnimationFrame`-deferred `showPopover()`, viewport-clamped
+  below-trigger positioning, the native `toggle` event as the single source
+  of truth for closing and returning focus to the trigger — reused wholesale
+  rather than reinvented, since none of it is specific to a listbox. What's
+  actually different is narrow: `PopoverContent` holds arbitrary content, not
+  a fixed set of options, so there's no roving-focus `onKeyDown`, no
+  `aria-selected`, no owned-option-element structure at all.
+- `role="dialog"`, not `role="menu"`/`"listbox"` — nothing about a popover's
+  content is a predictable, ownable set of items the way `ContextMenu`'s or
+  `Select`'s is, so there's no equivalent structure to declare. Unlike
+  `DialogContent`, no title is required: `Dialog` is modal and demands
+  orientation from whoever it just interrupted; a popover is lighter-weight
+  and usually self-evident from whatever was clicked to open it (an avatar
+  clicked for a profile card already says what the card is).
+- On open, focus moves to the first focusable descendant found via a
+  generic selector (links, enabled form controls, non-negative `tabindex`),
+  falling back to the panel itself (`tabIndex={-1}`) when nothing focusable
+  exists — necessarily a generic search, unlike `SelectContent` resuming
+  focus on a specific already-known option, since `PopoverContent`'s
+  contents aren't a fixed, typed shape the way an option list is.
+- No `align`/flip-to-the-opposite-side placement, and no separate
+  `PopoverAnchor` for positioning relative to something other than the
+  trigger — the same deliberate scope cut `DropdownMenu` already makes for
+  its own identical positioning question, for the same reason: the
+  viewport clamp already gets most of the practical benefit, and true
+  flipping needs the content's measured size fed back into which side to
+  open on, not just where to clamp to.
+- `PopoverClose` calls the native `hidePopover()` on `PopoverContent`
+  rather than updating state directly, funneling every closure path
+  (Escape, an outside click, this button) through the one `toggle` event
+  and its one `onOpenChange` call — the same reasoning `DialogClose` calls
+  `close()` on the native `<dialog>` instead of setting state itself.
+
 ## Progress
 
 - Rendered as `<div role="progressbar">` with `aria-valuenow`/`-min`/`-max`
