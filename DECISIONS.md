@@ -30,6 +30,52 @@
   switches to independent per-item state for cases like a multi-section reading
   view where more than one panel should stay open together.
 
+## Alert Dialog
+
+- `AlertDialog`, `AlertDialogTrigger`, `AlertDialogHeader`, `AlertDialogTitle`,
+  `AlertDialogDescription`, and `AlertDialogFooter` are the exact same
+  components as their `Dialog` counterparts, re-exported under
+  alertdialog-flavored names — the same relationship (and the same
+  reasoning) `Drawer` has to `Dialog`. Only `AlertDialogContent`,
+  `AlertDialogAction`, and `AlertDialogCancel` are genuinely new; the shared
+  native-`<dialog>` plumbing (`showModal()`/`close()`, scroll lock,
+  native-close sync) still lives in `useDialogPanel` in `Dialog.tsx`.
+- `AlertDialogContent` renders `role="alertdialog"`, overriding the native
+  `<dialog>` element's own implicit `dialog` role — a native element's
+  implicit role can be validly overridden by an explicit, ARIA-compatible
+  one, the same reasoning `AccordionTrigger`/`ContextMenuItem` recategorize
+  a `<button>`'s role for the widget they're part of.
+- `closeOnOutsideClick` isn't offered as a prop here the way it is on
+  `DialogContent` — it's simply hard-coded off, always, since the entire
+  reason to reach for `AlertDialog` instead of `Dialog` is that a stray
+  click shouldn't be able to silently discard a confirmation. Escape is
+  blocked the same deliberate way: a native `<dialog>` fires a cancelable
+  `cancel` event *before* Escape closes it, so `onCancel` calls
+  `preventDefault()` on it, stopping the close before it starts rather than
+  closing and then trying to reopen (which would flash the dialog shut and
+  fight the exit transition). There's also no built-in corner close
+  button — every dismissal should read as a deliberate choice between
+  `AlertDialogAction`/`AlertDialogCancel`, not a third, easier-to-misclick
+  escape hatch.
+- `AlertDialogAction`/`AlertDialogCancel` are styled with `Button`'s own
+  `variant`/`size` system by default (`variant="default"` and `"outline"`
+  respectively), unlike `DialogClose`, which is deliberately unstyled.
+  `DialogClose` is a general-purpose primitive (the corner X, a custom
+  "Cancel" button, anything) that's fair to leave to the caller to style
+  every time; `AlertDialogAction` specifically always represents the one
+  deliberate way forward out of a confirmation, so it always looks like a
+  real, obviously-clickable button without a caller having to remember to
+  add that styling themselves. `<AlertDialogAction variant="destructive">`
+  is the whole affordance for a destructive confirmation — no separate
+  "destructive" prop invented for what `Button`'s own vocabulary already
+  covers.
+- Motivated directly by a real gap: `Dialog`'s own "Destructive Confirmation"
+  story faked this with a plain `Dialog` and a bare `<Button
+  variant="destructive">` that had no `onClick` at all — visually
+  convincing, but Escape and a backdrop click both silently closed it, and
+  the "Delete account" button didn't actually do anything. `AlertDialog`
+  is what that story was reaching for without the mechanism to back it up.
+
 ## Aspect Ratio
 
 - `ratio` is a plain number, applied via the native CSS `aspect-ratio`

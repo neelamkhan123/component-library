@@ -1,4 +1,5 @@
 export * from "./components/Accordion";
+export * from "./components/AlertDialog";
 export * from "./components/AspectRatio";
 export * from "./components/Attachment";
 export * from "./components/Avatar";
