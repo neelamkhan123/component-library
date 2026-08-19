@@ -509,6 +509,52 @@ auto` rather than expecting a wrapping layout component to position it.
     somewhere to go that isn't `children`, and the story itself was
     corrected to use it.
 
+## Composer
+
+- A single component, `Textarea` and a send button already wired together,
+  not a compound API (no `ComposerTextarea`/`ComposerButton`) — matching
+  the rest of the chatbox trio it completes (`Attachment`/`Bubble`/
+  `Message` are all single components too, not compound ones), rather than
+  introducing a different composition style just for this one piece of
+  the same family.
+- Ref forwards to the `<textarea>` itself, not the wrapping `<div>` — the
+  same target `Input`/`Textarea` forward to, and the thing a caller
+  actually wants after sending (to call `.focus()` again), not its
+  container.
+- Auto-resize reads `scrollHeight` after first resetting `height` to
+  `"auto"` — there's no CSS-only way to size a `<textarea>` to its content
+  (`field-sizing: content` exists but isn't universally supported yet),
+  and `scrollHeight` is fundamentally a *measured* value that has to be
+  read imperatively, not derived from CSS. Resetting to `"auto"` first
+  matters: without it, `scrollHeight` would reflect the *previous*,
+  possibly-taller height instead of the actual content, since a tall
+  `<textarea>` that's had text deleted doesn't shrink its own
+  `scrollHeight` back down on its own.
+- Enter submits; Shift+Enter inserts a newline — the one keybinding
+  virtually every chat app already shares, not made configurable. A
+  submit-on-Cmd/Ctrl+Enter alternative (some apps prefer it) is a
+  deliberate scope cut in the same spirit as `Tooltip` leaving out shared
+  cross-tooltip delay-skipping — a real, nameable piece of polish, left
+  out rather than half-built.
+- `onSubmit` clears the field automatically when uncontrolled (nobody
+  wants their own message still sitting in the box after sending) but
+  leaves a controlled `Composer`'s `value` entirely alone — the same
+  "smart default when uncontrolled, hands-off when controlled" split
+  `Accordion`/`Select` already make for their own state.
+- Named `onSubmit`, not the native `HTMLTextAreaElement` event of the same
+  name `TextareaHTMLAttributes` already carries — `Omit`ted from the base
+  props so this one, with its own `(value: string) => void` signature, can
+  take its place. The identical collision `CommandItem`'s `onSelect` hit,
+  for the identical reason (a native event handler prop name that happens
+  to mean something completely different already existing on the base
+  HTML attributes this component's props extend).
+- No attachment button, emoji picker, or formatting toolbar built in —
+  `Attachment` already exists as its own component for a caller to place
+  alongside `Composer` (shown together in the "In a full conversation"
+  story), and the rest is real, separate scope no chat app agrees on
+  looking the same way, the same "no upload progress, no lightbox"
+  restraint `Attachment` itself already documents.
+
 ## Context Menu
 
 - `ContextMenuContent` is a native popover (`popover="auto"`) rather than a
@@ -1544,3 +1590,26 @@ nested <div>`, because `TooltipContent`'s `<div>` landed as a literal
   UX polish being left out, not an oversight — deliberately scoped the
   same way `ContextMenu` leaves out submenus and `Select` leaves out
   typeahead.
+
+## TypingIndicator
+
+- Styled to match `Bubble`'s own incoming shape directly (`rounded-2xl
+  rounded-bl-md`, the same background), not just "a similar bubble" —
+  it's meant to sit exactly where an incoming `Bubble` would, standing in
+  for one that hasn't arrived yet, the same relationship `Skeleton` has to
+  whatever content it's a placeholder for.
+- `role="status"` (implicit `aria-live="polite"`), unlike `Skeleton`'s
+  `aria-hidden`. The difference is deliberate, not inconsistent: `Skeleton`
+  is explicitly *not* the thing to announce, because a screen full of them
+  would each try to announce redundantly, leaving that to whatever wraps
+  a whole batch (a single `role="status"` region, shown directly in
+  `Skeleton`'s own story). A `TypingIndicator` doesn't have that problem —
+  there's normally exactly one, for whoever's currently typing — so it can
+  just announce itself.
+- The three dots use `animate-bounce`, Tailwind's stock utility, staggered
+  per-dot via inline `animationDelay` — not a custom `@keyframes` block.
+  `Progress`'s indeterminate state made the identical call for the
+  identical reason: a custom keyframe animation would be the first one
+  anywhere in this codebase, and reaching for a stock utility instead of
+  introducing that first bit of infrastructure for one component is a
+  deliberate scope cut, not a missed opportunity for a fancier animation.
