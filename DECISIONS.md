@@ -252,6 +252,68 @@ auto` rather than expecting a wrapping layout component to position it.
 - `disabled` is applied during loading too, preventing duplicate submissions
   from repeated activation while an action is in flight.
 
+## Calendar
+
+- No pre-wired popover/input — `Calendar` is the month grid alone, meant to
+  be composed with `Popover` (a trigger button showing the formatted date,
+  `PopoverContent` holding the grid) for what most people mean by "date
+  picker," rather than this component reaching for its own popup the way
+  `Select` does. The two problems are genuinely separate: `Select` and
+  `ContextMenu` need bespoke popover mechanics baked in because they *are*
+  fundamentally popup-shaped (a listbox, a menu, have no meaningful
+  standalone form); a calendar grid is a complete, useful thing entirely on
+  its own (embedded directly in a page, e.g. a booking flow) and gains
+  nothing from being forced to always live inside a popover. Composing
+  with `Popover` gets the date-picker case for free without `Calendar`
+  needing an opinion about how it's triggered — the same reasoning
+  `Sidebar` composes with `Resizable` instead of growing its own drag
+  logic, applied one level up.
+- Renders a native `<table role="grid">` — a genuinely clean native fit,
+  since a calendar month already *is* a grid of cells (rows are weeks,
+  columns are weekdays) rather than something merely grid-shaped being
+  pressed into that role. Each day is a real `<button role="gridcell">`
+  inside a `<td role="presentation">` — verified directly via axe that
+  `role="gridcell"` requires its *direct* parent to carry `role="row"`,
+  and a `<td>` inside a `role="grid"` table implicitly becomes a gridcell
+  itself (per the HTML-AAM table/grid mapping) unless told otherwise,
+  which put a gridcell directly inside another gridcell instead of inside
+  the row. `role="presentation"` makes the `<td>` ownership-transparent, so
+  the button becomes the row's direct accessible child, the same fix
+  real-world calendar implementations (react-day-picker, shadcn's Calendar)
+  converge on for the identical reason.
+- Roving `tabIndex` with real DOM focus moved by the arrow keys, not
+  `aria-activedescendant` — the same choice (and the same reasoning)
+  `ContextMenu`/`Select` make for their own roving focus. Arrow-key
+  navigation skips disabled dates entirely rather than landing on one: a
+  `disabled` `<button>` can never actually hold focus (the browser silently
+  refuses), so without this, landing there would leave the grid with no
+  focused element anywhere in it, keyboard-dead until tabbed away and back —
+  found and fixed directly while testing keyboard navigation with
+  `disabled`, not a hypothetical worry.
+- Clicking a day outside the displayed month both switches to that day's
+  month and selects it. Both `moveFocus` (used by keyboard navigation to
+  switch the view when crossing a month boundary without selecting) and
+  `selectDate` (used by both click and Enter/Space) independently know how
+  to switch the displayed month — a click handler that called both,
+  reasonably expecting each to only do its own job, ended up reporting
+  `onMonthChange` twice for one click, caught directly by a test asserting
+  it fires exactly once. Fixed by having a click set the next focus target
+  directly rather than routing through `moveFocus`'s own redundant
+  month-check, leaving `selectDate` the click path's one owner of that.
+- Month/year navigation text (`"August 2026"`) and weekday headers
+  (`"Sun"`, `"Mon"`, ...) are both generated with `Intl.DateTimeFormat`
+  rather than a hardcoded English array — locale-aware for free from the
+  platform, the same "reach for the platform API before hand-rolling it"
+  instinct behind this library's native-element and native-Popover-API
+  choices elsewhere, just applied to formatting instead of markup.
+- Deliberate scope cuts, the same spirit as `ContextMenu`'s submenus or
+  `Resizable`'s cascading resize: no range/multi-date selection (a
+  genuinely different selection model, not a small addition to a
+  single-date one), no locale-derived week start (`Intl.Locale`'s
+  `weekInfo` isn't universally supported yet, so `weekStartsOn` is a plain
+  numeric prop a caller sets explicitly), and no Ctrl/Shift+PageUp/Down
+  year-jump shortcuts beyond the month-level PageUp/PageDown that exist.
+
 ## Carousel
 
 - Built on native CSS scroll-snap (`overflow-x-auto` + `snap-x snap-mandatory`
