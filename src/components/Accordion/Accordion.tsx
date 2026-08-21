@@ -221,7 +221,7 @@ export const AccordionTrigger = forwardRef<HTMLButtonElement, AccordionTriggerPr
         <ChevronDown
           aria-hidden="true"
           className={mergeClassNames(
-            "h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200 motion-reduce:transition-none dark:text-slate-400",
+            "h-4 w-4 shrink-0 text-slate-500 transition-[color,transform] duration-200 motion-reduce:transition-none dark:text-slate-400",
             open && "rotate-180",
           )}
         />
