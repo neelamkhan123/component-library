@@ -15,9 +15,16 @@
   *,
   ::before,
   ::after {
-    transition-property: color, background-color, border-color, outline-color,
+    transition-property:
+      color, background-color, border-color, outline-color,
       text-decoration-color, fill, stroke;
     transition-timing-function: var(--default-transition-timing-function, ease);
     transition-duration: 150ms;
+  }
+  .sb-show-main.sb-main-padded {
+    min-height: 100vh;
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
   }
 }

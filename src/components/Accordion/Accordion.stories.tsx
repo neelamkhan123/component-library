@@ -69,7 +69,11 @@ export const Single: Story = {
 
 export const Multiple: Story = {
   render: () => (
-    <Accordion type="multiple" defaultValue={["what-is-it"]} className="w-full max-w-md">
+    <Accordion
+      type="multiple"
+      defaultValue={["what-is-it"]}
+      className="w-full max-w-md"
+    >
       {faq.map((item) => (
         <AccordionItem key={item.value} value={item.value}>
           <AccordionHeader>
@@ -93,7 +97,11 @@ export const NotCollapsible: Story = {
     },
   },
   render: () => (
-    <Accordion type="single" defaultValue="what-is-it" className="w-full max-w-md">
+    <Accordion
+      type="single"
+      defaultValue="what-is-it"
+      className="w-full max-w-md"
+    >
       {faq.map((item) => (
         <AccordionItem key={item.value} value={item.value}>
           <AccordionHeader>
