@@ -147,6 +147,15 @@ export const AsACommandPalette: Story = {
 // The same real-Chromium verification approach every native-<dialog>- or
 // Popover-API-based component's "Interactive" story uses.
 export const Interactive: Story = {
+  // Starts pre-opened (below) purely so `play` can grab the dialog without
+  // simulating a click first — fine for a story rendered on its own, but
+  // the autodocs page renders every story in this file inline at once, and
+  // `CommandDialog` is a real modal `<dialog>` whose backdrop covers the
+  // *whole document*, not just its own preview box. Left in autodocs, this
+  // story would pop up open over the entire docs page. `!autodocs` keeps
+  // it fully runnable on its own and in the test runner, just out of that
+  // aggregated view.
+  tags: ["!autodocs"],
   render: function Render() {
     const [open, setOpen] = useState(true);
     return (
