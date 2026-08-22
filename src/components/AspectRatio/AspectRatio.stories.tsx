@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { AspectRatio } from "./AspectRatio";
 
 const meta: Meta<typeof AspectRatio> = {
-  title: "Components/AspectRatio",
+  title: "Components/Aspect Ratio",
   component: AspectRatio,
   tags: ["autodocs"],
   parameters: {
@@ -28,7 +28,10 @@ type Story = StoryObj<typeof AspectRatio>;
 export const Video: Story = {
   name: "16 / 9 (video)",
   render: () => (
-    <AspectRatio ratio={16 / 9} className="rounded-lg border border-slate-200 dark:border-slate-800">
+    <AspectRatio
+      ratio={16 / 9}
+      className="rounded-lg border border-slate-200 dark:border-slate-800"
+    >
       <img
         src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=600&h=338&fit=crop"
         alt="A mountain landscape"
@@ -54,7 +57,10 @@ export const Square: Story = {
 export const Portrait: Story = {
   name: "3 / 4 (portrait)",
   render: () => (
-    <AspectRatio ratio={3 / 4} className="w-40 rounded-lg border border-slate-200 dark:border-slate-800">
+    <AspectRatio
+      ratio={3 / 4}
+      className="w-40 rounded-lg border border-slate-200 dark:border-slate-800"
+    >
       <img
         src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=300&h=400&fit=crop"
         alt="A portrait"

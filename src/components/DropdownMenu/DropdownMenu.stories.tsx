@@ -12,14 +12,14 @@ import {
 } from "./DropdownMenu";
 
 const meta: Meta<typeof DropdownMenu> = {
-  title: "Components/DropdownMenu",
+  title: "Components/Dropdown Menu",
   component: DropdownMenu,
   tags: ["autodocs"],
   parameters: {
     docs: {
       description: {
         component:
-          'A menu revealed by clicking a trigger button. Compose it with `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuSeparator`, `DropdownMenuLabel`, and `DropdownMenuShortcut`. Built directly on `ContextMenu` — see its docs for the menu panel itself (native popover, roving focus, scroll lock, light-dismiss).',
+          "A menu revealed by clicking a trigger button. Compose it with `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuSeparator`, `DropdownMenuLabel`, and `DropdownMenuShortcut`. Built directly on `ContextMenu` — see its docs for the menu panel itself (native popover, roving focus, scroll lock, light-dismiss).",
       },
     },
   },
@@ -103,7 +103,9 @@ export const Interactive: Story = {
     const menu = await canvas.findByRole("menu");
     await waitFor(() => expect(menu).toBeVisible());
     expect(trigger).toHaveAttribute("aria-expanded", "true");
-    await expect(canvas.getByRole("menuitem", { name: "Rename" })).toHaveFocus();
+    await expect(
+      canvas.getByRole("menuitem", { name: "Rename" }),
+    ).toHaveFocus();
 
     // Clicking the trigger again while open closes it (this runs through
     // this component's own code, not the browser's native light-dismiss —

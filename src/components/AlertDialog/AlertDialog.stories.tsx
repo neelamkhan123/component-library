@@ -14,7 +14,7 @@ import {
 } from "./AlertDialog";
 
 const meta: Meta<typeof AlertDialog> = {
-  title: "Components/AlertDialog",
+  title: "Components/Alert Dialog",
   component: AlertDialog,
   tags: ["autodocs"],
   parameters: {
@@ -33,11 +33,15 @@ type Story = StoryObj<typeof AlertDialog>;
 export const Default: Story = {
   render: () => (
     <AlertDialog>
-      <AlertDialogTrigger className={buttonVariants({ variant: "outline" })}>Log out</AlertDialogTrigger>
+      <AlertDialogTrigger className={buttonVariants({ variant: "outline" })}>
+        Log out
+      </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Log out?</AlertDialogTitle>
-          <AlertDialogDescription>You'll need to sign back in to access your account.</AlertDialogDescription>
+          <AlertDialogDescription>
+            You'll need to sign back in to access your account.
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -52,20 +56,24 @@ export const Destructive: Story = {
   name: "A destructive confirmation",
   render: () => (
     <AlertDialog>
-      <AlertDialogTrigger className={buttonVariants({ variant: "destructive" })}>
+      <AlertDialogTrigger
+        className={buttonVariants({ variant: "destructive" })}
+      >
         Delete account
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete your account and remove your data from our
-            servers.
+            This action cannot be undone. This will permanently delete your
+            account and remove your data from our servers.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction variant="destructive">Delete account</AlertDialogAction>
+          <AlertDialogAction variant="destructive">
+            Delete account
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
@@ -77,17 +85,23 @@ export const Destructive: Story = {
 export const Interactive: Story = {
   render: () => (
     <AlertDialog>
-      <AlertDialogTrigger className={buttonVariants({ variant: "destructive" })}>
+      <AlertDialogTrigger
+        className={buttonVariants({ variant: "destructive" })}
+      >
         Delete account
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-          <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+          <AlertDialogDescription>
+            This action cannot be undone.
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction variant="destructive">Delete account</AlertDialogAction>
+          <AlertDialogAction variant="destructive">
+            Delete account
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

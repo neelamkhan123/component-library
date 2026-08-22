@@ -5,7 +5,7 @@ import { Message } from "../Message/Message";
 import { TypingIndicator } from "./TypingIndicator";
 
 const meta: Meta<typeof TypingIndicator> = {
-  title: "Components/TypingIndicator",
+  title: "Components/Typing Indicator",
   component: TypingIndicator,
   tags: ["autodocs"],
   parameters: {
