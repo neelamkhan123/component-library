@@ -214,7 +214,16 @@ export const TooltipTrigger = forwardRef<HTMLSpanElement, TooltipTriggerProps>(
           if (!event.defaultPrevented) hide();
         }}
         className={mergeClassNames(
-          "inline-block rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:focus-visible:outline-white",
+          // No `display` utility of our own here (not even `inline-block`)
+          // — this library's plain string-concat `mergeClassNames` has no
+          // override resolution, so a `display` default here would compete
+          // with, and could unpredictably beat, a caller's own `display`
+          // utility (e.g. `flex` from `buttonVariants`) depending on
+          // unrelated Tailwind generation order rather than className
+          // string order. See DECISIONS.md's `Resizable` entry for the
+          // same class of bug. A plain `<span>`'s own default `inline`
+          // already suits the common truncated-label/status-icon case.
+          "rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:focus-visible:outline-white",
           className,
         )}
         {...props}
