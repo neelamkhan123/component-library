@@ -212,7 +212,7 @@ export const AccordionTrigger = forwardRef<HTMLButtonElement, AccordionTriggerPr
           if (!event.defaultPrevented) toggle(value);
         }}
         className={mergeClassNames(
-          "flex flex-1 items-center justify-between gap-4 py-4 text-left text-sm font-medium text-slate-950 transition-colors hover:text-slate-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:text-slate-300 dark:text-white dark:hover:text-slate-300 dark:focus-visible:outline-white dark:disabled:text-slate-600",
+          "flex flex-1 items-center justify-between gap-4 py-4 text-left text-sm font-medium text-slate-950 transition-colors hover:text-slate-600 focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] disabled:cursor-not-allowed disabled:text-slate-300 dark:text-white dark:hover:text-slate-300 dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px] dark:disabled:text-slate-600",
           className,
         )}
         {...props}

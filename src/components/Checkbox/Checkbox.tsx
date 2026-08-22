@@ -66,7 +66,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             onCheckedChange?.(event.target.checked);
           }}
           className={mergeClassNames(
-            "peer h-4 w-4 shrink-0 appearance-none rounded-sm border border-slate-300 bg-white transition-colors checked:border-slate-950 checked:bg-slate-950 indeterminate:border-slate-950 indeterminate:bg-slate-950 hover:border-slate-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 dark:border-slate-600 dark:bg-slate-950 dark:checked:border-white dark:checked:bg-white dark:indeterminate:border-white dark:indeterminate:bg-white dark:hover:border-slate-500 dark:focus-visible:outline-white dark:disabled:border-slate-700 dark:disabled:bg-slate-900",
+            "peer h-4 w-4 shrink-0 appearance-none rounded-sm border border-slate-300 bg-white transition-colors checked:border-slate-950 checked:bg-slate-950 indeterminate:border-slate-950 indeterminate:bg-slate-950 hover:border-slate-400 focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 dark:border-slate-600 dark:bg-slate-950 dark:checked:border-white dark:checked:bg-white dark:indeterminate:border-white dark:indeterminate:bg-white dark:hover:border-slate-500 dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px] dark:disabled:border-slate-700 dark:disabled:bg-slate-900",
             className,
           )}
           {...props}

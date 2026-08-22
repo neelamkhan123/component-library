@@ -188,7 +188,7 @@ export const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>(
           onValueChange(triggerValue);
         }}
         className={mergeClassNames(
-          "flex-1 rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:pointer-events-none disabled:opacity-50 dark:focus-visible:outline-white",
+          "flex-1 rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] disabled:pointer-events-none disabled:opacity-50 dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px]",
           isSelected
             ? "bg-white text-slate-950 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] dark:bg-slate-950 dark:text-white"
             : "text-slate-500 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white",
@@ -229,7 +229,7 @@ export const TabsContent = forwardRef<HTMLDivElement, TabsContentProps>(
         aria-labelledby={`${idPrefix}-trigger-${contentValue}`}
         tabIndex={0}
         className={mergeClassNames(
-          "rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:focus-visible:outline-white",
+          "rounded-md focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px]",
           className,
         )}
         {...props}

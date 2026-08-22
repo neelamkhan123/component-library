@@ -223,7 +223,7 @@ export const TooltipTrigger = forwardRef<HTMLSpanElement, TooltipTriggerProps>(
           // string order. See DECISIONS.md's `Resizable` entry for the
           // same class of bug. A plain `<span>`'s own default `inline`
           // already suits the common truncated-label/status-icon case.
-          "rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:focus-visible:outline-white",
+          "rounded-sm focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px]",
           className,
         )}
         {...props}

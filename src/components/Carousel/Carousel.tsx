@@ -253,7 +253,7 @@ export const CarouselItem = forwardRef<HTMLDivElement, CarouselItemProps>(
 CarouselItem.displayName = "CarouselItem";
 
 const navButtonClassName =
-  "absolute top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-950 shadow-[rgba(0,0,0,0.05)_0px_6px_24px_0px,_rgba(0,0,0,0.08)_0px_0px_0px_1px] backdrop-blur-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-950/90 dark:text-white dark:hover:bg-slate-950 dark:focus-visible:outline-white";
+  "absolute top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-950 shadow-[rgba(0,0,0,0.05)_0px_6px_24px_0px,_rgba(0,0,0,0.08)_0px_0px_0px_1px] backdrop-blur-sm transition-colors hover:bg-white focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-950/90 dark:text-white dark:hover:bg-slate-950 dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px]";
 
 export type CarouselPreviousProps = ButtonHTMLAttributes<HTMLButtonElement>;
 
@@ -334,7 +334,7 @@ export const CarouselDots = forwardRef<HTMLDivElement, CarouselDotsProps>(
               aria-current={isSelected || undefined}
               onClick={() => scrollTo(index)}
               className={mergeClassNames(
-                "h-1.5 w-1.5 rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:focus-visible:outline-white",
+                "h-1.5 w-1.5 rounded-full transition-colors focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px]",
                 isSelected
                   ? "bg-slate-950 dark:bg-white"
                   : "bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600",

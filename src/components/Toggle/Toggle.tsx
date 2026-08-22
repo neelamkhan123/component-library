@@ -8,7 +8,7 @@ const toggleVariants = cva(
   // attribute — `aria-pressed` is already the real signal a toggle button
   // exposes to assistive tech, so a second attribute carrying the same
   // fact would just be something else to keep in sync with it.
-  "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap text-slate-950 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:pointer-events-none disabled:opacity-50 aria-pressed:bg-slate-950 aria-pressed:text-white aria-pressed:hover:bg-slate-800 dark:text-white dark:hover:bg-slate-800 dark:focus-visible:outline-white dark:aria-pressed:bg-white dark:aria-pressed:text-slate-950 dark:aria-pressed:hover:bg-slate-200",
+  "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap text-slate-950 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] disabled:pointer-events-none disabled:opacity-50 aria-pressed:bg-slate-950 aria-pressed:text-white aria-pressed:hover:bg-slate-800 dark:text-white dark:hover:bg-slate-800 dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px] dark:aria-pressed:bg-white dark:aria-pressed:text-slate-950 dark:aria-pressed:hover:bg-slate-200",
   {
     variants: {
       variant: {

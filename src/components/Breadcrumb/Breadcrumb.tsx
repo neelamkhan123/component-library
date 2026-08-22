@@ -65,7 +65,7 @@ export const BreadcrumbLink = forwardRef<
   <a
     ref={ref}
     className={mergeClassNames(
-      "transition-colors hover:text-slate-950 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:hover:text-white dark:focus-visible:outline-white",
+      "transition-colors hover:text-slate-950 focus-visible:rounded-sm focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] dark:hover:text-white dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px]",
       className,
     )}
     {...props}

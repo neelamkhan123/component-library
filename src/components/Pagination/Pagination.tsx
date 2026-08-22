@@ -122,7 +122,7 @@ export const PaginationLink = forwardRef<HTMLButtonElement, PaginationLinkProps>
       type={type}
       aria-current={isActive ? "page" : undefined}
       className={mergeClassNames(
-        "flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:focus-visible:outline-white",
+        "flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px]",
         isActive
           ? "bg-slate-950 text-white dark:bg-white dark:text-slate-950"
           : "text-slate-950 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800",
@@ -143,7 +143,7 @@ export const PaginationPrevious = forwardRef<HTMLButtonElement, PaginationPrevio
       ref={ref}
       type={type}
       className={mergeClassNames(
-        "flex h-9 items-center gap-1 rounded-lg px-3 text-sm font-medium text-slate-950 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:pointer-events-none disabled:opacity-40 dark:text-white dark:hover:bg-slate-800 dark:focus-visible:outline-white",
+        "flex h-9 items-center gap-1 rounded-lg px-3 text-sm font-medium text-slate-950 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] disabled:pointer-events-none disabled:opacity-40 dark:text-white dark:hover:bg-slate-800 dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px]",
         className,
       )}
       {...props}
@@ -164,7 +164,7 @@ export const PaginationNext = forwardRef<HTMLButtonElement, PaginationNextProps>
       ref={ref}
       type={type}
       className={mergeClassNames(
-        "flex h-9 items-center gap-1 rounded-lg px-3 text-sm font-medium text-slate-950 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:pointer-events-none disabled:opacity-40 dark:text-white dark:hover:bg-slate-800 dark:focus-visible:outline-white",
+        "flex h-9 items-center gap-1 rounded-lg px-3 text-sm font-medium text-slate-950 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] disabled:pointer-events-none disabled:opacity-40 dark:text-white dark:hover:bg-slate-800 dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px]",
         className,
       )}
       {...props}
