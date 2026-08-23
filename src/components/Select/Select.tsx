@@ -258,7 +258,10 @@ export const SelectValue = forwardRef<HTMLSpanElement, SelectValueProps>(
         ref={ref}
         className={mergeClassNames(
           "truncate",
-          !label && "text-slate-400 dark:text-slate-500",
+          // Muted enough to read as a placeholder, dark enough to clear
+          // AA against the trigger's white/slate-950 field — slate-400
+          // here was 2.55:1 and failed `color-contrast`.
+          !label && "text-slate-500 dark:text-slate-400",
           className,
         )}
         {...props}
@@ -436,7 +439,17 @@ export const SelectItem = forwardRef<HTMLButtonElement, SelectItemProps>(
     // JSX whose rendered text isn't itself a stable dependency to watch —
     // `registerLabel` already no-ops when the label hasn't actually
     // changed, so this doesn't cause extra re-renders in the common case.
-    useEffect(() => {
+    //
+    // A *layout* effect, not a plain one: until this has run, `labels` is
+    // empty and a `Select` with a `defaultValue` paints its placeholder
+    // instead of the selected item's label. As a passive effect that
+    // correction lands a frame late, which the Storybook a11y run catches
+    // as a real failure — its `play` reads the trigger on that first
+    // commit and sees "Select a fruit" where "Banana" belongs. This reads
+    // the item's *own* ref, attached before its own layout effects run, so
+    // it's safe here in a way `CommandInput`'s sibling-reading effect
+    // isn't.
+    useLayoutEffect(() => {
       registerLabel(itemValue, labelRef.current?.textContent ?? "");
     });
 

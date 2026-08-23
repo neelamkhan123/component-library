@@ -191,7 +191,10 @@ export const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>(
           "flex-1 rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] disabled:pointer-events-none disabled:opacity-50 dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px]",
           isSelected
             ? "bg-white text-slate-950 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] dark:bg-slate-950 dark:text-white"
-            : "text-slate-500 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white",
+            // Measured against `TabsList`'s own slate-100/slate-800
+            // background, not the page — slate-500 on slate-100 is
+            // 4.28:1, just under AA, which `color-contrast` flags.
+            : "text-slate-600 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white",
           className,
         )}
         {...props}

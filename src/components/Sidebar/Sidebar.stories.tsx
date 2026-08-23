@@ -44,7 +44,7 @@ function TopBar({ title }: { title: string }) {
 
 function PlaceholderBody() {
   return (
-    <div className="flex flex-1 items-center justify-center text-sm text-slate-400 dark:text-slate-600">
+    <div className="flex flex-1 items-center justify-center text-sm text-slate-500 dark:text-slate-400">
       Page content
     </div>
   );

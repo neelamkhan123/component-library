@@ -27,28 +27,28 @@ export default meta;
 type Story = StoryObj<typeof Progress>;
 
 export const Default: Story = {
-  render: () => <Progress value={60} className="w-full" />,
+  render: () => <Progress value={60} aria-label="Download progress" className="w-full" />,
 };
 
 export const Values: Story = {
   render: () => (
     <div className="flex w-full flex-col gap-3">
-      <Progress value={0} />
-      <Progress value={33} />
-      <Progress value={66} />
-      <Progress value={100} />
+      <Progress value={0} aria-label="Not started" />
+      <Progress value={33} aria-label="A third done" />
+      <Progress value={66} aria-label="Two thirds done" />
+      <Progress value={100} aria-label="Complete" />
     </div>
   ),
 };
 
 export const Indeterminate: Story = {
   name: "Indeterminate (no value yet)",
-  render: () => <Progress className="w-full" />,
+  render: () => <Progress aria-label="Loading" className="w-full" />,
 };
 
 export const CustomMax: Story = {
   name: "A custom max (e.g. steps completed)",
-  render: () => <Progress value={3} max={5} className="w-full" />,
+  render: () => <Progress value={3} max={5} aria-label="Setup steps completed" className="w-full" />,
 };
 
 // A file upload is the most common reason a chatbox needs a progress bar —
@@ -71,7 +71,7 @@ export const SimulatedUpload: Story = {
 
     return (
       <div className="flex w-full flex-col gap-2">
-        <Progress value={progress} className="w-full" />
+        <Progress value={progress} aria-label="Upload progress" className="w-full" />
         <p className="text-xs text-slate-500 dark:text-slate-400">
           {progress < 100 ? `Uploading… ${progress}%` : "Upload complete"}
         </p>

@@ -51,10 +51,11 @@ export const Sizes: Story = {
 export const States: Story = {
   render: () => (
     <div className="flex w-64 flex-col gap-3">
-      <Input placeholder="Default" />
-      <Input placeholder="Disabled" disabled />
-      <Input placeholder="Disabled with value" disabled defaultValue="Can't edit this" />
+      <Input aria-label="Default example" placeholder="Default" />
+      <Input aria-label="Disabled example" placeholder="Disabled" disabled />
+      <Input aria-label="Disabled with value example" placeholder="Disabled with value" disabled defaultValue="Can't edit this" />
       <Input
+        aria-label="Email address"
         placeholder="Invalid"
         defaultValue="not-an-email"
         aria-invalid="true"

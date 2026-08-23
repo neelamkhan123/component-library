@@ -207,7 +207,7 @@ export type CommandListProps = HTMLAttributes<HTMLDivElement>;
  */
 export const CommandList = forwardRef<HTMLDivElement, CommandListProps>(
   ({ className, "aria-label": ariaLabel = "Results", ...props }, ref) => {
-    const { listRef, listId, query, setHasVisibleItems } = useCommandContext("CommandList");
+    const { listRef, listId, query, hasVisibleItems, setHasVisibleItems } = useCommandContext("CommandList");
 
     // Recomputed whenever `query` could have changed which CommandItems
     // rendered themselves at all — each decides for itself, synchronously,
@@ -226,8 +226,16 @@ export const CommandList = forwardRef<HTMLDivElement, CommandListProps>(
       <div
         ref={setRefs}
         id={listId}
-        role="listbox"
-        aria-label={ariaLabel}
+        // Only a `listbox` while it actually holds options. When the query
+        // matches nothing, the sole child is `CommandEmpty`'s message —
+        // and a `listbox` whose children aren't `option`/`group` is an
+        // `aria-required-children` violation (caught by the Storybook
+        // a11y run, whose `play` leaves this story on a no-match query).
+        // Dropping the role rather than the message is the honest fix: an
+        // empty result list isn't a list of choices, and the input's
+        // `aria-activedescendant` has nothing to point at either.
+        role={hasVisibleItems ? "listbox" : undefined}
+        aria-label={hasVisibleItems ? ariaLabel : undefined}
         className={mergeClassNames("max-h-80 overflow-y-auto p-2", className)}
         {...props}
       />

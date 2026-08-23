@@ -216,6 +216,12 @@ export const CarouselContent = forwardRef<HTMLDivElement, CarouselContentProps>(
     return (
       <div
         ref={mergeRefs(containerRef, ref)}
+        // The viewport is the element that actually scrolls, so it needs to
+        // be reachable by keyboard on its own — a mouse/trackpad user can
+        // swipe it, but without a tab stop nobody else can. This is the
+        // scrolling *viewport*, not the outer `role="region"` wrapper,
+        // which still deliberately stays out of the tab order.
+        tabIndex={0}
         className={mergeClassNames(
           // The native scrollbar is hidden since CarouselPrevious/CarouselNext/
           // CarouselDots already give the same navigation affordance visually;

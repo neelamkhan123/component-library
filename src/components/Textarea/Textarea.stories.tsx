@@ -41,10 +41,11 @@ export const WithLabel: Story = {
 export const States: Story = {
   render: () => (
     <div className="flex w-72 flex-col gap-3">
-      <Textarea placeholder="Default" />
-      <Textarea placeholder="Disabled" disabled />
-      <Textarea placeholder="Disabled with value" disabled defaultValue="Can't edit this" />
+      <Textarea aria-label="Default example" placeholder="Default" />
+      <Textarea aria-label="Disabled example" placeholder="Disabled" disabled />
+      <Textarea aria-label="Disabled with value example" placeholder="Disabled with value" disabled defaultValue="Can't edit this" />
       <Textarea
+        aria-label="Email address"
         placeholder="Invalid"
         defaultValue="too short"
         aria-invalid="true"

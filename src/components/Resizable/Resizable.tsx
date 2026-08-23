@@ -96,6 +96,10 @@ export const ResizablePanel = forwardRef<HTMLDivElement, ResizablePanelProps>(
           flexBasis: defaultSize === undefined ? "0%" : `${defaultSize}%`,
           ...style,
         }}
+        // A panel scrolls its own overflow, which makes it a scrollable
+        // region: without a tab stop, content that only overflow-scrolls
+        // is unreachable for anyone not using a pointer.
+        tabIndex={0}
         className={mergeClassNames("overflow-auto", orientation === "vertical" ? "min-h-0" : "min-w-0", className)}
         {...props}
       />
