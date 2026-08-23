@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+      - run: npm ci
+      - run: npm run test
+      - run: npm run build
+      - run: npm run build-storybook
+      - run: npx playwright install --with-deps
+      - name: Serve Storybook and run a11y tests
+        run: |
+          npx http-server storybook-static --port 6006 --silent &
+          npx wait-on tcp:6006
+          npm run test-storybook
