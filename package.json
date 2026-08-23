@@ -1,6 +1,6 @@
 {
   "name": "@neelamkhan21/ui",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "An accessible React component library",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -32,6 +32,7 @@
     "test-storybook": "test-storybook"
   },
   "devDependencies": {
+    "@changesets/cli": "^3.0.1",
     "@storybook/addon-a11y": "^10.5.8",
     "@storybook/addon-docs": "^10.5.8",
     "@storybook/addon-mcp": "latest",
