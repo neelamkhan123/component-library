@@ -181,6 +181,38 @@ object-cover` (the exact technique `AvatarImage` already uses to fill
   fast-loading image replaces it — mirroring Radix's Avatar, which added the
   same option for the same reason.
 
+## Avatar Group
+
+- Takes `Avatar` elements as children and applies the size and the overlap
+  itself (via `cloneElement`) rather than accepting a `people` array of
+  data. Callers keep `Avatar`/`AvatarImage`/`AvatarFallback`'s full
+  composition — a linked avatar, a tooltip on one of them — while the group
+  keeps the one thing that must be uniform: callers can't accidentally mix
+  sizes within a single stack.
+- The layout-shift guarantee is inherited, not added: `Avatar`'s size
+  variants are fixed `h-*`/`w-*` and `AvatarFallback` fills the same box
+  while an image is in flight, so every slot is reserved at first paint and
+  the group's width never reflows as images arrive or fail. This is the
+  whole reason the component exists as a component rather than as a
+  `flex -space-x-2` utility someone reapplies per usage.
+- `role="group"` with a required `label`, not a list. A bare stack of images
+  has no accessible meaning on its own, so the label isn't optional; but
+  per-avatar list semantics ("list, 5 items, item 1 of 5…") add
+  announcement noise without adding navigation anyone wants from a
+  decorative cluster of faces.
+- The `+N` overflow counter is deliberately *not* `aria-hidden`. "And 4
+  more" is information a screen-reader user needs exactly as much as a
+  sighted one, and it appears nowhere else in the group — so the glyph is
+  hidden and an `sr-only` phrase carries it, the same split `Pagination`'s
+  ellipsis and `Breadcrumb`'s "More" use.
+- `total` exists for the common case where `children` is already only the
+  first few of a much larger set — you shouldn't have to render 128 avatars
+  to say there are 128.
+- Adjacent circles are separated by a `ring` in the surface color rather
+  than left touching, so the stack reads as distinct people rather than one
+  blob — the same "fills never touch" rule `Chart` and `Sparkline` follow
+  for their own marks.
+
 ## Badge
 
 - Renders a plain `<span>`, not a `<button>` — a badge is informational (a
@@ -347,6 +379,64 @@ auto` rather than expecting a wrapping layout component to position it.
   (derived from the container's `scrollLeft` vs. `scrollWidth`/`clientWidth`)
   rather than hiding, so their position in the layout — and in the tab
   order — stays stable as the carousel scrolls.
+
+## Chart
+
+- Deliberately **not** a wrapper around a charting library. The plot is
+  whatever the caller passes as `children` — a Recharts `<LineChart>`, a
+  `<BarChart>`, hand-written SVG. Recharts is declared as an *optional*
+  `peerDependency` (`peerDependenciesMeta`), so it is never bundled, never
+  imported by this package, and consumers who don't chart pay nothing for
+  it. That keeps the no-new-runtime-dependency position `DataTable` takes
+  toward headless table libraries intact for the one component where the
+  pull to break it is strongest, and it means this component doesn't rot
+  when Recharts changes its API.
+- What `Chart` does own is everything identical across every chart and easy
+  to get wrong: series color, identity-beyond-color, and a reserved plot
+  box. That division is the whole design — a chart engine is a solved
+  problem with several good implementations; an accessible, correctly
+  colored *frame* around one is what libraries consistently skip.
+- Series color ships as `--chart-1` … `--chart-8` custom properties set on
+  the figure, so plot children reference `var(--chart-1)` and theme
+  correctly without knowing anything about dark mode. The dark column is
+  the same eight hues re-stepped for the dark surface, **not** an automatic
+  flip of the light column.
+- The palette was *validated*, not chosen by eye, against this library's own
+  surfaces (white and `slate-950`) rather than inherited from a
+  general-purpose palette: lightness band, chroma floor, adjacent-pair
+  separation under simulated protanopia/deuteranopia/tritanopia,
+  adjacent-pair separation for normal vision, and contrast against the
+  surface. Measured worst adjacent pairs — light: CVD ΔE 12.5
+  (teal↔orange, protan), normal-vision ΔE 22.4; dark: CVD ΔE 8.8
+  (green↔magenta, deutan), normal-vision ΔE 20.1. Reordering or re-stepping
+  the slots invalidates those numbers, which is why the order is documented
+  as fixed rather than treated as cosmetic.
+- Slots are assigned in fixed order and never cycled — a ninth series folds
+  into an "Other" bucket or splits into small multiples rather than getting
+  a generated hue, because a cycled palette makes two different series the
+  same color. `chartAllPairsSeriesLimit` (3) records the separate, stricter
+  cap for chart forms where *any* pair can end up adjacent (scatter, bubble,
+  small multiples) rather than only neighbouring ones (line, bar).
+- Three of the light-mode steps sit below 3:1 against white. Rather than
+  re-step the whole palette and lose the adjacent-pair separation above,
+  the documented relief applies: the legend labels and the data table are
+  required parts of the component, not optional decoration.
+- The plot is `aria-hidden` and `ChartDataTable` carries the real content.
+  An SVG plot exposes a pile of unlabeled shapes to a screen reader; the
+  numbers in a real `<table>` are reachable by screen reader, by keyboard,
+  and by anyone who can't separate two hues (WCAG 1.4.1). `ChartDataTable`
+  is a separate component the caller composes rather than something `Chart`
+  derives, because only the caller knows how its series map to columns and
+  how each value should be formatted for reading aloud.
+- Renders `<figure>`/`<figcaption>` — a chart is exactly the referenced,
+  captioned content that element pair is for, so the accessible name and
+  description come from real elements rather than from `aria-label` strings.
+- `height` is reserved up front so an async chart doesn't shift the page
+  when it arrives — the same layout-stability concern `AvatarGroup`
+  addresses for images.
+- Legend labels wear text tokens, never the series color: the lighter
+  categorical steps are illegible as text on the surface, so identity comes
+  from the colored swatch *beside* the label instead.
 
 ## Checkbox
 
@@ -636,14 +726,14 @@ auto` rather than expecting a wrapping layout component to position it.
   controls) rather than reinventing either — the same "compose what
   already exists" instinct behind `DropdownMenu` building on `ContextMenu`.
   Sorting is the one piece of real logic that's new here.
-- Deliberately scoped to sorting and pagination — no filtering, global
-  search, row selection, or column resizing/reordering. A fully-featured
-  data grid is a genuinely different, much larger component: shadcn/ui's
+- Deliberately scoped to sorting, filtering, and pagination — no row
+  selection, column resizing/reordering, or server-side/async data. A
+  fully-featured data grid is a genuinely different, much larger component: shadcn/ui's
   own docs are explicit that they don't ship one at all, pointing instead
   to a headless table library (TanStack Table) for anyone who needs the
   full feature set. This library has taken on no new runtime dependency
-  for any other component, and sorting plus pagination cover the large
-  majority of "I just want a nicer table" needs on their own — the same
+  for any other component, and sorting, filtering, and pagination cover the
+  large majority of "I just want a nicer table" needs on their own — the same
   kind of bounded, honest scope as `ContextMenu` leaving out submenus or
   `Select` leaving out typeahead, just declared up front rather than
   discovered by omission.
@@ -674,6 +764,76 @@ auto` rather than expecting a wrapping layout component to position it.
   machinery than a `cell?: (row) => ReactNode` slot already provides a
   perfectly good escape hatch for (wrap your own cell content in a
   `<button>`/`<a>` if a row needs to navigate somewhere).
+- Filtering (added after the initial pass, when the dashboard views this
+  library backs needed it) is one opt-in search box matching across every
+  column, not a filter control per column. "Find the row I mean" is a
+  single-box question, and a per-column filter row costs a lot of
+  permanent header space to answer a question users mostly aren't asking —
+  the same restraint behind leaving out row selection. `filterValue` on a
+  column supplies the text a column contributes when its `cell` renders
+  something the raw value doesn't describe (an avatar, a status badge), and
+  `() => ""` opts a column out of matching entirely.
+- Filtering runs _before_ sorting and pagination, so page counts and sort
+  order describe the rows actually on screen rather than the full data set,
+  and the current page resets to 1 whenever the filter changes — without
+  that reset, narrowing the results strands the user on an empty page 4 of
+  2. (`clampedPage` already prevented rendering past the end; the reset is
+  what stops the *jump* being silent.)
+- Matches are announced through an `sr-only` `role="status"` region. Typing
+  in the box rewrites the table with no focus change and no visible
+  transition of its own, so a screen-reader user otherwise gets no signal at
+  all that the result set moved under them (WCAG 4.1.3). The region stays
+  empty while the filter is empty, so it announces nothing on first paint —
+  the same "don't announce what nobody asked about" instinct behind
+  `EmptyState`'s `live` being opt-in.
+- A filtered-to-nothing table says something different from a table with no
+  data (`noMatchesMessage` vs `emptyMessage`): "no rows match your filter"
+  tells the user to widen the filter, while "no results" on a table they
+  just filtered reads as data loss.
+- The box is a native `type="search"` `Input` with an `sr-only` `<label>` —
+  the browser's own clear affordance and the right on-screen keyboard come
+  free, and the visible search icon is `aria-hidden` decoration rather than
+  the control's only label.
+
+## Date Range Picker
+
+- Assembled almost entirely from components this library already has:
+  `Popover` for the panel (and with it Escape, outside-click dismissal, and
+  top-layer rendering, none of it reimplemented), two `Calendar`s for the
+  custom range, and `RadioGroup` for the presets. The same
+  compose-what-exists instinct as `DataTable` building on
+  `Table`/`Pagination`.
+- The presets are a real `RadioGroup` of `<input type="radio">`s, not a
+  hand-rolled `role="listbox"`. They are a set of mutually exclusive
+  options, which is exactly what a radio group is — so mutual exclusivity,
+  arrow-key navigation between rows, and the "3 of 5" announcement all come
+  from the browser rather than from another roving-focus implementation.
+  `RadioGroupItem`'s own note about radio inputs being the one native
+  element with no `Checkbox` counterpart is the reason this was worth
+  reaching for.
+- Two calendars, one per endpoint, rather than one grid with range-painting
+  hover. A single-grid range picker has to express "click once for the
+  start, again for the end" through hover preview, which is invisible to
+  keyboard and touch users and unannounced to assistive tech; labelled
+  start/end grids make the same selection unambiguous on every input mode.
+  It also lets `Calendar` stay the single-date component it already is,
+  rather than growing a range mode that only this component would use.
+- An inverted range can't be produced at all: the end grid disables
+  everything before the start and the start grid everything after the end,
+  rather than silently swapping the two. A swap would move an endpoint the
+  user didn't touch — the same reason `Calendar` skips *past* disabled days
+  for roving focus instead of landing on them and quietly doing nothing.
+- A preset stores a `getRange()` *function*, not a precomputed range, so
+  "Last 7 days" is evaluated at selection time. Storing the dates would let
+  a long-lived dashboard tab silently mean last week by morning.
+- Which preset row is checked is derived from the selected range rather than
+  held in its own state, so a caller-controlled `value` and the checked row
+  can never disagree, and a hand-picked custom range simply matches nothing.
+- Date arithmetic is plain `Date` math, duplicated from `Calendar` rather
+  than shared through a new internal module — the same position `Calendar`
+  documents (every operation is a couple of lines, and a range is a pair of
+  local calendar days, never a pair of instants, so nothing needs timezone
+  conversion or a date library).
 
 ## Dialog
 
@@ -794,6 +954,31 @@ allow-discrete`, via Tailwind's `starting:`/`open:`/`transition-discrete`
   content's measured size fed back into which _side_ to open on, not just
   where to clamp to, which is a deliberate scope cut, not an oversight —
   the same spirit as `ContextMenu` leaving out submenus.
+
+## Empty State
+
+- Prop-driven (`icon`/`title`/`description`/`action`) rather than
+  compositional like `Card`. An empty state is always the same short,
+  fixed shape, so a sub-component per slot would be ceremony without
+  flexibility — the same call `Attachment` and `Progress` make.
+- The `title` renders as a `<p>` by default, not a heading. An empty state
+  can sit inside a card, a table body, a tab panel, or fill a whole page,
+  and only the caller knows which level would be correct there — guessing
+  produces skipped heading levels (WCAG 1.3.1). `CardTitle` can fix on `h3`
+  precisely because a card's nesting is predictable and an empty state's
+  isn't.
+- The level is chosen through a `titleAs` prop naming the *element*, not by
+  passing a heading element as `title`. Taking an element would nest an
+  `<h2>` inside the `<p>` that styles it — invalid HTML, and React says so
+  at runtime. Naming the element keeps one styled node either way.
+- `live` (`role="status"` + `aria-live="polite"`) is opt-in, not the
+  default. It's correct when the empty state *replaces* content in place —
+  a filter matching nothing, a load finishing with zero rows — and useless
+  when the empty state is present on first paint, where a live region has
+  no change to announce. Defaulting it on would make every first paint
+  announce itself.
+- `icon` is `aria-hidden` throughout: it always duplicates the title beside
+  it, the same treatment `Badge` and `Button` give their icon slots.
 
 ## Input
 
@@ -1297,6 +1482,64 @@ className="flex-1">...</main></SidebarProvider>`, with no `SidebarInset`
   users, the same treatment every other animation in this library gets
   (`Dialog`'s transitions, `Progress`'s indeterminate fill). Color alone
   (a gray block) still reads as "this is loading" without needing motion.
+
+## Sparkline
+
+- Hand-drawn plain SVG rather than a charting dependency. A sparkline is a
+  polyline through normalized points plus an optional end dot — a few lines
+  of arithmetic — and `Chart` already exists for the case that genuinely
+  wants a chart engine. Same position as `Calendar`'s hand-rolled date math
+  and `DataTable`'s refusal of a headless table library.
+- Colored with `currentColor`, the way `lucide-react`'s icons are, so a
+  caller tints it with a `text-*` class on the sparkline or any ancestor.
+  A `color` prop would have to re-theme itself for dark mode; inheriting
+  means `StatCard` can tint the trend to match its delta for free.
+- Decorative (`aria-hidden`) by default. A sparkline is a redundant
+  restatement of a number that is nearly always written out beside it, so
+  announcing it too is noise — the same reasoning `Skeleton` gives for
+  hiding itself. `label` promotes it to `role="img"` for the rare
+  standalone case, and the doc comment points at `Chart` plus its data
+  table for anything where the trend is the primary content.
+- Fewer than two points renders nothing at all. One point is not a trend,
+  and a lone dot would imply one.
+- A flat series is centered rather than divided by a zero range — that's
+  both what "no change" should look like and the guard that keeps `NaN` out
+  of the path data.
+- `preserveAspectRatio="none"` plus `vectorEffect="non-scaling-stroke"`: the
+  box is stretched freely by CSS (a sparkline has no meaningful aspect
+  ratio to preserve) while the line itself stays an even weight rather than
+  distorting with it.
+- Bars leave a 1px gap between fills, the sparkline-scale version of the
+  same "fills never touch" rule `Chart` and `AvatarGroup` follow.
+
+## Stat Card
+
+- Wraps `Card` rather than restyling a bare `<div>`, so a KPI row and the
+  cards around it share one surface, border, and shadow.
+- The delta never leans on color alone (WCAG 1.4.1): an arrow icon carries
+  direction visually, and an `sr-only` "Increased by"/"Decreased by"/"No
+  change" carries it to assistive tech. The green/red is reinforcement, not
+  the signal — the same split `AvatarGroup`'s `+N` counter uses.
+- `deltaDirection` exists because "up" isn't universally good. Active
+  users rising is good news; average response time rising isn't. Hard-coding
+  green-for-up would color half of a real dashboard wrong, so the caller
+  states which direction is good news and `"neutral"` opts out of coloring
+  entirely. A zero delta is always neutral regardless.
+- The value uses the font's default proportional figures, deliberately
+  *not* `tabular-nums`. Tabular figures give every digit a `0`'s width,
+  which reads loose at display sizes; columns of numbers that must align
+  vertically are where they belong, which is why `ChartDataTable`'s cells
+  do use them and this doesn't.
+- No loading state of its own. A caller showing a tile before its data
+  arrives composes `Skeleton` in the `value` slot and wraps the whole
+  loading region in one `role="status"` — exactly the pattern `Skeleton`'s
+  own docs prescribe, rather than every tile announcing separately.
+- `delta` is a ratio (`0.124`), not a preformatted string, so the component
+  can decide the sign, the arrow, and the color from it; `formatDelta`
+  overrides the rendering for deltas that aren't percentages.
+- A `trend` shorter than two points is dropped rather than rendered — the
+  same threshold `Sparkline` itself enforces, checked here too so the tile
+  doesn't reserve space for nothing.
 
 ## Switch
 
