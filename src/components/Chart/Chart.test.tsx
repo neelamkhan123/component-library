@@ -161,6 +161,26 @@ test("ChartDataTable is visually hidden but present by default", () => {
   expect(container.querySelector(".sr-only")).toContainElement(screen.getByRole("table"));
 });
 
+test("a hidden ChartDataTable renders no scroll container", () => {
+  const { container } = render(
+    <ChartDataTable caption="Sessions per week" columns={columns} data={rows} />,
+  );
+
+  // `Table`'s `overflow-x-auto` wrapper is right for a visible table and
+  // wrong for an `sr-only` one: clipped to 1x1px it always has overflowing
+  // content, which axe reports as a scrollable region unreachable by
+  // keyboard. jsdom applies no CSS so it can't see the violation itself —
+  // asserting the wrapper is absent is what actually guards it.
+  expect(container.querySelector(".overflow-x-auto")).toBeNull();
+});
+
+test("a visible ChartDataTable keeps the scroll container", () => {
+  const { container } = render(
+    <ChartDataTable caption="Sessions per week" columns={columns} data={rows} visuallyHidden={false} />,
+  );
+  expect(container.querySelector(".overflow-x-auto")).not.toBeNull();
+});
+
 test("ChartDataTable can be shown to everyone", () => {
   const { container } = render(
     <ChartDataTable caption="Sessions per week" columns={columns} data={rows} visuallyHidden={false} />,

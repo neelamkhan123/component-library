@@ -228,31 +228,45 @@ export interface ChartDataTableProps<T> {
  * and how each value should be formatted for reading aloud.
  */
 export function ChartDataTable<T>({ columns, data, caption, visuallyHidden = true }: ChartDataTableProps<T>) {
-  return (
-    <div className={visuallyHidden ? "sr-only" : undefined}>
-      <Table>
-        <TableCaption className="sr-only">{caption}</TableCaption>
-        <TableHeader>
-          <TableRow>
-            {columns.map((column, index) => (
-              <TableHead key={index}>{column.header}</TableHead>
+  const content = (
+    <>
+      <TableCaption className="sr-only">{caption}</TableCaption>
+      <TableHeader>
+        <TableRow>
+          {columns.map((column, index) => (
+            <TableHead key={index}>{column.header}</TableHead>
+          ))}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {data.map((row, rowIndex) => (
+          <TableRow key={rowIndex}>
+            {columns.map((column, columnIndex) => (
+              // Numbers in a column, where `tabular-nums` earns its keep —
+              // unlike `StatCard`'s standalone value.
+              <TableCell key={columnIndex} className="tabular-nums">
+                {column.cell(row)}
+              </TableCell>
             ))}
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map((row, rowIndex) => (
-            <TableRow key={rowIndex}>
-              {columns.map((column, columnIndex) => (
-                // Numbers in a column, where `tabular-nums` earns its keep —
-                // unlike `StatCard`'s standalone value.
-                <TableCell key={columnIndex} className="tabular-nums">
-                  {column.cell(row)}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+        ))}
+      </TableBody>
+    </>
+  );
+
+  // Deliberately *not* wrapped in `Table` when hidden. `Table` puts its
+  // `<table>` inside an `overflow-x-auto` container so narrow viewports
+  // scroll instead of overflowing — correct when the table is on screen, but
+  // `sr-only` clips its container to 1×1px, so the content always overflows
+  // it and axe flags a scrollable region no keyboard user can reach
+  // (`scrollable-region-focusable`, serious). A table nobody can see needs no
+  // scroll affordance; giving it a tab stop instead would put an invisible
+  // stop in the tab order, which is worse.
+  return visuallyHidden ? (
+    <div className="sr-only">
+      <table className="w-full caption-bottom text-sm">{content}</table>
     </div>
+  ) : (
+    <Table>{content}</Table>
   );
 }
