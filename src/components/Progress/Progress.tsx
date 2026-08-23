@@ -21,6 +21,11 @@ export interface ProgressProps extends HTMLAttributes<HTMLDivElement> {
  * inconsistently across engines and can't be reached with a plain Tailwind
  * class, so a track `<div>` with a width-driven fill `<div>` inside it is
  * the one that can actually be styled consistently. See `DECISIONS.md`.
+ *
+ * A `progressbar` has no name from content the way a `<button>` does, so
+ * pass `aria-label` (or `aria-labelledby`) saying what is progressing —
+ * without one, axe flags `aria-progressbar-name` and a screen reader
+ * announces a bare percentage with nothing to attach it to.
  */
 export const Progress = forwardRef<HTMLDivElement, ProgressProps>(
   ({ value, max = 100, className, ...props }, ref) => {

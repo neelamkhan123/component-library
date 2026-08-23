@@ -181,7 +181,7 @@ function ToastItem({ record }: { record: ToastRecord }) {
               action.onClick();
               dismissToast(id);
             }}
-            className="text-sm font-medium underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+            className="text-sm font-medium underline underline-offset-4 focus-visible:outline-none focus-visible:shadow-[currentColor_0px_0px_0px_2px]"
           >
             {action.label}
           </button>
@@ -191,7 +191,7 @@ function ToastItem({ record }: { record: ToastRecord }) {
         type="button"
         onClick={() => dismissToast(id)}
         aria-label="Dismiss"
-        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md opacity-60 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md opacity-60 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:shadow-[currentColor_0px_0px_0px_2px]"
       >
         <X className="h-4 w-4" aria-hidden="true" />
       </button>

@@ -96,6 +96,10 @@ export const ResizablePanel = forwardRef<HTMLDivElement, ResizablePanelProps>(
           flexBasis: defaultSize === undefined ? "0%" : `${defaultSize}%`,
           ...style,
         }}
+        // A panel scrolls its own overflow, which makes it a scrollable
+        // region: without a tab stop, content that only overflow-scrolls
+        // is unreachable for anyone not using a pointer.
+        tabIndex={0}
         className={mergeClassNames("overflow-auto", orientation === "vertical" ? "min-h-0" : "min-w-0", className)}
         {...props}
       />
@@ -269,7 +273,7 @@ export const ResizableHandle = forwardRef<HTMLDivElement, ResizableHandleProps>(
           else applyDelta(measurement, measurement.startNextSize);
         }}
         className={mergeClassNames(
-          "relative flex shrink-0 touch-none items-center justify-center bg-slate-200 transition-colors hover:bg-slate-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 dark:focus-visible:outline-white",
+          "relative flex shrink-0 touch-none items-center justify-center bg-slate-200 transition-colors hover:bg-slate-300 focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] dark:bg-slate-800 dark:hover:bg-slate-700 dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px]",
           // `self-stretch`, not `h-full`/`w-full` (i.e. not a percentage):
           // the group's own height/width is itself intrinsic (sized to its
           // panels' content, not an explicit value), and a percentage

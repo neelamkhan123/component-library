@@ -97,7 +97,7 @@ export const WithSeparatorAndDisabled: Story = {
 
 export const Disabled: Story = {
   render: () => (
-    <label className="flex w-56 flex-col gap-1.5 text-sm font-medium text-slate-300 dark:text-slate-600">
+    <label className="flex w-56 flex-col gap-1.5 text-sm font-medium text-slate-500 dark:text-slate-400">
       Fruit
       <Select defaultValue="blueberry" disabled>
         <SelectTrigger>

@@ -3,7 +3,7 @@ import { expect, userEvent, within } from "storybook/test";
 import { DataTable, type DataTableColumn } from "./DataTable";
 
 const meta: Meta<typeof DataTable> = {
-  title: "Components/DataTable",
+  title: "Components/Data Table",
   component: DataTable,
   tags: ["autodocs"],
   parameters: {
@@ -35,11 +35,41 @@ interface Person {
 }
 
 const people: Person[] = [
-  { id: 1, name: "Ada Lovelace", email: "ada@example.com", role: "Engineer", score: 98 },
-  { id: 2, name: "Grace Hopper", email: "grace@example.com", role: "Engineer", score: 95 },
-  { id: 3, name: "Alan Turing", email: "alan@example.com", role: "Researcher", score: 99 },
-  { id: 4, name: "Katherine Johnson", email: "katherine@example.com", role: "Mathematician", score: 97 },
-  { id: 5, name: "Margaret Hamilton", email: "margaret@example.com", role: "Engineer", score: 96 },
+  {
+    id: 1,
+    name: "Ada Lovelace",
+    email: "ada@example.com",
+    role: "Engineer",
+    score: 98,
+  },
+  {
+    id: 2,
+    name: "Grace Hopper",
+    email: "grace@example.com",
+    role: "Engineer",
+    score: 95,
+  },
+  {
+    id: 3,
+    name: "Alan Turing",
+    email: "alan@example.com",
+    role: "Researcher",
+    score: 99,
+  },
+  {
+    id: 4,
+    name: "Katherine Johnson",
+    email: "katherine@example.com",
+    role: "Mathematician",
+    score: 97,
+  },
+  {
+    id: 5,
+    name: "Margaret Hamilton",
+    email: "margaret@example.com",
+    role: "Engineer",
+    score: 96,
+  },
 ];
 
 const columns: DataTableColumn<Person>[] = [
@@ -50,7 +80,9 @@ const columns: DataTableColumn<Person>[] = [
 ];
 
 export const Default: Story = {
-  render: () => <DataTable columns={columns} data={people} getRowId={(row) => row.id} />,
+  render: () => (
+    <DataTable columns={columns} data={people} getRowId={(row) => row.id} />
+  ),
 };
 
 export const CustomCell: Story = {
@@ -62,7 +94,10 @@ export const CustomCell: Story = {
           key: "email",
           header: "Email",
           cell: (row) => (
-            <a href={`mailto:${row.email}`} className="text-slate-950 underline dark:text-white">
+            <a
+              href={`mailto:${row.email}`}
+              className="text-slate-950 underline dark:text-white"
+            >
               {row.email}
             </a>
           ),
@@ -79,13 +114,19 @@ const manyPeople: Person[] = Array.from({ length: 23 }, (_, index) => ({
   id: index + 1,
   name: `Person ${index + 1}`,
   email: `person${index + 1}@example.com`,
-  role: index % 3 === 0 ? "Engineer" : index % 3 === 1 ? "Designer" : "Researcher",
+  role:
+    index % 3 === 0 ? "Engineer" : index % 3 === 1 ? "Designer" : "Researcher",
   score: 100 - index,
 }));
 
 export const Paginated: Story = {
   render: () => (
-    <DataTable columns={columns} data={manyPeople} getRowId={(row) => row.id} pageSize={5} />
+    <DataTable
+      columns={columns}
+      data={manyPeople}
+      getRowId={(row) => row.id}
+      pageSize={5}
+    />
   ),
 };
 
@@ -99,7 +140,12 @@ export const Empty: Story = {
 // library's other "Interactive" stories.
 export const Interactive: Story = {
   render: () => (
-    <DataTable columns={columns} data={manyPeople} getRowId={(row) => row.id} pageSize={5} />
+    <DataTable
+      columns={columns}
+      data={manyPeople}
+      getRowId={(row) => row.id}
+      pageSize={5}
+    />
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

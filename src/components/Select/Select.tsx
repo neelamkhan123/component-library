@@ -224,7 +224,7 @@ export const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
           }
         }}
         className={mergeClassNames(
-          "flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-950 transition-colors hover:border-slate-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400 disabled:hover:border-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:border-slate-600 dark:focus-visible:outline-white dark:disabled:border-slate-700 dark:disabled:bg-slate-900 dark:disabled:text-slate-600 dark:disabled:hover:border-slate-700",
+          "flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-950 transition-colors hover:border-slate-300 focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400 disabled:hover:border-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:border-slate-600 dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px] dark:disabled:border-slate-700 dark:disabled:bg-slate-900 dark:disabled:text-slate-600 dark:disabled:hover:border-slate-700",
           className,
         )}
         {...props}
@@ -258,7 +258,10 @@ export const SelectValue = forwardRef<HTMLSpanElement, SelectValueProps>(
         ref={ref}
         className={mergeClassNames(
           "truncate",
-          !label && "text-slate-400 dark:text-slate-500",
+          // Muted enough to read as a placeholder, dark enough to clear
+          // AA against the trigger's white/slate-950 field — slate-400
+          // here was 2.55:1 and failed `color-contrast`.
+          !label && "text-slate-500 dark:text-slate-400",
           className,
         )}
         {...props}
@@ -436,7 +439,17 @@ export const SelectItem = forwardRef<HTMLButtonElement, SelectItemProps>(
     // JSX whose rendered text isn't itself a stable dependency to watch —
     // `registerLabel` already no-ops when the label hasn't actually
     // changed, so this doesn't cause extra re-renders in the common case.
-    useEffect(() => {
+    //
+    // A *layout* effect, not a plain one: until this has run, `labels` is
+    // empty and a `Select` with a `defaultValue` paints its placeholder
+    // instead of the selected item's label. As a passive effect that
+    // correction lands a frame late, which the Storybook a11y run catches
+    // as a real failure — its `play` reads the trigger on that first
+    // commit and sees "Select a fruit" where "Banana" belongs. This reads
+    // the item's *own* ref, attached before its own layout effects run, so
+    // it's safe here in a way `CommandInput`'s sibling-reading effect
+    // isn't.
+    useLayoutEffect(() => {
       registerLabel(itemValue, labelRef.current?.textContent ?? "");
     });
 

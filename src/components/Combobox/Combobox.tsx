@@ -179,7 +179,7 @@ export type ComboboxInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "va
  * the selected label if closed without picking anything new.
  */
 export const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(
-  ({ className, onChange, onFocus, onKeyDown, onBlur, disabled, ...props }, ref) => {
+  ({ className, onChange, onFocus, onClick, onMouseDown, onKeyDown, onBlur, disabled, ...props }, ref) => {
     const {
       value,
       query,
@@ -258,6 +258,12 @@ export const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(
     // `DECISIONS.md`.
     const setRefs = useMemo(() => mergeRefs(inputRef, ref), [inputRef, ref]);
 
+    // Set on `mousedown`, read (and cleared) by `onFocus`/`onClick` below —
+    // see the long comment on `onFocus` for why a mouse-originated focus
+    // has to defer opening to the later `click` instead of opening
+    // immediately the way a keyboard-originated one safely can.
+    const pointerDownRef = useRef(false);
+
     return (
       <input
         ref={setRefs}
@@ -277,12 +283,47 @@ export const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(
           setFilterText(event.target.value);
           if (!open) positionAndOpen();
         }}
+        // A plain mousedown here — nothing needs preventing, just a note
+        // that a real click *started*, read by `onFocus` right after.
+        onMouseDown={(event) => {
+          onMouseDown?.(event);
+          pointerDownRef.current = true;
+        }}
         onFocus={(event) => {
           onFocus?.(event);
+          if (event.defaultPrevented) return;
+          // A mouse click's `focus` fires on `mousedown` — well before
+          // `mouseup` — so opening (and thus showing the popover) here
+          // would show it *while the mouse button is still down*. The
+          // native "auto" popover then dismisses itself the instant that
+          // same button is released, even with this input established as
+          // the popover's `source`/invoker (see the `showPopover` call
+          // below): that exemption only covers a *fresh* interaction with
+          // the invoker, not a release completing a gesture that was
+          // already in progress before the popover existed. Deferring to
+          // `onClick` — which fires strictly after `mouseup` — sidesteps
+          // the race outright instead of fighting the browser's dismiss
+          // timing. A keyboard-driven focus (Tab) has no such gesture in
+          // flight, so it can still open immediately.
+          if (pointerDownRef.current) return;
+          if (!open) openShowingEverything();
+        }}
+        // Where a mouse-originated focus actually opens the popover (see
+        // `onFocus`), and — since `mouseup`/`click` are the *only* events
+        // fired when clicking a field that's already focused (e.g. right
+        // after picking an option) — also what reopens it there, since no
+        // `focus` event fires in that case for `onFocus` to react to.
+        onClick={(event) => {
+          onClick?.(event);
+          pointerDownRef.current = false;
           if (!event.defaultPrevented && !open) openShowingEverything();
         }}
         onBlur={(event) => {
           onBlur?.(event);
+          // Defensive: a mousedown that drags off the input and releases
+          // elsewhere never fires this input's own `click`, which is
+          // otherwise what clears the flag `onFocus` set above.
+          pointerDownRef.current = false;
           if (event.defaultPrevented) return;
           // Closing on blur (not just Escape/an outside click) matters
           // specifically for a text input: unlike a button trigger, it's
@@ -322,7 +363,7 @@ export const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(
           }
         }}
         className={mergeClassNames(
-          "flex h-10 w-full items-center rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-950 transition-colors placeholder:text-slate-400 hover:border-slate-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus-visible:outline-white dark:disabled:border-slate-700 dark:disabled:bg-slate-900 dark:disabled:text-slate-600",
+          "flex h-10 w-full items-center rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-950 transition-colors placeholder:text-slate-400 hover:border-slate-300 focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px] dark:disabled:border-slate-700 dark:disabled:bg-slate-900 dark:disabled:text-slate-600",
           className,
         )}
         {...props}
@@ -376,7 +417,27 @@ export const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
       }
 
       const frame = requestAnimationFrame(() => {
-        if (!el.matches(":popover-open")) el.showPopover();
+        if (!el.matches(":popover-open")) {
+          // Passing the input as this popover's `source` formally makes it
+          // the popover's *invoker* — without that relationship, the
+          // native "auto" popover's light-dismiss treats any interaction
+          // with the input (even the very click that's opening it) as
+          // "outside," and can close the popover the instant the same
+          // click's `mouseup` lands, if `showPopover()` here — deliberately
+          // deferred a frame for positioning — ends up landing mid-click
+          // (a real click's mousedown-to-mouseup span is easily longer
+          // than one frame). Declaring the invoker exempts the input from
+          // that check entirely, matching what `popovertarget` gives a
+          // `<button>` for free.
+          // TypeScript's DOM lib doesn't type `showPopover`'s options
+          // argument yet — only the zero-argument overload — so the
+          // invoker has to be passed through a local cast. Browsers
+          // without support for the argument ignore it and fall back to
+          // the plain call's behaviour.
+          (el as HTMLElement & {
+            showPopover(options?: { source?: Element }): void;
+          }).showPopover({ source: inputRef.current ?? undefined });
+        }
         const rect = el.getBoundingClientRect();
         const margin = 8;
         el.style.left = `${Math.max(margin, Math.min(position.x, window.innerWidth - rect.width - margin))}px`;
@@ -424,7 +485,6 @@ export const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
         onToggle={(event) => {
           if (event.newState !== "closed") return;
           onOpenChange(false);
-          inputRef.current?.focus();
         }}
         style={{ top: position.y, left: position.x, minWidth: position.width, ...style }}
         className={mergeClassNames(
@@ -455,7 +515,7 @@ export interface ComboboxItemProps extends Omit<ButtonHTMLAttributes<HTMLButtonE
 
 /** One filterable option. Renders `null` entirely (not just visually hidden) when `children` doesn't match the current filter text — case-insensitive substring matching. */
 export const ComboboxItem = forwardRef<HTMLButtonElement, ComboboxItemProps>(
-  ({ value: itemValue, className, children, onClick, onMouseEnter, type = "button", ...props }, ref) => {
+  ({ value: itemValue, className, children, onClick, onMouseDown, onMouseEnter, type = "button", ...props }, ref) => {
     const { value, filterText, activeValue, setActiveValue, onValueChange, onOpenChange, contentId, registerLabel } =
       useComboboxContext("ComboboxItem");
     const isSelected = value === itemValue;
@@ -482,6 +542,19 @@ export const ComboboxItem = forwardRef<HTMLButtonElement, ComboboxItemProps>(
           if (event.defaultPrevented) return;
           onValueChange(itemValue);
           onOpenChange(false);
+        }}
+        // A mousedown here would otherwise focus this `<button>` and blur
+        // `ComboboxInput` a beat before `onClick` runs — `ComboboxInput`'s
+        // own `onBlur` treats that as "give up, close the listbox," which
+        // fires *before* the click completes and silently swallows the
+        // selection (the popover hides mid-click, so the click event
+        // never even reaches this button). Preventing the default here is
+        // what actually keeps real focus on `ComboboxInput`, the way
+        // `DECISIONS.md` describes — not just an optimization.
+        onMouseDown={(event) => {
+          onMouseDown?.(event);
+          if (event.defaultPrevented) return;
+          event.preventDefault();
         }}
         // Hovering an option makes it the active (highlighted) one too —
         // mouse and keyboard share one notion of "active" rather than

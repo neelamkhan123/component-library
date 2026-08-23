@@ -3,14 +3,14 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { RadioGroup, RadioGroupItem } from "./RadioGroup";
 
 const meta: Meta<typeof RadioGroup> = {
-  title: "Components/RadioGroup",
+  title: "Components/Radio Group",
   component: RadioGroup,
   tags: ["autodocs"],
   parameters: {
     docs: {
       description: {
         component:
-          "A set of mutually exclusive options. Compose it with `RadioGroupItem`. Renders native `<input type=\"radio\">`s sharing one `name`, so mutual exclusivity and arrow-key navigation between options both come from the browser. Pair each item with an ordinary `<label>` for its text; there's no bundled label component.",
+          'A set of mutually exclusive options. Compose it with `RadioGroupItem`. Renders native `<input type="radio">`s sharing one `name`, so mutual exclusivity and arrow-key navigation between options both come from the browser. Pair each item with an ordinary `<label>` for its text; there\'s no bundled label component.',
       },
     },
   },
@@ -52,7 +52,11 @@ export const Disabled: Story = {
         <p className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
           Entire group disabled
         </p>
-        <RadioGroup defaultValue="a" disabled aria-label="Example, entire group disabled">
+        <RadioGroup
+          defaultValue="a"
+          disabled
+          aria-label="Example, entire group disabled"
+        >
           <label className="flex items-center gap-2 text-sm text-slate-300 dark:text-slate-600">
             <RadioGroupItem value="a" />
             Option A
@@ -101,7 +105,9 @@ export const Controlled: Story = {
             Enterprise
           </label>
         </RadioGroup>
-        <p className="text-xs text-slate-500 dark:text-slate-400">Selected: {plan}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          Selected: {plan}
+        </p>
       </div>
     );
   },

@@ -1,3 +1,30 @@
 @import "tailwindcss";
 @source "./components";
 @custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  /*
+   * Toggling `.dark` only fades whatever element explicitly has
+   * `transition-colors` (usually just the outer decorator wrapper) — every
+   * other `dark:` variant (borders, muted text, icon fills, ...) snaps
+   * instantly, which reads as a messy, out-of-sync flash rather than one
+   * smooth theme switch. Give every element this fade by default; any
+   * component that sets its own `transition-*` utility (e.g. the accordion
+   * chevron's `transition-transform`) overrides this and is unaffected.
+   */
+  *,
+  ::before,
+  ::after {
+    transition-property:
+      color, background-color, border-color, outline-color,
+      text-decoration-color, fill, stroke;
+    transition-timing-function: var(--default-transition-timing-function, ease);
+    transition-duration: 150ms;
+  }
+  .sb-show-main.sb-main-padded {
+    min-height: 100vh;
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+  }
+}

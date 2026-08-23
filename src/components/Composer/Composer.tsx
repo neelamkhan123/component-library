@@ -144,7 +144,7 @@ export const Composer = forwardRef<HTMLTextAreaElement, ComposerProps>(
           aria-label={sendLabel}
           disabled={disabled || value.trim() === ""}
           onClick={submit}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-950 text-white transition-colors hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-300 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:focus-visible:outline-white dark:disabled:bg-slate-800 dark:disabled:text-slate-600"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-950 text-white transition-colors hover:bg-slate-800 focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-300 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px] dark:disabled:bg-slate-800 dark:disabled:text-slate-600"
         >
           <Send className="h-4 w-4" aria-hidden="true" />
         </button>
