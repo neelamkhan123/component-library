@@ -152,3 +152,159 @@ test("paginates data, with Previous disabled on the first page", async () => {
   expect(rowTexts()).toHaveLength(2); // last page, 12 - 10 = 2 rows
   expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
 });
+
+test("filterable DataTable renders with no accessibility violations", async () => {
+  const { container } = render(<DataTable columns={columns} data={people} filterable />);
+  const results = await axe(container);
+  expect(results).toHaveNoViolations();
+});
+
+test("shows no filter box unless asked", () => {
+  render(<DataTable columns={columns} data={people} />);
+  expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+});
+
+test("labels the filter box even though the label isn't drawn", () => {
+  render(<DataTable columns={columns} data={people} filterable />);
+  expect(screen.getByRole("searchbox", { name: "Filter rows" })).toBeInTheDocument();
+});
+
+test("filters rows across every column", async () => {
+  const user = userEvent.setup();
+  render(<DataTable columns={columns} data={people} filterable />);
+
+  // Matches a `name`...
+  await user.type(screen.getByRole("searchbox"), "ali");
+  expect(rowTexts()).toHaveLength(1);
+  expect(rowTexts()[0]).toContain("Alice");
+
+  // ...and a `role`, which no column was told about specially.
+  await user.clear(screen.getByRole("searchbox"));
+  await user.type(screen.getByRole("searchbox"), "Engineer");
+  expect(rowTexts()).toHaveLength(2);
+});
+
+test("filters case-insensitively and ignores surrounding whitespace", async () => {
+  const user = userEvent.setup();
+  render(<DataTable columns={columns} data={people} filterable />);
+
+  await user.type(screen.getByRole("searchbox"), "  DESIGNER  ");
+  expect(rowTexts()).toHaveLength(1);
+  expect(rowTexts()[0]).toContain("Alice");
+});
+
+test("uses a column's filterValue in place of its raw value", async () => {
+  const user = userEvent.setup();
+  const withFilterValue: DataTableColumn<Person>[] = [
+    { key: "name", header: "Name", cell: () => "—", filterValue: (row) => `${row.name} ${row.role}` },
+    { key: "score", header: "Score" },
+  ];
+  render(<DataTable columns={withFilterValue} data={people} filterable />);
+
+  // "Designer" is nowhere in the rendered cells, only in the filter text.
+  await user.type(screen.getByRole("searchbox"), "Designer");
+  expect(rowTexts()).toHaveLength(1);
+});
+
+test("a column opting out of filtering contributes nothing to matches", async () => {
+  const user = userEvent.setup();
+  const optedOut: DataTableColumn<Person>[] = [
+    { key: "name", header: "Name" },
+    { key: "role", header: "Role", filterValue: () => "" },
+  ];
+  render(<DataTable columns={optedOut} data={people} filterable />);
+
+  await user.type(screen.getByRole("searchbox"), "Engineer");
+  expect(screen.getByText("No rows match your filter.")).toBeVisible();
+});
+
+test("announces the match count politely while filtering", async () => {
+  const user = userEvent.setup();
+  render(<DataTable columns={columns} data={people} filterable />);
+
+  // Silent before anything is typed, so it says nothing on first paint.
+  expect(screen.getByRole("status")).toHaveTextContent("");
+
+  await user.type(screen.getByRole("searchbox"), "Engineer");
+  expect(screen.getByRole("status")).toHaveTextContent("2 rows match Engineer");
+
+  await user.type(screen.getByRole("searchbox"), "x");
+  expect(screen.getByRole("status")).toHaveTextContent("0 rows match Engineerx");
+});
+
+test("uses the singular in the announcement for exactly one match", async () => {
+  const user = userEvent.setup();
+  render(<DataTable columns={columns} data={people} filterable />);
+
+  await user.type(screen.getByRole("searchbox"), "Alice");
+  expect(screen.getByRole("status")).toHaveTextContent("1 row match");
+});
+
+test("distinguishes a filtered-to-nothing table from an empty one", async () => {
+  const user = userEvent.setup();
+  const { rerender } = render(<DataTable columns={columns} data={[]} filterable />);
+  expect(screen.getByText("No results.")).toBeVisible();
+
+  rerender(<DataTable columns={columns} data={people} filterable />);
+  await user.type(screen.getByRole("searchbox"), "nobody");
+  expect(screen.getByText("No rows match your filter.")).toBeVisible();
+});
+
+test("filters before sorting, so sort order describes the visible rows", async () => {
+  const user = userEvent.setup();
+  render(<DataTable columns={columns} data={people} filterable />);
+
+  await user.click(screen.getByRole("button", { name: /Name/ }));
+  await user.type(screen.getByRole("searchbox"), "Engineer");
+
+  expect(rowTexts()[0]).toContain("Bob");
+  expect(rowTexts()[1]).toContain("Charlie");
+});
+
+test("filters before paginating, so the page count follows the matches", async () => {
+  const user = userEvent.setup();
+  const manyPeople = Array.from({ length: 12 }, (_, i) => ({
+    id: i + 1,
+    name: `Person ${i + 1}`,
+    role: i < 3 ? "Designer" : "Engineer",
+    score: i,
+  }));
+  render(<DataTable columns={columns} data={manyPeople} pageSize={5} filterable getRowId={(row) => row.id} />);
+
+  expect(screen.getByRole("button", { name: "2" })).toBeInTheDocument();
+
+  await user.type(screen.getByRole("searchbox"), "Designer");
+  expect(rowTexts()).toHaveLength(3);
+  // Three matches fit on one page, so the pager goes away entirely.
+  expect(screen.queryByRole("button", { name: "Next" })).not.toBeInTheDocument();
+});
+
+test("returns to the first page when the filter changes", async () => {
+  const user = userEvent.setup();
+  const manyPeople = Array.from({ length: 12 }, (_, i) => ({
+    id: i + 1,
+    name: `Person ${i + 1}`,
+    role: "Engineer",
+    score: i,
+  }));
+  render(<DataTable columns={columns} data={manyPeople} pageSize={5} filterable getRowId={(row) => row.id} />);
+
+  await user.click(screen.getByRole("button", { name: "3" }));
+  expect(rowTexts()[0]).toContain("Person 11");
+
+  // Without the reset this would sit on a page past the end of the matches.
+  await user.type(screen.getByRole("searchbox"), "Person 1");
+  expect(rowTexts()[0]).toContain("Person 1");
+});
+
+test("keeps sorting available while filtered", async () => {
+  const user = userEvent.setup();
+  render(<DataTable columns={columns} data={people} filterable />);
+
+  await user.type(screen.getByRole("searchbox"), "Engineer");
+  const nameHeader = screen.getAllByRole("columnheader")[0];
+  await user.click(within(nameHeader).getByRole("button"));
+
+  expect(nameHeader).toHaveAttribute("aria-sort", "ascending");
+  expect(rowTexts()[0]).toContain("Bob");
+});

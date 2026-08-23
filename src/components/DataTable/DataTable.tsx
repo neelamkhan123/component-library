@@ -1,5 +1,6 @@
-import { useMemo, useState, type ReactNode } from "react";
-import { ChevronDown, ChevronUp, ChevronsUpDown } from "lucide-react";
+import { useId, useMemo, useState, type ReactNode } from "react";
+import { ChevronDown, ChevronUp, ChevronsUpDown, Search } from "lucide-react";
+import { Input } from "../Input/Input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../Table/Table";
 import {
   Pagination,
@@ -29,6 +30,13 @@ export interface DataTableColumn<T> {
   sortable?: boolean;
   /** Custom sort key, for columns whose displayed value isn't itself sortable (e.g. a formatted date). Defaults to `row[key]`. */
   sortValue?: (row: T) => string | number;
+  /**
+   * The text this column contributes to the filter. Defaults to
+   * `String(row[key])` — set it for columns whose `cell` renders something
+   * the raw value doesn't describe (an avatar, a status badge), or pass
+   * `() => ""` to exclude the column from filtering entirely.
+   */
+  filterValue?: (row: T) => string;
   align?: Align;
   className?: string;
 }
@@ -41,6 +49,13 @@ export interface DataTableProps<T> {
   /** Rows per page. Omit to disable pagination and render every row. */
   pageSize?: number;
   emptyMessage?: ReactNode;
+  /** Shows a search box above the table that filters rows across every column. */
+  filterable?: boolean;
+  /** The search box's accessible name. Defaults to `"Filter rows"`. */
+  filterLabel?: string;
+  filterPlaceholder?: string;
+  /** Shown in place of `emptyMessage` when a filter is what emptied the table. */
+  noMatchesMessage?: ReactNode;
 }
 
 const alignClassNames: Record<Align, string> = {
@@ -55,14 +70,27 @@ const alignClassNames: Record<Align, string> = {
  * page controls) rather than reinventing either — the same "compose what
  * already exists" instinct behind `DropdownMenu` building on `ContextMenu`.
  *
- * Deliberately scoped: no filtering, global search, row selection, or
- * column resizing/reordering. A fully-featured data grid is a genuinely
+ * Opt-in `filterable` adds one search box that matches across every column,
+ * rather than a filter control per column: "find the row I mean" is a
+ * single-box question, and per-column filter rows cost a lot of header
+ * space to answer a question users mostly aren't asking. Columns
+ * whose `cell` renders something the raw value doesn't describe (an avatar,
+ * a badge) contribute their own `filterValue`.
+ *
+ * Filtering runs *before* sorting and pagination, so page counts and sort
+ * order describe the rows actually on screen. Matches are announced through
+ * a `role="status"` region, because filtering as you type changes the table
+ * silently otherwise — a screen-reader user would get no feedback that the
+ * result set moved under them (WCAG 4.1.3).
+ *
+ * Still deliberately scoped: no row selection, column resizing/reordering,
+ * or server-side/async data. A fully-featured data grid is a genuinely
  * different, much larger component — most component libraries that ship
  * one either depend on a headless table library (TanStack Table, the
  * approach shadcn/ui's own docs recommend rather than shipping a built-in
  * data table at all) or accept a similarly bounded scope to this one. This
  * library has taken on no new dependencies for any other component, and
- * sorting plus pagination are the two features that cover the large
+ * sorting, filtering, and pagination are the features that cover the large
  * majority of "I just want a nicer table" needs — see `DECISIONS.md`.
  */
 export function DataTable<T>({
@@ -71,16 +99,34 @@ export function DataTable<T>({
   getRowId,
   pageSize,
   emptyMessage = "No results.",
+  filterable = false,
+  filterLabel = "Filter rows",
+  filterPlaceholder = "Search…",
+  noMatchesMessage = "No rows match your filter.",
 }: DataTableProps<T>) {
   const [sort, setSort] = useState<{ key: string; direction: SortDirection } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [filter, setFilter] = useState("");
+  const filterInputId = useId();
+
+  const trimmedFilter = filter.trim().toLowerCase();
+
+  const filteredData = useMemo(() => {
+    if (!filterable || trimmedFilter === "") return data;
+    return data.filter((row) =>
+      columns.some((column) => {
+        const text = column.filterValue ? column.filterValue(row) : String(row[column.key] ?? "");
+        return text.toLowerCase().includes(trimmedFilter);
+      }),
+    );
+  }, [data, columns, filterable, trimmedFilter]);
 
   const sortedData = useMemo(() => {
-    if (!sort) return data;
+    if (!sort) return filteredData;
     const column = columns.find((c) => c.key === sort.key);
-    if (!column) return data;
+    if (!column) return filteredData;
     const getValue = column.sortValue ?? ((row: T) => row[column.key] as unknown as string | number);
-    const sorted = [...data].sort((a, b) => {
+    const sorted = [...filteredData].sort((a, b) => {
       const av = getValue(a);
       const bv = getValue(b);
       const comparison =
@@ -88,7 +134,7 @@ export function DataTable<T>({
       return sort.direction === "asc" ? comparison : -comparison;
     });
     return sorted;
-  }, [data, sort, columns]);
+  }, [filteredData, sort, columns]);
 
   const totalPages = pageSize ? Math.max(1, Math.ceil(sortedData.length / pageSize)) : 1;
   const clampedPage = Math.min(currentPage, totalPages);
@@ -107,6 +153,46 @@ export function DataTable<T>({
 
   return (
     <div className="flex flex-col gap-3">
+      {filterable ? (
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor={filterInputId} className="sr-only">
+            {filterLabel}
+          </label>
+          <div className="relative">
+            <Search
+              className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+              aria-hidden="true"
+            />
+            <Input
+              id={filterInputId}
+              // `type="search"` for the browser's own clear affordance and
+              // the right on-screen keyboard, the same lean-on-the-platform
+              // default `Input` documents.
+              type="search"
+              value={filter}
+              placeholder={filterPlaceholder}
+              onChange={(event) => {
+                setFilter(event.target.value);
+                // A narrower result set can leave the current page past the
+                // end; reset rather than show an empty page-4 of 2.
+                setCurrentPage(1);
+              }}
+              className="pl-9"
+            />
+          </div>
+          {/*
+            Filtering as you type rewrites the table with no visible focus
+            change, so assistive tech gets no signal that anything happened.
+            This announces the new count politely, and stays empty while
+            unfiltered so it says nothing on first paint.
+          */}
+          <span role="status" aria-live="polite" className="sr-only">
+            {trimmedFilter === ""
+              ? ""
+              : `${sortedData.length} ${sortedData.length === 1 ? "row" : "rows"} match ${filter.trim()}`}
+          </span>
+        </div>
+      ) : null}
       <Table>
         <TableHeader>
           <TableRow>
@@ -165,7 +251,7 @@ export function DataTable<T>({
                 colSpan={columns.length}
                 className="h-24 text-center text-slate-500 dark:text-slate-400"
               >
-                {emptyMessage}
+                {filterable && trimmedFilter !== "" ? noMatchesMessage : emptyMessage}
               </TableCell>
             </TableRow>
           ) : (

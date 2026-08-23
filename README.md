@@ -16,6 +16,19 @@ npm install @neelamkhan21/ui
 
 React 18+ and `react-dom` 18+ are peer dependencies.
 
+`Chart` is a shell around a plot you supply, not a charting engine — it
+owns the caption, legend, validated series palette, reserved plot box, and
+the accessible data table, and renders whatever you pass as children.
+[Recharts](https://recharts.org) is an **optional** peer dependency, so
+install it only if you want it:
+
+```bash
+npm install recharts
+```
+
+Nothing is bundled and nothing is imported from it, so consumers who don't
+chart pay nothing.
+
 ## Usage
 
 ```tsx
@@ -58,6 +71,8 @@ package included as a source:
 | Accordion | `Enter`/`Space` toggles panel |
 | Select | Arrow keys navigate, `Home`/`End` jump to first/last, `Escape` closes |
 | Combobox | See [APG combobox pattern](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/) |
+| Date Range Picker | Arrow keys move between presets, `Escape` closes, arrow keys navigate each calendar grid |
+| Data Table | `Enter`/`Space` on a column header cycles sort, `Tab` reaches the filter box |
 
 ## Notable decisions
 

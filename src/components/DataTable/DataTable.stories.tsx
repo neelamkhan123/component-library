@@ -10,7 +10,7 @@ const meta: Meta<typeof DataTable> = {
     docs: {
       description: {
         component:
-          "A sortable, optionally paginated table driven by a `columns`/`data` pair. Built on `Table` and `Pagination`. Deliberately scoped — see `DECISIONS.md` for what's intentionally left out (filtering, row selection, column resizing).",
+          "A sortable, optionally filterable and paginated table driven by a `columns`/`data` pair. Built on `Table`, `Pagination`, and `Input`. Filtering runs before sorting and pagination, so page counts and sort order describe the rows actually on screen, and match counts are announced through a live region. Still deliberately scoped — see `DECISIONS.md` for what's intentionally left out (row selection, column resizing, server-side data).",
       },
     },
   },
@@ -177,5 +177,55 @@ export const Interactive: Story = {
     // Page navigation.
     await userEvent.click(canvas.getByRole("button", { name: "2" }));
     expect(firstCellText()).toContain("Person 6");
+  },
+};
+
+export const Filterable: Story = {
+  name: "Filterable",
+  args: {
+    columns,
+    data: people,
+    filterable: true,
+  },
+};
+
+export const FilterableAndPaginated: Story = {
+  name: "Filtered, sorted, and paginated together",
+  args: {
+    columns,
+    data: Array.from({ length: 24 }, (_, i) => ({
+      id: i + 1,
+      name: `Person ${i + 1}`,
+      role: i % 3 === 0 ? "Designer" : "Engineer",
+      score: 60 + ((i * 7) % 40),
+    })),
+    filterable: true,
+    pageSize: 6,
+    getRowId: (row: Person) => row.id,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Filtering happens first, so the pager reflects the matches rather than the full data set, and the page resets to 1 whenever the filter changes — otherwise a narrowed result set would leave you stranded on an empty page 4 of 2.",
+      },
+    },
+  },
+};
+
+export const FilteredToNothing: Story = {
+  name: "A filter matching nothing",
+  args: {
+    columns,
+    data: people,
+    filterable: true,
+    noMatchesMessage: "No people match your filter.",
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(canvas.getByRole("searchbox"), "nobody");
+    await expect(canvas.getByText("No people match your filter.")).toBeVisible();
+    // Distinct from the "no data at all" message, and announced politely.
+    await expect(canvas.getByRole("status")).toHaveTextContent("0 rows match nobody");
   },
 };
