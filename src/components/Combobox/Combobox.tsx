@@ -429,7 +429,14 @@ export const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
           // than one frame). Declaring the invoker exempts the input from
           // that check entirely, matching what `popovertarget` gives a
           // `<button>` for free.
-          el.showPopover({ source: inputRef.current ?? undefined });
+          // TypeScript's DOM lib doesn't type `showPopover`'s options
+          // argument yet — only the zero-argument overload — so the
+          // invoker has to be passed through a local cast. Browsers
+          // without support for the argument ignore it and fall back to
+          // the plain call's behaviour.
+          (el as HTMLElement & {
+            showPopover(options?: { source?: Element }): void;
+          }).showPopover({ source: inputRef.current ?? undefined });
         }
         const rect = el.getBoundingClientRect();
         const margin = 8;
