@@ -14,8 +14,15 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE",
+    "THIRD-PARTY-NOTICES.md"
   ],
+  "homepage": "https://df22wszov2zdy.cloudfront.net",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neelamkhan123/component-library.git"
+  },
   "author": "Neelam Khan",
   "license": "MIT",
   "peerDependencies": {
