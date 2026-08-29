@@ -185,6 +185,28 @@ test("DateRangePicker respects a caller's own disabled predicate", async () => {
   expect(within(startGrid).getByRole("gridcell", { name: /^12\b/ })).toBeDisabled();
 });
 
+test("DateRangePicker's calendars jump to a preset's month, not just seed their initial one", async () => {
+  const user = userEvent.setup();
+  const juneRange: DateRange = { from: new Date(2026, 5, 1), to: new Date(2026, 5, 30) };
+  render(
+    <DateRangePicker
+      defaultValue={range} // January 2026, per the fixture above
+      presets={[{ label: "June", getRange: () => juneRange }]}
+    />,
+  );
+  await openPanel(user);
+
+  await user.click(screen.getByRole("radio", { name: "June" }));
+
+  // Both grids started on January (`range`'s month) — a `defaultMonth`
+  // only seeds Calendar's *initial* display and is ignored after that, so
+  // this only passes if the picker is actually re-syncing each Calendar's
+  // month from the outside when `range` changes for a reason other than
+  // paging through it by hand.
+  const juneLabel = new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(juneRange.from);
+  expect(screen.getAllByRole("grid", { name: juneLabel })).toHaveLength(2);
+});
+
 test("DateRangePicker stays uncontrolled when given only a default", async () => {
   const user = userEvent.setup();
   render(<DateRangePicker defaultValue={range} />);

@@ -82,7 +82,16 @@ test("disabled dates can't be selected and render as disabled", async () => {
 test("today gets aria-current=date", () => {
   const today = new Date();
   render(<Calendar month={today} />);
-  expect(screen.getByRole("gridcell", { name: String(today.getDate()) })).toHaveAttribute("aria-current", "date");
+  // getByRole (singular) breaks whenever today's day-of-month also appears
+  // as a leading/trailing day from an adjacent month (e.g. today the 29th,
+  // with the grid's last row spilling into the 29th of next month) — which
+  // is most months, not an edge case. aria-current is what's actually under
+  // test, so find the cell that has it rather than assuming the day number
+  // alone is unique on the grid.
+  const todaysCell = screen
+    .getAllByRole("gridcell", { name: String(today.getDate()) })
+    .find((cell) => cell.getAttribute("aria-current") === "date");
+  expect(todaysCell).toBeDefined();
 });
 
 test("the previous/next month buttons navigate and report onMonthChange", async () => {
@@ -211,6 +220,14 @@ test("selecting a day outside the displayed month switches to that day's month",
 
   expect(onMonthChange).toHaveBeenCalledOnce();
   expect((onMonthChange.mock.calls[0][0] as Date).getMonth()).toBe(11);
+});
+
+test("a day outside the displayed month is styled muted, not like a current-month day", () => {
+  render(<Calendar month={JAN_2024} />);
+  // The grid's first row includes trailing December days before Jan 1.
+  const dec31 = screen.getAllByRole("gridcell", { name: "31" })[0];
+  expect(dec31).toHaveClass("text-slate-500");
+  expect(dec31).not.toHaveClass("text-slate-950");
 });
 
 test("Calendar merges a custom className with its defaults", () => {

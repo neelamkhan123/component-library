@@ -1,4 +1,4 @@
-import { forwardRef, useState, type ReactNode } from "react";
+import { forwardRef, useEffect, useState, type ReactNode } from "react";
 import { CalendarDays } from "lucide-react";
 import { buttonVariants } from "../Button/Button";
 import { Calendar } from "../Calendar/Calendar";
@@ -138,6 +138,31 @@ export const DateRangePicker = forwardRef<HTMLButtonElement, DateRangePickerProp
       onValueChange?.(next);
     };
 
+    // Each calendar's own displayed month — independent of `range` so the
+    // user can still page forward/back with the chevrons without every
+    // render snapping it back, but re-synced whenever `range` changes for a
+    // reason *other* than paging: a preset row, a controlled `value` prop
+    // update from the caller, or committing a hand-picked date. That's
+    // exactly what plain `defaultMonth` can't do — it only seeds Calendar's
+    // *initial* month once and is silently ignored on every render after,
+    // so picking "Last 30 days" left both grids showing whatever month
+    // happened to be open rather than jumping to the new range.
+    const [startMonth, setStartMonth] = useState(() => range?.from ?? new Date());
+    const [endMonth, setEndMonth] = useState(() => range?.to ?? new Date());
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the
+    // timestamp, not the Date object: a preset's getRange() (and a caller
+    // re-rendering with an equivalent but new `value` object) produces a
+    // fresh Date instance every time even when the day itself hasn't
+    // changed, and re-syncing on every such render would fight the user's
+    // own in-progress month navigation for no reason.
+    useEffect(() => {
+      if (range?.from) setStartMonth(range.from);
+    }, [range?.from?.getTime()]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
+    useEffect(() => {
+      if (range?.to) setEndMonth(range.to);
+    }, [range?.to?.getTime()]);
+
     // Which preset row is checked — derived from the range itself rather than
     // held in its own state, so a caller-controlled `value` and the checked
     // row can never disagree, and a custom range simply matches nothing.
@@ -196,7 +221,8 @@ export const DateRangePicker = forwardRef<HTMLButtonElement, DateRangePickerProp
               <Calendar
                 aria-label="Start date"
                 selected={range?.from}
-                defaultMonth={range?.from}
+                month={startMonth}
+                onMonthChange={setStartMonth}
                 // Selecting a start after the current end would invert the
                 // range, so those days are unselectable rather than silently
                 // swapped — a swap would move an endpoint the user didn't touch.
@@ -209,7 +235,8 @@ export const DateRangePicker = forwardRef<HTMLButtonElement, DateRangePickerProp
               <Calendar
                 aria-label="End date"
                 selected={range?.to}
-                defaultMonth={range?.to}
+                month={endMonth}
+                onMonthChange={setEndMonth}
                 disabled={(date) => Boolean(disabled?.(date)) || Boolean(range && stripTime(date) < stripTime(range.from))}
                 onSelect={(to) => commit({ from: range ? range.from : stripTime(to), to: stripTime(to) })}
               />
