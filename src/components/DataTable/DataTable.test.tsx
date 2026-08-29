@@ -2,8 +2,8 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 import { axe, toHaveNoViolations } from "jest-axe";
-import { expect, test } from "vitest";
-import { DataTable, type DataTableColumn } from "./DataTable";
+import { expect, test, vi } from "vitest";
+import { DataTable, type DataTableColumn, type DataTablePaginationState } from "./DataTable";
 
 expect.extend(toHaveNoViolations);
 
@@ -151,6 +151,71 @@ test("paginates data, with Previous disabled on the first page", async () => {
   await user.click(screen.getByRole("button", { name: "Next" }));
   expect(rowTexts()).toHaveLength(2); // last page, 12 - 10 = 2 rows
   expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
+});
+
+test("hidePagination suppresses the built-in footer without turning pagination off", () => {
+  const manyPeople = Array.from({ length: 12 }, (_, i) => ({
+    id: i + 1,
+    name: `Person ${i + 1}`,
+    role: "Engineer",
+    score: i,
+  }));
+  render(<DataTable columns={columns} data={manyPeople} pageSize={5} hidePagination getRowId={(row) => row.id} />);
+
+  // Still only page 1's rows — hidePagination hides the footer, not the
+  // paging math that slices which rows actually render.
+  expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+  expect(rowTexts()).toHaveLength(5);
+});
+
+test("onPaginationChange reports the page, total pages, and a working setter", async () => {
+  const manyPeople = Array.from({ length: 12 }, (_, i) => ({
+    id: i + 1,
+    name: `Person ${i + 1}`,
+    role: "Engineer",
+    score: i,
+  }));
+  const onPaginationChange = vi.fn();
+  render(
+    <DataTable
+      columns={columns}
+      data={manyPeople}
+      pageSize={5}
+      hidePagination
+      onPaginationChange={onPaginationChange}
+      getRowId={(row) => row.id}
+    />,
+  );
+
+  expect(onPaginationChange).toHaveBeenLastCalledWith(
+    expect.objectContaining({ page: 1, totalPages: 3 }),
+  );
+
+  // hidePagination leaves no footer buttons to click — the reported
+  // setter is the only way a caller building its own footer can turn
+  // the page, so it has to actually work.
+  const lastState = onPaginationChange.mock.calls.at(-1)![0] as DataTablePaginationState;
+  lastState.setPage(2);
+
+  expect(await screen.findByText("Person 6")).toBeInTheDocument();
+  expect(onPaginationChange).toHaveBeenLastCalledWith(
+    expect.objectContaining({ page: 2, totalPages: 3 }),
+  );
+});
+
+test("onPaginationChange re-fires when the row count changes the page total", () => {
+  const onPaginationChange = vi.fn();
+  const { rerender } = render(
+    <DataTable columns={columns} data={people} pageSize={2} onPaginationChange={onPaginationChange} />,
+  );
+  expect(onPaginationChange).toHaveBeenLastCalledWith(
+    expect.objectContaining({ page: 1, totalPages: 2 }),
+  );
+
+  rerender(<DataTable columns={columns} data={people.slice(0, 1)} pageSize={2} onPaginationChange={onPaginationChange} />);
+  expect(onPaginationChange).toHaveBeenLastCalledWith(
+    expect.objectContaining({ page: 1, totalPages: 1 }),
+  );
 });
 
 test("filterable DataTable renders with no accessibility violations", async () => {

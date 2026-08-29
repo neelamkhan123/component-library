@@ -1,4 +1,4 @@
-import { useId, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import { ChevronDown, ChevronUp, ChevronsUpDown, Search } from "lucide-react";
 import { Input } from "../Input/Input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../Table/Table";
@@ -41,6 +41,16 @@ export interface DataTableColumn<T> {
   className?: string;
 }
 
+/** What `onPaginationChange` reports — everything a caller needs to render
+ *  its own pagination footer in place of DataTable's built-in one. */
+export interface DataTablePaginationState {
+  /** The current page, 1-indexed and already clamped to a valid range. */
+  page: number;
+  totalPages: number;
+  /** Turns the page — the same setter the built-in footer's own buttons call. */
+  setPage: (page: number) => void;
+}
+
 export interface DataTableProps<T> {
   columns: DataTableColumn<T>[];
   data: T[];
@@ -56,6 +66,21 @@ export interface DataTableProps<T> {
   filterPlaceholder?: string;
   /** Shown in place of `emptyMessage` when a filter is what emptied the table. */
   noMatchesMessage?: ReactNode;
+  /**
+   * Suppresses the built-in pagination footer while `pageSize` still pages
+   * the rows internally exactly as before — pair with `onPaginationChange`
+   * to render an equivalent footer somewhere else, e.g. outside a card
+   * DataTable itself renders inside. Has no effect without `pageSize`.
+   */
+  hidePagination?: boolean;
+  /**
+   * Reports the current page, total page count, and a setter, whenever any
+   * of them changes — a page turn, or the row count changing under a
+   * filter or a new `data` prop. DataTable still owns the state either
+   * way; this just also hands it outward, which only matters paired with
+   * `hidePagination`.
+   */
+  onPaginationChange?: (state: DataTablePaginationState) => void;
 }
 
 const alignClassNames: Record<Align, string> = {
@@ -103,6 +128,8 @@ export function DataTable<T>({
   filterLabel = "Filter rows",
   filterPlaceholder = "Search…",
   noMatchesMessage = "No rows match your filter.",
+  hidePagination = false,
+  onPaginationChange,
 }: DataTableProps<T>) {
   const [sort, setSort] = useState<{ key: string; direction: SortDirection } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -141,6 +168,17 @@ export function DataTable<T>({
   const pageData = pageSize
     ? sortedData.slice((clampedPage - 1) * pageSize, clampedPage * pageSize)
     : sortedData;
+
+  // Reports outward regardless of `hidePagination` — a caller could
+  // reasonably want the numbers (e.g. an "N of M" caption) even while
+  // keeping the built-in footer. `setCurrentPage` is a stable useState
+  // setter, so it's the only piece of this that never itself retriggers
+  // the effect; `onPaginationChange` still belongs in the dependency array
+  // for the ordinary reason (an inline arrow the caller passes should be
+  // able to close over fresh values without this going stale).
+  useEffect(() => {
+    onPaginationChange?.({ page: clampedPage, totalPages, setPage: setCurrentPage });
+  }, [clampedPage, totalPages, onPaginationChange]);
 
   // Three-state cycle: unsorted -> ascending -> descending -> unsorted.
   const toggleSort = (key: string) => {
@@ -270,7 +308,7 @@ export function DataTable<T>({
           )}
         </TableBody>
       </Table>
-      {pageSize && totalPages > 1 ? (
+      {!hidePagination && pageSize && totalPages > 1 ? (
         <Pagination>
           <PaginationContent>
             <PaginationItem>
