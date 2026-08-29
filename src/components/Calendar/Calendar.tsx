@@ -283,10 +283,24 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(
                         onKeyDown={(event) => handleKeyDown(event, day)}
                         className={mergeClassNames(
                           "flex h-8 w-8 items-center justify-center rounded-md text-sm transition-colors focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] disabled:pointer-events-none disabled:opacity-40 dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px]",
+                          // One branch per state, not `isOutsideMonth` bolted
+                          // on as a separate always-evaluated clause: that
+                          // used to add "text-slate-400" alongside the
+                          // "text-slate-950" the non-selected branch already
+                          // contributes, leaving two conflicting text-color
+                          // utilities on the same button. Utility classes
+                          // don't override by string position — which one
+                          // actually painted depended on Tailwind's internal
+                          // rule order, not on which of these branches ran
+                          // "later" — so outside-month days silently stopped
+                          // looking muted. Making the three states mutually
+                          // exclusive means exactly one text-color class is
+                          // ever present, regardless of cascade order.
                           isSelected
                             ? "bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
-                            : "text-slate-950 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800",
-                          !isSelected && isOutsideMonth && "text-slate-400 dark:text-slate-600",
+                            : isOutsideMonth
+                              ? "text-slate-400 hover:bg-slate-100 dark:text-slate-600 dark:hover:bg-slate-800"
+                              : "text-slate-950 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800",
                           !isSelected && isToday && "font-semibold underline underline-offset-4",
                         )}
                       >
