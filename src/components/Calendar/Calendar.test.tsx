@@ -226,7 +226,7 @@ test("a day outside the displayed month is styled muted, not like a current-mont
   render(<Calendar month={JAN_2024} />);
   // The grid's first row includes trailing December days before Jan 1.
   const dec31 = screen.getAllByRole("gridcell", { name: "31" })[0];
-  expect(dec31).toHaveClass("text-slate-400");
+  expect(dec31).toHaveClass("text-slate-500");
   expect(dec31).not.toHaveClass("text-slate-950");
 });
 

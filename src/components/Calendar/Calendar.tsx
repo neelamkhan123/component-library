@@ -296,10 +296,22 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(
                           // looking muted. Making the three states mutually
                           // exclusive means exactly one text-color class is
                           // ever present, regardless of cascade order.
+                          //
+                          // text-slate-500/dark:text-slate-400, not
+                          // text-slate-400/dark:text-slate-600 (what the
+                          // conflict above used to resolve to once fixed):
+                          // slate-400-on-white is 2.56:1 and
+                          // slate-600-on-this-dark-background is 2.66:1,
+                          // both well under WCAG AA's 4.5:1 — the original
+                          // bug's winning class happened to always be the
+                          // higher-contrast one, so this was latent until
+                          // the conflict was resolved. slate-500/slate-400
+                          // is the same pairing the weekday headers above
+                          // already use for muted text in this component.
                           isSelected
                             ? "bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
                             : isOutsideMonth
-                              ? "text-slate-400 hover:bg-slate-100 dark:text-slate-600 dark:hover:bg-slate-800"
+                              ? "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
                               : "text-slate-950 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800",
                           !isSelected && isToday && "font-semibold underline underline-offset-4",
                         )}
