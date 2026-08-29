@@ -87,6 +87,19 @@ test("DateRangePicker honors a custom value formatter", () => {
   expect(screen.getByRole("button", { name: "Date range" })).toHaveTextContent("Custom label");
 });
 
+test("DateRangePicker's size prop actually changes the trigger's size classes", () => {
+  render(<DateRangePicker defaultValue={range} size="sm" />);
+  const trigger = screen.getByRole("button", { name: "Date range" });
+  // The real regression this guards: passing `size` used to require a
+  // `className="h-8 ..."` override that only ever *added* to the
+  // trigger's hardcoded `buttonVariants({ size: "md" })` classes rather
+  // than replacing them — leaving both "h-8" and "h-10" present at once
+  // and letting Tailwind's cascade order (not this prop) decide which
+  // actually won.
+  expect(trigger).toHaveClass("h-8");
+  expect(trigger).not.toHaveClass("h-10");
+});
+
 test("DateRangePicker renders its presets as a real radio group", async () => {
   const user = userEvent.setup();
   render(<DateRangePicker />);
