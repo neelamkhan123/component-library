@@ -1,5 +1,11 @@
 # @neelamkhan21/ui
 
+## 1.2.1
+
+### Patch Changes
+
+- Fix `Avatar` rendering its fallback on top of, and behind, the image. Three problems compounded: an errored `<img>` stayed mounted underneath the fallback, so the browser painted its broken-image glyph and `alt` text behind the initials (both elements are `absolute inset-0`); the fallback itself was transparent and sits after the image in the DOM, so it composited its initials over a mid-load image rather than standing in for it; and resetting the load status from a `useEffect` raced the `load` event, since effects flush after paint — a cached image could report `loaded` first, and the late reset then stranded the fallback over an image that had already arrived, with no further event to clear it. `AvatarImage` now renders nothing when it has no `src` or the current `src` failed, the fallback is opaque, and load state is read from the element in a ref callback during commit and recorded per-`src` so a failed image can't suppress the next one.
+
 ## 1.2.0
 
 ### Minor Changes
