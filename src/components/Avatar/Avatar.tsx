@@ -1,11 +1,17 @@
 import {
   createContext,
   forwardRef,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
+  type Dispatch,
+  type ForwardedRef,
   type HTMLAttributes,
   type ImgHTMLAttributes,
+  type MutableRefObject,
+  type SetStateAction,
 } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
@@ -13,11 +19,30 @@ function mergeClassNames(...classNames: Array<string | undefined>): string {
   return classNames.filter(Boolean).join(" ");
 }
 
+function assignRef<T>(ref: ForwardedRef<T>, value: T | null): void {
+  if (typeof ref === "function") {
+    ref(value);
+  } else if (ref) {
+    (ref as MutableRefObject<T | null>).current = value;
+  }
+}
+
 type ImageStatus = "idle" | "loading" | "loaded" | "error";
 
+interface AvatarImageState {
+  /**
+   * The `src` this status describes. A status recorded for one `src` says
+   * nothing about a different one, so the two always travel together.
+   */
+  src: string | undefined;
+  status: ImageStatus;
+}
+
+const IDLE_IMAGE_STATE: AvatarImageState = { src: undefined, status: "idle" };
+
 interface AvatarContextValue {
-  imageStatus: ImageStatus;
-  setImageStatus: (status: ImageStatus) => void;
+  imageState: AvatarImageState;
+  setImageState: Dispatch<SetStateAction<AvatarImageState>>;
 }
 
 const AvatarContext = createContext<AvatarContextValue | null>(null);
@@ -57,9 +82,10 @@ export interface AvatarProps
  */
 export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(
   ({ className, size, children, ...props }, ref) => {
-    const [imageStatus, setImageStatus] = useState<ImageStatus>("idle");
+    const [imageState, setImageState] = useState<AvatarImageState>(IDLE_IMAGE_STATE);
+    const context = useMemo(() => ({ imageState, setImageState }), [imageState]);
     return (
-      <AvatarContext.Provider value={{ imageStatus, setImageStatus }}>
+      <AvatarContext.Provider value={context}>
         <span
           ref={ref}
           className={mergeClassNames(avatarVariants({ size }), className)}
@@ -83,29 +109,68 @@ export interface AvatarImageProps
  * The avatar's image. Tracks its own load state so `AvatarFallback` knows
  * when to give way to it — mount this unconditionally (even with a `src`
  * you're not sure will resolve) and the fallback handles the rest.
+ *
+ * Renders nothing when there's no `src` or the image failed to load, so the
+ * browser's broken-image glyph can never show through the fallback.
  */
 export const AvatarImage = forwardRef<HTMLImageElement, AvatarImageProps>(
   ({ className, onLoad, onError, src, ...props }, ref) => {
-    const { setImageStatus } = useAvatarContext("AvatarImage");
+    const { imageState, setImageState } = useAvatarContext("AvatarImage");
 
-    // Reset to "loading" whenever the image being requested changes, rather
-    // than leaving the previous src's status (e.g. "error") applied to the
-    // new one while it's still in flight.
+    // A status belongs to the `src` it was recorded for; anything else is
+    // still in flight, which is what keeps a previous src's "error" from
+    // suppressing the <img> for the new one.
+    const status = imageState.src === src ? imageState.status : "loading";
+
+    const record = useCallback(
+      (next: AvatarImageState) =>
+        setImageState((previous) =>
+          previous.src === next.src && previous.status === next.status
+            ? previous
+            : next,
+        ),
+      [setImageState],
+    );
+
+    // Read the element's own state as React attaches it instead of reporting
+    // "loading" from an effect: effects flush after paint, so a cached image
+    // can fire `load` first and a late reset would then strand the fallback
+    // on top of an image that had already arrived. Re-keying on `src` makes
+    // React re-run this whenever the requested image changes.
+    const attachImage = useCallback(
+      (node: HTMLImageElement | null) => {
+        assignRef(ref, node);
+        if (!node || !src) return;
+        if (!node.complete) {
+          record({ src, status: "loading" });
+        } else {
+          record({ src, status: node.naturalWidth > 0 ? "loaded" : "error" });
+        }
+      },
+      [ref, src, record],
+    );
+
+    // With no `src` there's no <img> to report back, so record idle here.
     useEffect(() => {
-      setImageStatus(src ? "loading" : "idle");
-    }, [src, setImageStatus]);
+      if (!src) record(IDLE_IMAGE_STATE);
+    }, [src, record]);
+
+    // An <img> with a broken (or absent) src still paints the browser's
+    // broken-image icon and alt text, which would sit behind the fallback's
+    // initials. Unmount it instead and leave the circle to the fallback.
+    if (!src || status === "error") return null;
 
     return (
       <img
-        ref={ref}
+        ref={attachImage}
         src={src}
         onLoad={(event) => {
           onLoad?.(event);
-          setImageStatus("loaded");
+          record({ src, status: "loaded" });
         }}
         onError={(event) => {
           onError?.(event);
-          setImageStatus("error");
+          record({ src, status: "error" });
         }}
         className={mergeClassNames(
           "absolute inset-0 h-full w-full object-cover",
@@ -133,7 +198,7 @@ export interface AvatarFallbackProps extends HTMLAttributes<HTMLSpanElement> {
  */
 export const AvatarFallback = forwardRef<HTMLSpanElement, AvatarFallbackProps>(
   ({ className, delayMs, ...props }, ref) => {
-    const { imageStatus } = useAvatarContext("AvatarFallback");
+    const { imageState } = useAvatarContext("AvatarFallback");
     const [delayElapsed, setDelayElapsed] = useState(delayMs === undefined);
 
     useEffect(() => {
@@ -143,13 +208,16 @@ export const AvatarFallback = forwardRef<HTMLSpanElement, AvatarFallbackProps>(
       return () => clearTimeout(timer);
     }, [delayMs]);
 
-    if (imageStatus === "loaded" || !delayElapsed) return null;
+    if (imageState.status === "loaded" || !delayElapsed) return null;
 
     return (
       <span
         ref={ref}
         className={mergeClassNames(
-          "absolute inset-0 flex items-center justify-center font-medium uppercase text-slate-600 dark:text-slate-300",
+          // Opaque, not a transparent overlay: it sits above the <img>, so a
+          // see-through fallback would composite its initials on top of an
+          // image that is mid-load rather than standing in for it.
+          "absolute inset-0 flex items-center justify-center bg-slate-100 font-medium uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300",
           className,
         )}
         {...props}
