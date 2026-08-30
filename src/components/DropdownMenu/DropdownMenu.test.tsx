@@ -162,3 +162,47 @@ test("DropdownMenuItem throws outside of a DropdownMenu", () => {
   );
   consoleError.mockRestore();
 });
+
+// jsdom has no layout engine, so `getBoundingClientRect()` reports all
+// zeros here regardless of `side` — there's no real pixel position for
+// these tests to check (that's what the "Interactive" story's play
+// function, run against real Chromium, is for). What jsdom *can* prove is
+// which CSS property the positioning effect chose to drive: `side="top"`
+// must clear `top` and write `bottom` instead, since a leftover `top`
+// from a previous open (or the library's own default) would fix the
+// box's height and fight the `bottom` value below it.
+test('side="top" anchors the menu with `bottom`, not `top`', async () => {
+  const user = userEvent.setup();
+  render(
+    <DropdownMenu>
+      <DropdownMenuTrigger side="top">Account</DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuItem>Sign out</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>,
+  );
+
+  await user.click(screen.getByRole("button", { name: "Account" }));
+  const menu = await screen.findByRole("menu");
+
+  expect(menu.style.top).toBe("auto");
+  expect(menu.style.bottom).not.toBe("");
+  expect(menu.style.bottom).not.toBe("auto");
+});
+
+test('side="top" still opens on ArrowUp/ArrowDown and focuses first/last, same as the default side', async () => {
+  render(
+    <DropdownMenu>
+      <DropdownMenuTrigger side="top">Account</DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuItem>Profile</DropdownMenuItem>
+        <DropdownMenuItem>Sign out</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>,
+  );
+  const trigger = screen.getByRole("button", { name: "Account" });
+  trigger.focus();
+
+  fireEvent.keyDown(trigger, { key: "ArrowUp" });
+  expect(await screen.findByRole("menuitem", { name: "Sign out" })).toHaveFocus();
+});
