@@ -1,5 +1,12 @@
 # @neelamkhan21/ui
 
+## 1.2.0
+
+### Minor Changes
+
+- 985884a: `DropdownMenuTrigger` now accepts a `side` prop (`"top" | "bottom"`, defaulting to `"bottom"`, its existing behavior) so a trigger sitting near the bottom of the viewport — a sidebar footer's account menu, say — can open its menu upward instead of getting clamped to the bottom of the viewport rather than actually landing next to the trigger. Optional and backward compatible — omitting it opens below exactly as before.
+- 638ad7c: `DataTable` now accepts `hidePagination` and `onPaginationChange`, so a caller can render its own pagination footer somewhere other than wherever `DataTable` itself renders — e.g. outside a card the table sits inside — while `DataTable` keeps owning the sort/filter/page-size math exactly as before. `onPaginationChange` reports `{ page, totalPages, setPage }` whenever any of them changes; `hidePagination` just suppresses the built-in footer, and has no effect without `pageSize`. Both are optional and backward compatible — omitting them renders exactly as before.
+
 ## 1.1.2
 
 ### Patch Changes
