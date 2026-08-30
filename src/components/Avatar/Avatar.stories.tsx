@@ -41,7 +41,7 @@ export const Fallback: Story = {
   name: "Fallback (broken image)",
   render: () => (
     <Avatar>
-      <AvatarImage src="https://broken.example/does-not-exist.jpg" alt="" />
+      <AvatarImage src="https://broken.example/does-not-exist.jpg" alt="Jane Doe" />
       <AvatarFallback>JD</AvatarFallback>
     </Avatar>
   ),
