@@ -34,6 +34,18 @@ interface Position {
   y: number;
   /** Which item to focus once the menu opens at this position. Defaults to `"first"`. */
   initialFocus?: "first" | "last";
+  /** Which edge `y` names. `"top"` (the default) is the cursor/click case
+   *  and `DropdownMenuTrigger`'s normal "open below" — the menu's *top*
+   *  sits at `y` and it grows downward, so its final height can be
+   *  measured and clamped after the fact. `"bottom"` is
+   *  `DropdownMenuTrigger`'s `side="top"` — the menu's *bottom* sits at
+   *  `y` and it grows upward instead, which a top/height clamp can't
+   *  express: at the moment `y` is chosen (the trigger's own rect, before
+   *  the menu has rendered at all) there's no height yet to subtract from
+   *  a top coordinate. Anchoring via the `bottom` CSS property sidesteps
+   *  that — the browser grows the box upward on its own, no
+   *  content-height lookahead required. */
+  anchor?: "top" | "bottom";
 }
 
 interface ContextMenuContextValue {
@@ -184,7 +196,19 @@ export const ContextMenuContent = forwardRef<
       const rect = el.getBoundingClientRect();
       const margin = 8;
       el.style.left = `${Math.max(margin, Math.min(position.x, window.innerWidth - rect.width - margin))}px`;
-      el.style.top = `${Math.max(margin, Math.min(position.y, window.innerHeight - rect.height - margin))}px`;
+      if (position.anchor === "bottom") {
+        // Growing upward from `y`: clear `top` (a stale value from a
+        // previous top-anchored open would otherwise still apply, fixing
+        // the box's height and fighting the `bottom` positioning below)
+        // and clamp the distance from the viewport's bottom edge just
+        // like the top-anchored branch clamps from its top — same
+        // "don't run past the far edge" guard, mirrored.
+        el.style.top = "auto";
+        el.style.bottom = `${Math.max(margin, Math.min(window.innerHeight - position.y, window.innerHeight - rect.height - margin))}px`;
+      } else {
+        el.style.bottom = "auto";
+        el.style.top = `${Math.max(margin, Math.min(position.y, window.innerHeight - rect.height - margin))}px`;
+      }
       const items = el.querySelectorAll<HTMLElement>(
         '[role="menuitem"]:not(:disabled)',
       );
