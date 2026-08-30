@@ -84,6 +84,16 @@ export interface DateRangePickerProps {
   label?: string;
   /** Rendered on the trigger when nothing is selected yet. */
   placeholder?: ReactNode;
+  /** The trigger button's size, same vocabulary as `Button`'s own (minus
+   *  `"icon"`, which doesn't fit a trigger that always renders a label).
+   *  Defaults to `"md"`, matching `Button`'s own default. Pick this
+   *  instead of trying to shrink the trigger via `className`: the trigger
+   *  already carries `buttonVariants({ size: "md" })`, so a plain
+   *  `className="h-8 ..."` override doesn't replace those classes, it
+   *  just adds `h-8` alongside the existing `h-10` — two conflicting
+   *  utility classes on the same element, with whichever Tailwind happens
+   *  to emit later in its generated stylesheet silently winning. */
+  size?: "sm" | "md" | "lg";
   className?: string;
 }
 
@@ -125,6 +135,7 @@ export const DateRangePicker = forwardRef<HTMLButtonElement, DateRangePickerProp
       disabled,
       label = "Date range",
       placeholder = "Pick a date range",
+      size = "md",
       className,
     },
     ref,
@@ -179,7 +190,7 @@ export const DateRangePicker = forwardRef<HTMLButtonElement, DateRangePickerProp
           ref={ref}
           aria-label={label}
           className={mergeClassNames(
-            buttonVariants({ variant: "outline", size: "md" }),
+            buttonVariants({ variant: "outline", size }),
             "w-auto justify-start gap-2 font-normal",
             className,
           )}

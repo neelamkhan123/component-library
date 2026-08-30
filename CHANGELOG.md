@@ -1,5 +1,11 @@
 # @neelamkhan21/ui
 
+## 1.1.2
+
+### Patch Changes
+
+- Add a `size` prop to `DateRangePicker` (`"sm" | "md" | "lg"`, matching `Button`'s own vocabulary minus `"icon"`). Previously the trigger always carried `buttonVariants({ size: "md" })` with no way to pick a different size other than overriding `className` — but that override never actually replaced the hardcoded size classes, it just added alongside them (e.g. `className="h-8 ..."` left both `h-8` and `h-10` on the same element, with Tailwind's generated stylesheet order silently deciding which one won). `size` now goes through the same `buttonVariants` call that resolves the variant/size combination cleanly, so there's no conflicting-class trap to fall into.
+
 ## 1.1.1
 
 ### Patch Changes
