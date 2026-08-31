@@ -1,0 +1,97 @@
+{
+  "name": "@neelamkhan21/ui",
+  "version": "1.2.1",
+  "description": "An accessible React component library",
+  "keywords": [
+    "react",
+    "components",
+    "component-library",
+    "ui",
+    "design-system",
+    "accessibility",
+    "a11y",
+    "aria",
+    "wai-aria",
+    "tailwindcss",
+    "typescript"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "THIRD-PARTY-NOTICES.md"
+  ],
+  "homepage": "https://df22wszov2zdy.cloudfront.net",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neelamkhan123/component-library.git",
+    "directory": "packages/ui"
+  },
+  "author": "Neelam Khan",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18",
+    "recharts": ">=2"
+  },
+  "peerDependenciesMeta": {
+    "recharts": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "test": "vitest run",
+    "lint": "eslint src",
+    "storybook": "storybook dev -p 6006",
+    "test-storybook": "test-storybook"
+  },
+  "devDependencies": {
+    "@storybook/addon-a11y": "^10.5.8",
+    "@storybook/addon-docs": "^10.5.8",
+    "@storybook/addon-mcp": "latest",
+    "@storybook/addon-vitest": "^10.5.8",
+    "@storybook/icons": "^2.1.0",
+    "@storybook/react-vite": "^10.5.8",
+    "@storybook/test-runner": "^0.24.4",
+    "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/jest-axe": "^3.5.9",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitest/browser-playwright": "latest",
+    "@vitest/coverage-v8": "latest",
+    "axe-playwright": "^2.2.2",
+    "jest-axe": "^11.0.0",
+    "jsdom": "^28.1.0",
+    "playwright": "latest",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "storybook": "^10.5.8",
+    "tailwindcss": "^4.3.3",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  },
+  "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "lucide-react": "^1.31.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -5,7 +5,7 @@
 An accessible React component library, built with a focus on keyboard
 navigation, focus management, and ARIA correctness.
 
-📖 **[Live Storybook docs](https://df22wszov2zdy.cloudfront.net)**  
+📖 **[Documentation](https://df22wszov2zdy.cloudfront.net)** · 🧪 **[Storybook](https://df22wszov2zdy.cloudfront.net)**  
 📦 **[npm package](https://www.npmjs.com/package/@neelamkhan21/ui)**
 
 ## Installation
@@ -81,14 +81,19 @@ behind specific accessibility choices.
 
 ## Development
 
+This package lives in a monorepo alongside its documentation site; see the
+[repository README](../../README.md) for the full layout. Install once from the
+repository root, then:
+
 ```bash
-npm install
-npm run dev              # Storybook at localhost:6006
-npm run test             # unit + a11y tests (vitest + jest-axe)
-npm run test-storybook   # axe-core run over every story
-npm run lint             # eslint
-npm run build            # build the package
+npm run storybook -w @neelamkhan21/ui        # Storybook at localhost:6006
+npm run test -w @neelamkhan21/ui             # unit + a11y tests (vitest + jest-axe)
+npm run test-storybook -w @neelamkhan21/ui   # axe-core run over every story
+npm run build -w @neelamkhan21/ui            # build the package
 ```
+
+The root package.json aliases the common ones, so `npm run test`,
+`npm run storybook`, and `npm run build` work from the repository root too.
 
 ## License
 
