@@ -1,0 +1,112 @@
+export const metadata = {
+  title: "Button",
+  description: "A versatile button with variants, sizes, icons, and a loading state.",
+};
+
+<PageHeader
+  title="Button"
+  description="A versatile, accessible button supporting six visual variants, four sizes, an optional icon slot, and a loading state."
+  componentName="Button"
+/>
+
+<ComponentPreview name="button-demo" />
+
+## Usage
+
+```tsx
+import { Button } from "@neelamkhan21/ui";
+
+<Button variant="outline" size="lg">
+  Get started
+</Button>
+```
+
+## Variants
+
+Six variants cover the usual hierarchy. `default` is the primary action;
+there should generally be at most one per view.
+
+<ComponentPreview name="button-variants" />
+
+`link` renders as underlined text with no horizontal padding, for cases where a
+button has to sit inline in a sentence. If it navigates rather than acts, use an
+anchor styled with `buttonVariants` instead — the distinction matters to screen
+reader users, who are told "button" or "link" accordingly.
+
+## Sizes
+
+<ComponentPreview name="button-sizes" />
+
+<Callout variant="warning" title="Icon-only buttons need a name">
+  `size="icon"` renders no text, so the button has no accessible name unless you
+  give it one. Always pass `aria-label`. Without it, a screen reader announces
+  only "button".
+</Callout>
+
+## With an icon
+
+The `icon` prop renders content before the label and marks it `aria-hidden`, so
+a decorative icon is not announced alongside the text it duplicates.
+
+<ComponentPreview name="button-icon" />
+
+## Loading
+
+`loading` disables the button and sets `aria-busy`, so assistive technology
+reports the pending state rather than silently ignoring clicks.
+
+<ComponentPreview name="button-loading" />
+
+<Callout variant="tip" title="Keep the label stable">
+  Changing the label while loading — "Save" to "Saving…" — is announced as a new
+  label by some screen readers. If that churn is a problem, keep the label fixed
+  and let `aria-busy` carry the state.
+</Callout>
+
+## Composition
+
+`Button` renders a real `<button>`. When you need a different element to look
+like one — a `DialogTrigger`, or a Next.js `Link` — use the exported
+`buttonVariants` factory rather than nesting elements:
+
+```tsx
+import Link from "next/link";
+import { buttonVariants } from "@neelamkhan21/ui";
+
+<Link href="/docs" className={buttonVariants({ variant: "outline" })}>
+  Read the docs
+</Link>
+```
+
+<Callout variant="danger" title="Never nest an anchor inside a button">
+  `<Button><a href="…">…</a></Button>` produces invalid HTML and two
+  overlapping interactive elements with conflicting semantics. `buttonVariants`
+  exists precisely to avoid it.
+</Callout>
+
+## Keyboard
+
+<KeyboardTable
+  shortcuts={[
+    { keys: "Tab", description: "Moves focus to the button. Disabled and loading buttons are skipped." },
+    { keys: "Enter / Space", description: "Activates the button — native behaviour, not re-implemented." },
+  ]}
+/>
+
+## Accessibility
+
+- Renders a native `<button>`, so role, focusability, and activation come from
+  the platform.
+- `loading` sets `aria-busy` and the `disabled` attribute together, so the
+  pending state is both announced and un-clickable.
+- The `icon` slot is `aria-hidden`, avoiding a duplicate announcement of a
+  decorative glyph.
+- Focus-visible styling uses a layered `box-shadow` rather than `outline`, so it
+  stays visible over adjacent content and inside overflow containers.
+
+## API reference
+
+<PropsTable name="Button" />
+
+Also accepts every native `<button>` attribute — `type`, `form`, `onClick`,
+`aria-*`, and the rest.

@@ -5,10 +5,13 @@
   "description": "Monorepo for @neelamkhan21/ui and its documentation site",
   "type": "module",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "scripts": {
     "build": "npm run build -w @neelamkhan21/ui",
+    "build:docs": "npm run build -w @neelamkhan21/ui && npm run build -w docs",
+    "dev": "npm run dev -w docs",
     "storybook": "npm run storybook -w @neelamkhan21/ui",
     "build-storybook": "npm run build-storybook -w @neelamkhan21/ui",
     "test": "npm run test -w @neelamkhan21/ui",

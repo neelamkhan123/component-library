@@ -1,0 +1,125 @@
+export const metadata = {
+  title: "Combobox",
+  description: "A text input paired with a filterable listbox, per the APG combobox pattern.",
+};
+
+<PageHeader
+  title="Combobox"
+  description="A searchable Select — typing narrows the options to those matching what has been typed, rather than only ever picking from the full list."
+  componentName="Combobox"
+/>
+
+<ComponentPreview name="combobox-demo" />
+
+## Usage
+
+```tsx
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxTriggerIcon,
+} from "@neelamkhan21/ui";
+
+<Combobox>
+  <ComboboxInput placeholder="Search fruit…" />
+  <ComboboxContent>
+    <ComboboxItem value="apple">Apple</ComboboxItem>
+    <ComboboxItem value="banana">Banana</ComboboxItem>
+    <ComboboxEmpty>No fruit found.</ComboboxEmpty>
+  </ComboboxContent>
+</Combobox>
+```
+
+`ComboboxEmpty` renders only when filtering has excluded everything. Include it —
+without it, a search with no matches collapses to an empty box that gives the
+user no feedback at all.
+
+## Labelling
+
+`ComboboxInput` is a text input and needs a label like any other. Wrapping it in
+a `<label>` is the most robust option, since it survives the input being
+re-parented:
+
+```tsx
+<label className="flex w-64 flex-col gap-1.5 text-sm font-medium">
+  Fruit
+  <Combobox>…</Combobox>
+</label>
+```
+
+<Callout variant="warning" title="Placeholder is not a label">
+  A placeholder disappears the moment the user types — exactly when they most
+  need to remember what the field is for — and is not reliably announced. Use it
+  for an example value, never as the field's name.
+</Callout>
+
+## Controlled
+
+```tsx
+const [value, setValue] = useState("apple");
+
+<Combobox value={value} onValueChange={setValue}>
+  …
+</Combobox>
+```
+
+Uncontrolled use with `defaultValue` is supported the same way.
+
+## Combobox or Select?
+
+| | `Combobox` | `Select` |
+| --- | --- | --- |
+| Options | Many; filtering earns its keep past ~10 | Few enough to scan |
+| Input | Free text, filters the list | Typeahead jumps to a match |
+| Best for | Countries, users, repositories | Status, role, sort order |
+
+If the list fits on screen without scrolling, `Select` is the lighter and more
+predictable choice.
+
+## Keyboard
+
+<KeyboardTable
+  shortcuts={[
+    { keys: "↓", description: "Opens the list, or moves to the next option." },
+    { keys: "↑", description: "Moves to the previous option." },
+    { keys: "Enter", description: "Selects the active option and closes the list." },
+    { keys: "Escape", description: "Closes the list, leaving the value unchanged." },
+    { keys: "A–Z", description: "Typing filters the list; the first match becomes active." },
+  ]}
+/>
+
+## Accessibility
+
+Implements the [APG combobox pattern](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/):
+
+- The input carries `role="combobox"` with `aria-expanded` and `aria-controls`
+  pointing at the listbox.
+- The active option is tracked with `aria-activedescendant`, so **focus stays in
+  the text input** while the arrow keys move the selection — a screen reader
+  user can keep typing without losing their place.
+- Options carry `role="option"` with `aria-selected`.
+- The list closes on `Escape` without committing a value, so an accidental open
+  is always recoverable.
+
+<Callout variant="note" title="Why aria-activedescendant rather than roving focus">
+  Moving real DOM focus into the list would take it out of the text input, and
+  the user could no longer type to refine the search. `aria-activedescendant` is
+  what the pattern specifies for exactly this reason.
+</Callout>
+
+## API reference
+
+### Combobox
+
+<PropsTable name="Combobox" />
+
+### ComboboxInput
+
+<PropsTable name="ComboboxInput" />
+
+### ComboboxItem
+
+<PropsTable name="ComboboxItem" />

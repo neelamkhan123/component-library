@@ -1,0 +1,113 @@
+export const metadata = {
+  title: "Theming",
+  description: "Restyle components with className, cva variants, and Tailwind's theme.",
+};
+
+<PageHeader
+  title="Theming"
+  description="There is no theme object to configure. Components are Tailwind classes on real elements, so you restyle them the way you restyle your own markup."
+/>
+
+## The className escape hatch
+
+Every component accepts `className`, and it is merged so that your classes are
+appended after the component's own. Because Tailwind v4 resolves conflicts by
+source order in the generated stylesheet rather than by class-string order, a
+plain override of the same property is not always a reliable win.
+
+```tsx
+<Button className="rounded-full px-8">Rounded</Button>
+```
+
+<Callout variant="warning" title="Overriding a property the component already sets">
+  When you need to beat a class the component itself sets for the *same* property,
+  use Tailwind's important modifier — `p-0!`, not `p-0`. Two same-specificity
+  classes are decided by their order in the generated CSS, which you do not
+  control from the call site. The library hits this internally in `Resizable`,
+  `Sidebar`, and `CommandDialog`, and the reasoning is written up in `DECISIONS.md`.
+</Callout>
+
+## Variant factories
+
+Components built with [class-variance-authority](https://cva.style) export
+their variant function, so you can produce the same styling on a different
+element. This is how a `DialogTrigger` — which is not a `Button` — is made to
+look like one:
+
+```tsx
+import { buttonVariants, DialogTrigger } from "@neelamkhan21/ui";
+
+<DialogTrigger className={buttonVariants({ variant: "outline" })}>
+  Edit profile
+</DialogTrigger>
+```
+
+`buttonVariants` and `badgeVariants` are both exported.
+
+## Retheming globally
+
+The components are written against Tailwind's `slate` palette plus semantic
+colours such as `red` for destructive states. To shift the whole library's
+neutral tone at once, redefine those scale steps in your own `@theme` block —
+every component picks the change up because they all reference the same
+utilities:
+
+```css
+@import "tailwindcss";
+@source "../node_modules/@neelamkhan21/ui/dist";
+
+@theme {
+  /* Warm the neutrals: every slate-* utility in the library follows. */
+  --color-slate-50: oklch(0.98 0.005 85);
+  --color-slate-100: oklch(0.96 0.008 85);
+  --color-slate-900: oklch(0.25 0.015 85);
+  --color-slate-950: oklch(0.18 0.015 85);
+}
+```
+
+<Callout variant="tip">
+  This is a blunt instrument by design — it retones everything at once. For
+  one-off changes, `className` on the specific component is the better tool.
+</Callout>
+
+## Border radius and density
+
+Radius is set per component (`rounded-xl` on `Button`, `rounded-full` on
+`Badge`) rather than pulled from a shared token, so there is no single knob for
+it. Change it where it matters with `className`, or wrap the component:
+
+```tsx
+import { Button, type ButtonProps } from "@neelamkhan21/ui";
+
+export function SquareButton({ className, ...props }: ButtonProps) {
+  return <Button className={`rounded-md ${className ?? ""}`} {...props} />;
+}
+```
+
+Wrapping is generally the better move for a house style — it gives you one
+place to change later, and it keeps the override out of every call site.
+
+## Focus rings
+
+Focus-visible styling is deliberately consistent across the library: a layered
+`box-shadow` rather than an `outline`, so it renders correctly over adjacent
+elements and inside overflow containers. If you replace it, replace it
+everywhere — a focus indicator that appears on some controls and not others is
+worse than either consistent choice.
+
+<Callout variant="danger" title="Do not remove focus styling">
+  Removing the focus ring without replacing it with something of at least equal
+  visibility fails WCAG 2.4.7 and makes every keyboard path through your app
+  untraceable.
+</Callout>
+
+## Motion
+
+Every transition is dropped under `prefers-reduced-motion` (WCAG 2.3.3). If you
+add your own transitions on top of a component, add the same guard:
+
+```tsx
+<Card className="transition-transform hover:scale-[1.02] motion-reduce:transition-none motion-reduce:hover:scale-100">
+  …
+</Card>
+```
