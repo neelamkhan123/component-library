@@ -19,7 +19,8 @@
 
 @theme {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --font-mono:
+    var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
 
   --color-accent-50: oklch(0.97 0.014 285);
   --color-accent-100: oklch(0.94 0.03 285);
@@ -124,11 +125,17 @@
     counter-reset: line;
   }
 
-  [data-rehype-pretty-code-figure] pre code > .line {
+  /*
+   * The <pre> carries only vertical padding: horizontal padding has to sit on
+   * each line so that highlighted-line backgrounds run the full width and the
+   * trailing gutter survives a horizontal scroll. rehype-pretty-code marks
+   * lines with a `data-line` attribute, not a `.line` class.
+   */
+  [data-rehype-pretty-code-figure] pre code > [data-line] {
     padding-inline: 1rem;
   }
 
-  [data-line-numbers] pre code > .line::before {
+  [data-line-numbers] pre code > [data-line]::before {
     counter-increment: line;
     content: counter(line);
     display: inline-block;
@@ -139,7 +146,11 @@
   }
 
   [data-highlighted-line] {
-    background-color: color-mix(in oklab, var(--color-accent-500) 12%, transparent);
+    background-color: color-mix(
+      in oklab,
+      var(--color-accent-500) 12%,
+      transparent
+    );
     border-left: 2px solid var(--color-accent-500);
   }
 
