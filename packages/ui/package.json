@@ -34,7 +34,7 @@
   "homepage": "https://df22wszov2zdy.cloudfront.net",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/neelamkhan123/component-library.git",
+    "url": "https://github.com/neelamkhan123/component-library.git",
     "directory": "packages/ui"
   },
   "author": "Neelam Khan",
