@@ -45,7 +45,12 @@ jobs:
       # so the library has to be built before Next can resolve or scan it.
       - run: npm run build -w @neelamkhan21/ui
       - run: npm run typecheck -w docs
+      # The deployed site lives under /preview in a shared bucket, so the
+      # artifact has to be built for that path — basePath is baked in at build
+      # time and cannot be applied at deploy time.
       - run: npm run build -w docs
+        env:
+          NEXT_PUBLIC_BASE_PATH: /preview
       - uses: actions/upload-artifact@v4
         with:
           name: docs-static
@@ -68,12 +73,20 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      - run: aws s3 sync storybook-static/ s3://${{ secrets.AWS_S3_BUCKET }} --delete
+      # --exclude protects the destination prefix from --delete as well as
+      # skipping it on upload; the docs live under preview/ in this bucket.
+      - run: aws s3 sync storybook-static/ s3://${{ secrets.AWS_S3_BUCKET }} --delete --exclude "preview/*"
       - run: aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CLOUDFRONT_DIST_ID }} --paths "/*"
 
-  # Opt-in: runs only once AWS_S3_BUCKET_DOCS is set, so it cannot overwrite
-  # the bucket currently serving Storybook. Point it at its own bucket and
-  # distribution (or give the docs a path prefix) before enabling.
+  # Serves the docs from the preview/ prefix of the bucket that already hosts
+  # Storybook, so this needs no new bucket, distribution, certificate or DNS.
+  #
+  # The origin is S3 over REST, which resolves exact object keys only — it has
+  # no directory-index behaviour and returns 403 for anything else. Next
+  # exports pages as flat `.html` files but links to them without the
+  # extension, so the files are uploaded under extension-stripped keys that
+  # match those links exactly. Entry point is /preview (no trailing slash;
+  # /preview/ would need a CloudFront function to rewrite).
   deploy-docs:
     needs: [docs, test]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -83,18 +96,39 @@ jobs:
         with:
           name: docs-static
           path: docs-static
-      - name: Check the docs bucket is configured
-        id: check
-        run: echo "enabled=${{ secrets.AWS_S3_BUCKET_DOCS != '' }}" >> "$GITHUB_OUTPUT"
       - uses: aws-actions/configure-aws-credentials@v4
-        if: steps.check.outputs.enabled == 'true'
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      - name: Sync to S3
-        if: steps.check.outputs.enabled == 'true'
-        run: aws s3 sync docs-static/ s3://${{ secrets.AWS_S3_BUCKET_DOCS }} --delete
-      - name: Invalidate CloudFront
-        if: steps.check.outputs.enabled == 'true'
-        run: aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CLOUDFRONT_DIST_ID_DOCS }} --paths "/*"
+
+      # Assets keep their extensions, so a plain sync gives them correct
+      # content types. --delete also clears the previous deploy's page keys,
+      # which the next step immediately rewrites.
+      - name: Sync assets
+        run: |
+          aws s3 sync docs-static/ "s3://${{ secrets.AWS_S3_BUCKET }}/preview/" \
+            --delete --exclude "*.html"
+
+      # Pages, uploaded under extension-stripped keys. Content type has to be
+      # set explicitly: without an extension the CLI would label them
+      # binary/octet-stream and browsers would download rather than render.
+      - name: Upload pages under extensionless keys
+        working-directory: docs-static
+        run: |
+          find . -name "*.html" -print0 | while IFS= read -r -d "" file; do
+            rel="${file#./}"
+            stem="${rel%.html}"
+            if [ "$stem" = "index" ]; then key="preview"; else key="preview/$stem"; fi
+            aws s3 cp "$file" "s3://${{ secrets.AWS_S3_BUCKET }}/$key" \
+              --content-type "text/html; charset=utf-8" \
+              --cache-control "public, max-age=0, must-revalidate" \
+              --only-show-errors
+          done
+          echo "uploaded $(find . -name '*.html' | wc -l) pages"
+
+      - name: Invalidate the docs path
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.AWS_CLOUDFRONT_DIST_ID }} \
+            --paths "/preview" "/preview/*"
