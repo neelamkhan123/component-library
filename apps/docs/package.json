@@ -10,6 +10,7 @@
     "prebuild": "npm run gen",
     "build": "next build",
     "start": "next start",
+    "pretypecheck": "npm run gen",
     "typecheck": "tsc --noEmit",
     "scaffold": "node scripts/scaffold-components.mjs"
   },
