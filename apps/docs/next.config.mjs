@@ -23,8 +23,15 @@ const withMDX = createMDX({
   },
 });
 
+// Set when the site is served from a sub-path of a bucket it shares with
+// something else (currently /preview alongside Storybook). Empty for local
+// development and for serving at a domain root, so promoting the site later
+// is a one-line change in CI rather than a code change.
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  basePath,
   pageExtensions: ["ts", "tsx", "md", "mdx"],
   // The site is fully static — no server runtime — so it can be dropped on
   // the same S3 bucket + CloudFront distribution that serves Storybook today.
