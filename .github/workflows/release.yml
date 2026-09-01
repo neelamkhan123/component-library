@@ -50,6 +50,7 @@ jobs:
       # ACTIONS_ID_TOKEN_REQUEST_TOKEN/URL, so npm sees no OIDC credentials
       # and fails. See npm/cli#8976.
       - name: Open or update the version PR
+        id: changesets
         uses: changesets/action@v1
         with:
           version: npm run version-packages
@@ -62,8 +63,16 @@ jobs:
       # rather than on "were there changesets", because every ordinary push to
       # main also arrives here with nothing pending. This makes the job
       # idempotent: re-running it after a partial failure is safe.
+      # Gated on there being no changesets left, which is only true once the
+      # version PR has been merged. Without this gate the step reads a
+      # package.json that the action above has just rewritten in place while
+      # preparing that PR — so it sees the new version, finds it unpublished,
+      # and publishes immediately on the changeset's own merge, skipping the
+      # version PR entirely. The registry check below is then a safety net for
+      # idempotency rather than the gate itself.
       - name: Decide whether there is a new version to publish
         id: check
+        if: steps.changesets.outputs.hasChangesets == 'false'
         run: |
           version=$(node -p "require('./packages/ui/package.json').version")
           echo "version=$version" >> "$GITHUB_OUTPUT"
