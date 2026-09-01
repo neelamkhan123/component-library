@@ -5,7 +5,7 @@
 An accessible React component library, built with a focus on keyboard
 navigation, focus management, and ARIA correctness.
 
-📖 **[Documentation](https://df22wszov2zdy.cloudfront.net)** · 🧪 **[Storybook](https://df22wszov2zdy.cloudfront.net)**  
+📖 **[Documentation](https://df22wszov2zdy.cloudfront.net/preview)** · 🧪 **[Storybook](https://df22wszov2zdy.cloudfront.net)**  
 📦 **[npm package](https://www.npmjs.com/package/@neelamkhan21/ui)**
 
 ## Installation
