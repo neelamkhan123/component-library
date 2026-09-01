@@ -3,18 +3,30 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn, normalizePath } from "@/lib/utils";
-import { siteConfig } from "@/lib/site";
 
 const links = [
-  { href: "/docs", label: "Docs", match: (p: string) => p === "/docs" || (p.startsWith("/docs") && !p.startsWith("/docs/components")) },
-  { href: "/docs/components/button", label: "Components", match: (p: string) => p.startsWith("/docs/components") },
+  {
+    href: "/docs",
+    label: "Docs",
+    match: (p: string) =>
+      p === "/docs" ||
+      (p.startsWith("/docs") && !p.startsWith("/docs/components")),
+  },
+  {
+    href: "/docs/components/button",
+    label: "Components",
+    match: (p: string) => p.startsWith("/docs/components"),
+  },
 ];
 
 export function MainNavLinks() {
   const pathname = normalizePath(usePathname());
 
   return (
-    <nav aria-label="Main" className="hidden items-center gap-5 pl-6 text-sm lg:flex">
+    <nav
+      aria-label="Main"
+      className="hidden items-center gap-5 pl-6 text-sm lg:flex"
+    >
       {links.map((link) => (
         <Link
           key={link.href}
@@ -30,14 +42,6 @@ export function MainNavLinks() {
           {link.label}
         </Link>
       ))}
-      <a
-        href={siteConfig.links.storybook}
-        target="_blank"
-        rel="noreferrer"
-        className="text-slate-600 transition-colors hover:text-slate-950 dark:text-slate-400 dark:hover:text-white"
-      >
-        Storybook
-      </a>
     </nav>
   );
 }

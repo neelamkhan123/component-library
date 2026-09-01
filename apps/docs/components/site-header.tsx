@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { GitHubIcon, Logo, NpmIcon } from "@/components/icons";
+import { GitHubIcon, NpmIcon } from "@/components/icons";
 import { CommandMenu } from "@/components/command-menu";
 import { MobileNav } from "@/components/mobile-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { MainNavLinks } from "@/components/main-nav-links";
 import { siteConfig } from "@/lib/site";
+import { LogoIcon } from "./logo";
 
 export function SiteHeader() {
   return (
@@ -16,10 +17,7 @@ export function SiteHeader() {
           href="/"
           className="flex shrink-0 items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500"
         >
-          <Logo className="h-6 w-6" />
-          <span className="hidden font-semibold tracking-tight sm:inline">
-            {siteConfig.shortName}
-          </span>
+          <LogoIcon />
         </Link>
 
         <MainNavLinks />

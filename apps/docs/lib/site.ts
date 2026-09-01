@@ -1,6 +1,5 @@
 export const siteConfig = {
   name: "neelam-ui",
-  shortName: "neelamkhan/ui",
   tagline: "Accessible React components",
   description:
     "An accessible React component library built with a focus on keyboard navigation, focus management, and ARIA correctness. 46 components, typed, tree-shakeable, and tested against axe-core in CI.",

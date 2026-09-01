@@ -33,6 +33,10 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const nextConfig = {
   basePath,
   pageExtensions: ["ts", "tsx", "md", "mdx"],
+  // The dev-only Next.js badge in the bottom-left corner. It sits over the
+  // page while working on it and never ships, so nothing but the local view
+  // changes here.
+  devIndicators: false,
   // The site is fully static — no server runtime — so it can be dropped on
   // the same S3 bucket + CloudFront distribution that serves Storybook today.
   output: "export",
