@@ -1,0 +1,164 @@
+export const metadata = {
+  title: "Data Table",
+  description: "A sortable, filterable, paginated table driven by a columns/data pair.",
+};
+
+<PageHeader
+  title="Data Table"
+  description="A sortable, optionally filterable and paginated table driven by a columns/data pair. Built on Table, Pagination, and Input."
+  componentName="DataTable"
+/>
+
+<ComponentPreview name="data-table-demo" align="start" />
+
+## Usage
+
+```tsx
+import { DataTable, type DataTableColumn } from "@neelamkhan21/ui";
+
+interface Person {
+  id: number;
+  name: string;
+  role: string;
+  score: number;
+}
+
+const columns: DataTableColumn<Person>[] = [
+  { key: "name", header: "Name", sortable: true },
+  { key: "role", header: "Role", sortable: true },
+  { key: "score", header: "Score", sortable: true, align: "right" },
+];
+
+<DataTable columns={columns} data={people} getRowId={(row) => row.id} />
+```
+
+## Order of operations
+
+Filtering runs **before** sorting and pagination. That ordering is what makes
+the page count and sort order describe the rows actually on screen, rather than
+the unfiltered set — a common off-by-a-page bug when the three are composed in
+the wrong order.
+
+## Columns
+
+`key` must be a key of your row type, so a typo is a type error rather than a
+column of `undefined`.
+
+### Custom cells
+
+`cell` takes over rendering for a column:
+
+```tsx
+{
+  key: "role",
+  header: "Role",
+  sortable: true,
+  cell: (row) => <Badge variant="secondary">{row.role}</Badge>,
+  filterValue: (row) => row.role,
+}
+```
+
+<Callout variant="warning" title="Custom cells need filterValue">
+  Once `cell` returns an element rather than a string, the filter has no text to
+  match against and that column silently stops being searchable. `filterValue`
+  gives it the raw string back. The same applies to `sortValue` for columns
+  whose displayed value is not itself sortable — a formatted date, for example.
+</Callout>
+
+### Sorting a formatted value
+
+```tsx
+{
+  key: "createdAt",
+  header: "Created",
+  sortable: true,
+  cell: (row) => formatDate(row.createdAt),
+  sortValue: (row) => row.createdAt.getTime(),
+}
+```
+
+Without `sortValue`, "1 April" sorts before "1 March" — alphabetically correct
+and chronologically wrong.
+
+## Filtering
+
+`filterable` adds a search box above the table that matches across every
+column. Match counts are announced through a live region, so a screen reader
+user learns that the result set changed without having to go looking.
+
+```tsx
+<DataTable
+  columns={columns}
+  data={people}
+  filterable
+  filterLabel="Filter people"
+  noMatchesMessage="No people match that search."
+/>
+```
+
+## Pagination
+
+Set `pageSize` to paginate; omit it to render every row. To place the pagination
+controls somewhere else — outside a card the table sits inside, say — combine
+`hidePagination` with `onPaginationChange` and render your own, while
+`DataTable` keeps owning the sort, filter, and page maths:
+
+```tsx
+const [pagination, setPagination] = useState(null);
+
+<DataTable
+  columns={columns}
+  data={people}
+  pageSize={10}
+  hidePagination
+  onPaginationChange={setPagination}
+/>;
+
+{pagination && (
+  <Pagination
+    page={pagination.page}
+    totalPages={pagination.totalPages}
+    onPageChange={pagination.setPage}
+  />
+)}
+```
+
+`hidePagination` has no effect without `pageSize`.
+
+## Keyboard
+
+<KeyboardTable
+  shortcuts={[
+    { keys: "Tab", description: "Reaches the filter box, each sortable column header, and the pagination controls in visual order." },
+    { keys: "Enter / Space", description: "On a sortable column header, cycles ascending → descending → unsorted." },
+  ]}
+/>
+
+## Accessibility
+
+- Renders a real `<table>` with `<th scope="col">` headers, so table navigation
+  commands work in screen readers.
+- Sortable headers are `<button>`s carrying `aria-sort`, which is updated as the
+  sort cycles — the current sort is announced, not merely drawn as an arrow.
+- Filter match counts are announced through a live region.
+- The empty state distinguishes "no data at all" (`emptyMessage`) from "your
+  filter excluded everything" (`noMatchesMessage`), which are very different
+  situations for the user.
+
+## Deliberate omissions
+
+Row selection, column resizing, column reordering, virtualisation, and
+server-side data are **not** included. Each would push the component from a
+presentation concern into a state-management one, and the reasoning is recorded
+in `DECISIONS.md` in the repository. For those cases, compose
+[`Table`](/docs/components/table) with your own logic.
+
+## API reference
+
+### DataTable
+
+<PropsTable name="DataTable" />
+
+### DataTableColumn
+
+<PropsTable name="DataTableColumn" />

@@ -1,0 +1,152 @@
+@import "tailwindcss";
+
+/*
+ * The library ships Tailwind utility classes and no stylesheet of its own,
+ * so its compiled output has to be scanned as a source here — exactly the
+ * setup documented for consumers in the package README. Pointing at the
+ * workspace path rather than `node_modules/@neelamkhan21/ui` keeps the scan
+ * working regardless of how npm chooses to hoist the symlink.
+ */
+@source "../../../packages/ui/dist";
+
+/*
+ * Must match the library's own variant definition. Without it the `dark:`
+ * classes baked into the library's dist would compile against the default
+ * `prefers-color-scheme` media query and stop responding to the site's
+ * class-based theme toggle.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --color-accent-50: oklch(0.97 0.014 285);
+  --color-accent-100: oklch(0.94 0.03 285);
+  --color-accent-200: oklch(0.88 0.06 285);
+  --color-accent-300: oklch(0.8 0.1 285);
+  --color-accent-400: oklch(0.7 0.15 285);
+  --color-accent-500: oklch(0.62 0.19 285);
+  --color-accent-600: oklch(0.55 0.21 285);
+  --color-accent-700: oklch(0.48 0.19 285);
+  --color-accent-800: oklch(0.4 0.15 285);
+  --color-accent-900: oklch(0.33 0.11 285);
+  --color-accent-950: oklch(0.23 0.08 285);
+
+  --spacing-header: 3.5rem;
+  --spacing-sidebar: 15.5rem;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --bg: theme(--color-white);
+    --bg-subtle: theme(--color-slate-50);
+    --fg: theme(--color-slate-950);
+    --fg-muted: theme(--color-slate-500);
+    --border: theme(--color-slate-200);
+  }
+
+  .dark {
+    color-scheme: dark;
+    --bg: theme(--color-slate-950);
+    --bg-subtle: theme(--color-slate-900);
+    --fg: theme(--color-white);
+    --fg-muted: theme(--color-slate-400);
+    --border: theme(--color-slate-800);
+  }
+
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* The site's own chrome fades on theme switch for the same reason the
+     library's base layer does it — so borders, muted text and icon fills
+     don't snap a frame ahead of the background. */
+  body,
+  header,
+  aside,
+  nav,
+  main {
+    transition:
+      background-color 150ms ease,
+      border-color 150ms ease,
+      color 150ms ease;
+  }
+
+  ::selection {
+    background-color: theme(--color-accent-500);
+    color: white;
+  }
+}
+
+@layer utilities {
+  /*
+   * Both the MDX pipeline (rehype-pretty-code) and <CodeBlock> highlight with
+   * two themes at once and emit them as `--shiki-light` / `--shiki-dark` CSS
+   * variables on every token, setting no `color` of their own. These rules
+   * pick which set is live — BOTH are required. With only the dark rule, light
+   * mode renders every token in the inherited body colour, i.e. no
+   * highlighting at all.
+   */
+  [data-rehype-pretty-code-figure] span,
+  .shiki span {
+    color: var(--shiki-light);
+  }
+
+  .dark [data-rehype-pretty-code-figure] span,
+  .dark .shiki span {
+    color: var(--shiki-dark);
+  }
+
+  /*
+   * github-light-default renders comments at #6e7781 — 4.35:1 against this
+   * site's code background, just under WCAG AA. shiki writes each token's
+   * colour as an inline custom property and rehype-pretty-code builds its own
+   * highlighter (ignoring `colorReplacements`), so the override has to land
+   * here. Matching the inline value is exact, covers both highlight
+   * pipelines, and needs `!important` only because it is competing with an
+   * inline declaration. Comments are the sole token this theme leaves short.
+   */
+  [style*="--shiki-light:#6e7781" i] {
+    --shiki-light: #68707a !important;
+  }
+
+  [data-rehype-pretty-code-figure] pre code {
+    display: grid;
+    counter-reset: line;
+  }
+
+  [data-rehype-pretty-code-figure] pre code > .line {
+    padding-inline: 1rem;
+  }
+
+  [data-line-numbers] pre code > .line::before {
+    counter-increment: line;
+    content: counter(line);
+    display: inline-block;
+    width: 1.25rem;
+    margin-right: 1.25rem;
+    text-align: right;
+    color: var(--fg-muted);
+  }
+
+  [data-highlighted-line] {
+    background-color: color-mix(in oklab, var(--color-accent-500) 12%, transparent);
+    border-left: 2px solid var(--color-accent-500);
+  }
+
+  /* Long tables and wide code inside prose scroll in their own box rather
+     than pushing the page into a horizontal scroll. */
+  .scroll-x {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+}

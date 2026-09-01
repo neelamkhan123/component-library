@@ -1,0 +1,94 @@
+export const metadata = {
+  title: "Dark Mode",
+  description: "Class-based dark mode, and how to wire a theme toggle without a flash.",
+};
+
+<PageHeader
+  title="Dark Mode"
+  description="Every component ships light and dark styling. Dark mode resolves against a class, so your app controls it."
+/>
+
+## Declare the variant
+
+The library's `dark:` classes are compiled against a `.dark` ancestor rather
+than `prefers-color-scheme`. Your stylesheet has to declare the same variant or
+those classes will never match:
+
+```css
+@import "tailwindcss";
+@source "../node_modules/@neelamkhan21/ui/dist";
+
+@custom-variant dark (&:where(.dark, .dark *));
+```
+
+The `:where()` wrapper keeps the selector at zero specificity, so a `dark:`
+class is no harder to override than the light class it sits next to.
+
+<Callout variant="warning" title="Media-query dark mode will not work on its own">
+  If you skip this and rely on Tailwind's default, the library's `dark:` classes
+  compile to `@media (prefers-color-scheme: dark)` and stop responding to your
+  toggle entirely — the site follows the OS and ignores the user's choice.
+</Callout>
+
+## Toggle the class
+
+Anything that puts `dark` on an ancestor works. The whole mechanism is:
+
+```tsx
+document.documentElement.classList.toggle("dark", isDark);
+```
+
+## Avoiding the flash
+
+The one real hazard is a flash of the wrong theme: the browser paints your
+default before JavaScript reads the stored preference. The fix is a small
+blocking script in `<head>` that sets the class before first paint.
+
+```html
+<script>
+  // Deliberately blocking and inline: it must run before the first paint,
+  // so it cannot be deferred, bundled, or moved to the end of <body>.
+  (function () {
+    try {
+      var stored = localStorage.getItem("theme");
+      var dark =
+        stored === "dark" ||
+        (!stored && matchMedia("(prefers-color-scheme: dark)").matches);
+      document.documentElement.classList.toggle("dark", dark);
+    } catch (error) {
+      /* Private mode can throw on localStorage access — fall through to light. */
+    }
+  })();
+</script>
+```
+
+In Next.js, [`next-themes`](https://github.com/pacocoursey/next-themes) does
+exactly this for you, which is what this site uses:
+
+```tsx
+<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+  {children}
+</ThemeProvider>
+```
+
+## Set color-scheme too
+
+Tell the browser which scheme is active so form controls, scrollbars, and the
+default canvas match. Without it you get light scrollbars framing a dark page:
+
+```css
+:root { color-scheme: light; }
+.dark { color-scheme: dark; }
+```
+
+## Respect "system"
+
+Offer three states — light, dark, and system — rather than two. A binary
+toggle silently overrides an OS-level preference that some users set for
+accessibility reasons, and gives them no way back to it.
+
+<Callout variant="tip">
+  Use the toggle in this site's header to check any component page in both
+  themes. Every preview on this site renders the real component, so what you see
+  is what ships.
+</Callout>

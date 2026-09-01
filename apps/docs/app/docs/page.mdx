@@ -1,0 +1,67 @@
+export const metadata = {
+  title: "Introduction",
+  description:
+    "An accessible React component library built on semantic HTML and the WAI-ARIA Authoring Practices Guide.",
+};
+
+<PageHeader
+  title="Introduction"
+  description="An accessible React component library, built with a focus on keyboard navigation, focus management, and ARIA correctness."
+/>
+
+`@neelamkhan21/ui` is a set of 46 React components styled with Tailwind CSS v4.
+It is not a design system you configure and adopt wholesale — it is a set of
+primitives that behave correctly, which you restyle as far as you like.
+
+The distinguishing choice is that accessibility is the specification, not a
+review step. Every interactive component implements the
+[WAI-ARIA Authoring Practices Guide](https://www.w3.org/WAI/ARIA/apg/patterns/)
+pattern for its widget type, and every Storybook story is asserted against
+axe-core in CI, so a regression fails the build before it can merge.
+
+## Principles
+
+### Semantic HTML first
+
+Native elements are used wherever one exists. Custom ARIA widgets are built
+only where the platform offers no equivalent. `Dialog` is a real `<dialog>`
+driven by `showModal()`, so the focus trap, `Escape`-to-close, and top-layer
+stacking come from the browser rather than from JavaScript that approximates
+them.
+
+### Composition over configuration
+
+Components are compound by default. Rather than a `Dialog` with a dozen props
+describing its parts, you compose `DialogTrigger`, `DialogContent`,
+`DialogHeader`, `DialogTitle`, and `DialogFooter` — so you can put anything you
+want in any slot without the library anticipating it.
+
+### Styling stays yours
+
+Nothing ships a stylesheet. Components are Tailwind utility classes on real
+elements, and every one accepts `className`, which is merged so your classes
+win. There is no theme object, no CSS-in-JS runtime, and no build step beyond
+the Tailwind you already run.
+
+<Callout variant="note" title="Scope is deliberate">
+  Some components stop short of what a full framework would offer — `DataTable`
+  has no row selection or server-side data, for instance. The reasoning for each
+  omission is recorded per component in `DECISIONS.md` in the repository.
+</Callout>
+
+## Try it
+
+Everything on this site is rendered with the published package. This is the
+real component, keyboard and all:
+
+<ComponentPreview name="button-variants" />
+
+## What's in the box
+
+<ComponentGrid headingLevel={3} />
+
+## Next steps
+
+Install the package and wire up Tailwind in [Installation](/docs/installation),
+then read [Accessibility](/docs/accessibility) for what the library guarantees
+and what remains your responsibility.

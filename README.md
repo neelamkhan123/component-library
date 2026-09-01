@@ -1,99 +1,72 @@
 ![CI](https://github.com/neelamkhan123/component-library/actions/workflows/ci.yml/badge.svg)
 
-# @neelamkhan21/ui
+# component-library
 
-An accessible React component library, built with a focus on keyboard
-navigation, focus management, and ARIA correctness.
+Monorepo for **[@neelamkhan21/ui](./packages/ui)** — an accessible React
+component library — and its documentation site.
 
-📖 **[Live Storybook docs](https://df22wszov2zdy.cloudfront.net)**  
-📦 **[npm package](https://www.npmjs.com/package/@neelamkhan21/ui)**
+```
+packages/ui     the published npm package (46 components) + Storybook
+apps/docs       the documentation site (Next.js App Router + MDX)
+```
 
-## Installation
+## Getting started
 
 ```bash
-npm install @neelamkhan21/ui
+npm install                      # installs every workspace
+npm run build                    # build the library (apps/docs consumes its dist)
+npm run dev                      # docs site at localhost:3000
 ```
 
-React 18+ and `react-dom` 18+ are peer dependencies.
+## Scripts
 
-`Chart` is a shell around a plot you supply, not a charting engine — it
-owns the caption, legend, validated series palette, reserved plot box, and
-the accessible data table, and renders whatever you pass as children.
-[Recharts](https://recharts.org) is an **optional** peer dependency, so
-install it only if you want it:
+Run from the repository root:
+
+| Script | What it does |
+| --- | --- |
+| `npm run dev` | Docs site at `localhost:3000` |
+| `npm run storybook` | Storybook at `localhost:6006` |
+| `npm run build` | Build the library package |
+| `npm run build:docs` | Build the library, then export the docs site to `apps/docs/out` |
+| `npm run test` | Unit + a11y tests (vitest + jest-axe) |
+| `npm run test-storybook` | axe-core over every story |
+| `npm run changeset` | Record a release note |
+| `npm run release` | Build and publish the package |
+
+Anything scoped to one workspace also works directly:
+`npm run <script> -w @neelamkhan21/ui` or `-w docs`.
+
+## How the docs site consumes the library
+
+`apps/docs` depends on `@neelamkhan21/ui` as a workspace package and imports
+its **built** `dist`, exactly as an outside consumer does — including the
+Tailwind `@source` scan of the compiled output. That means the site dogfoods
+the real published surface rather than a privileged internal path, but it also
+means **the library must be built before the docs will pick up a change**:
 
 ```bash
-npm install recharts
+npm run build -w @neelamkhan21/ui    # or `npm run build -w @neelamkhan21/ui -- --watch`
 ```
 
-Nothing is bundled and nothing is imported from it, so consumers who don't
-chart pay nothing.
+Two files under `apps/docs/lib` are generated at build time and git-ignored:
 
-## Usage
+- `props.generated.json` — prop tables extracted from the library's own TSDoc
+- `examples.generated.ts` — the demo registry, pairing each example component
+  with its verbatim source
 
-```tsx
-import { Button, Dialog } from '@neelamkhan21/ui';
-```
+`npm run gen -w docs` rebuilds both; `prebuild` and `predev` run it for you.
 
-Components are styled with Tailwind CSS v4 utility classes and ship no
-stylesheet of their own, so the consuming app needs Tailwind v4 with the
-package included as a source:
+## Adding documentation for a component
 
-```css
-@import "tailwindcss";
-@source "../node_modules/@neelamkhan21/ui/dist";
-```
+1. Write a demo at `apps/docs/examples/<slug>-demo.tsx` (it needs its own
+   `"use client"` — the library ships no directives of its own).
+2. Run `npm run gen -w docs`.
+3. Reference it from the component's page with
+   `<ComponentPreview name="<slug>-demo" />`.
 
-## Accessibility approach
-
-- **Semantic HTML first** — native elements are used wherever possible;
-  custom ARIA widgets are only built where no native equivalent exists.
-  `Dialog` is a real `<dialog>` with `showModal()`, so the focus trap,
-  Escape-to-close, and top-layer stacking come from the browser.
-- **Keyboard navigation** — every interactive component follows the
-  [WAI-ARIA Authoring Practices Guide](https://www.w3.org/WAI/ARIA/apg/patterns/)
-  pattern for its widget type.
-- **Focus management** — Dialog and Popover trap and restore focus on
-  open/close. Focus-visible styling is preserved everywhere.
-- **Reduced motion** — every transition is dropped under
-  `prefers-reduced-motion` (WCAG 2.3.3).
-- **Automated testing** — every Storybook story is checked against
-  axe-core in CI via the Storybook test runner, so accessibility
-  regressions fail the build before merge.
-
-## Component keyboard reference
-
-| Component | Keys |
-|---|---|
-| Dialog | `Escape` closes, `Tab`/`Shift+Tab` trapped inside |
-| Dropdown Menu | Arrow keys navigate, `Enter`/`Space` selects, `Escape` closes |
-| Tabs | Arrow keys switch tabs, `Home`/`End` jump to first/last |
-| Accordion | `Enter`/`Space` toggles panel |
-| Select | Arrow keys navigate, `Home`/`End` jump to first/last, `Escape` closes |
-| Combobox | See [APG combobox pattern](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/) |
-| Date Range Picker | Arrow keys move between presets, `Escape` closes, arrow keys navigate each calendar grid |
-| Data Table | `Enter`/`Space` on a column header cycles sort, `Tab` reaches the filter box |
-
-## Notable decisions
-
-See [DECISIONS.md](./DECISIONS.md) for the full per-component reasoning
-behind specific accessibility choices.
-
-## Development
-
-```bash
-npm install
-npm run dev              # Storybook at localhost:6006
-npm run test             # unit + a11y tests (vitest + jest-axe)
-npm run test-storybook   # axe-core run over every story
-npm run lint             # eslint
-npm run build            # build the package
-```
+`npm run scaffold -w docs` creates a page for any component in the registry
+that does not have one yet, and never touches an existing page.
 
 ## License
 
-MIT © Neelam Khan — see [LICENSE](./LICENSE).
-
-The published bundle inlines `class-variance-authority` (Apache-2.0) and
-`lucide-react` (ISC); their notices are reproduced in
-[THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md).
+MIT © Neelam Khan — see [LICENSE](./packages/ui/LICENSE).

@@ -1,0 +1,106 @@
+export const metadata = {
+  title: "Accessibility",
+  description: "What the library guarantees, how it is tested, and what remains your responsibility.",
+};
+
+<PageHeader
+  title="Accessibility"
+  description="What this library guarantees, how those guarantees are enforced, and the part that is still yours."
+/>
+
+Most component libraries treat accessibility as a quality bar. Here it is the
+specification: the APG pattern defines what a component *is*, and the tests
+enforce it on every pull request.
+
+## The approach
+
+### Semantic HTML first
+
+Native elements are used wherever one exists; custom ARIA widgets are built
+only where the platform has no equivalent. `Dialog` is a real `<dialog>` opened
+with `showModal()`, so focus trapping, `Escape`-to-close, inert background
+content, and top-layer stacking are the browser's implementation rather than an
+approximation of it.
+
+### APG patterns, not approximations
+
+Every interactive component follows the
+[WAI-ARIA Authoring Practices Guide](https://www.w3.org/WAI/ARIA/apg/patterns/)
+pattern for its widget type — roles, states, properties, and the full keyboard
+interaction table, including the parts that are easy to skip: typeahead in
+`Select`, roving tabindex in `RadioGroup` and `Tabs`, `Home`/`End` in every
+composite widget.
+
+### Focus management
+
+`Dialog`, `AlertDialog`, `Drawer`, and `Popover` move focus in on open and
+restore it to the trigger on close. Focus-visible styling is preserved
+everywhere and never suppressed.
+
+### Reduced motion
+
+Every transition is dropped under `prefers-reduced-motion` (WCAG 2.3.3) —
+including the ones the library adds to its own base layer for smooth theme
+switching.
+
+## Keyboard reference
+
+<KeyboardTable
+  shortcuts={[
+    { keys: "Escape", description: "Closes Dialog, AlertDialog, Drawer, Popover, Select, Combobox, Command, and Date Range Picker." },
+    { keys: "Tab / Shift+Tab", description: "Trapped inside modal surfaces; moves normally everywhere else." },
+    { keys: "↑ / ↓", description: "Moves between options in Select, Combobox, Command, Dropdown Menu, and Context Menu." },
+    { keys: "← / →", description: "Moves between Tabs, Radio Group options, Carousel slides, and Date Range Picker presets." },
+    { keys: "Home / End", description: "Jumps to the first or last item in every composite widget." },
+    { keys: "Enter / Space", description: "Activates the focused control; cycles sort on a Data Table column header." },
+    { keys: "A–Z", description: "Typeahead: jumps to the next option starting with that character in Select." },
+  ]}
+/>
+
+Per-component keyboard tables are on each component's page.
+
+## How it is tested
+
+Three layers, all of them blocking on pull requests:
+
+1. **Unit and integration tests** — Vitest with Testing Library, driving each
+   component the way a keyboard user would rather than asserting on internals.
+2. **`jest-axe` per component** — every component is rendered and asserted to
+   produce no axe-core violations.
+3. **axe-core over every story** — the Storybook test runner walks all 46
+   components' stories in a real Chromium and fails CI on any violation.
+
+The third layer is the one that catches regressions the other two miss, because
+it runs against the real rendered output in a real browser, including the
+composed states that only stories exercise.
+
+<Callout variant="note" title="What automated testing cannot catch">
+  axe-core reliably finds perhaps a third of WCAG issues. It cannot tell you
+  whether your labels are meaningful, whether focus order matches visual order
+  in your layout, or whether an error message actually explains the error. Those
+  need a person, and ideally a person using a screen reader.
+</Callout>
+
+## What is still your responsibility
+
+The library gets the widget right. The page is yours:
+
+- **Accessible names.** Icon-only controls need a name you supply —
+  `aria-label` on an icon `Button`, a visible `<label>` on an `Input`. The
+  library cannot invent one.
+- **Heading structure.** Components render the heading levels you give them.
+  Ordering them into a coherent outline is a page-level concern.
+- **Colour contrast.** The default palette meets WCAG AA. If you retheme, verify
+  it again — [Theming](/docs/theming) makes it easy to change and equally easy
+  to break.
+- **Content order.** Focus order follows DOM order. CSS that reorders elements
+  visually (`order`, `grid-area`, `flex-direction: row-reverse`) desynchronises
+  the two and is invisible to automated checks.
+- **Live regions.** `Toast` and `DataTable` announce their own updates. Anything
+  else you make dynamic needs its own.
+
+## Reporting a problem
+
+Accessibility bugs are treated as correctness bugs, not enhancements. Please
+[open an issue](https://github.com/neelamkhan123/component-library/issues) with
+the component, the assistive technology and browser, and what you expected.

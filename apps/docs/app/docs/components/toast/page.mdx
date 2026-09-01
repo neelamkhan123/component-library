@@ -1,0 +1,124 @@
+export const metadata = {
+  title: "Toast",
+  description: "Brief, non-blocking messages announced to assistive technology.",
+};
+
+<PageHeader
+  title="Toast"
+  description="A notification shown briefly at the edge of the screen. Unlike every other component here, it is triggered imperatively."
+  componentName="Toast"
+/>
+
+<ComponentPreview name="toast-demo" />
+
+## Usage
+
+Toast has two halves. Mount `<Toaster />` once, near the root of your app —
+it is the surface everything renders into:
+
+```tsx
+// app/layout.tsx
+import { Toaster } from "@neelamkhan21/ui";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        {children}
+        <Toaster position="bottom-right" />
+      </body>
+    </html>
+  );
+}
+```
+
+Then call `toast()` from anywhere — a click handler, an async callback, a
+`catch` block. No context, no hook, no prop drilling:
+
+```tsx
+import { toast } from "@neelamkhan21/ui";
+
+toast("Saved successfully");
+
+toast({
+  title: "Event created",
+  description: "Monday, January 3rd at 6:00pm.",
+  action: { label: "Undo", onClick: restore },
+});
+```
+
+<Callout variant="note" title="Why an imperative API here">
+  A toast is fired by an event, not rendered by a state change — and the code
+  that knows a save succeeded is rarely the component that owns the notification
+  area. A declarative API would mean lifting transient state up through the tree
+  for no benefit.
+</Callout>
+
+## Variants
+
+<ComponentPreview name="toast-variants" />
+
+`duration` accepts milliseconds and defaults to `5000`. Pass `Infinity` to
+require manual dismissal.
+
+<Callout variant="warning" title="Errors should not time out">
+  A destructive toast that vanishes on its own can be missed entirely — by
+  someone who looked away, and reliably by someone using a screen magnifier.
+  Give anything the user must act on `duration: Infinity`.
+</Callout>
+
+## Positioning
+
+`position` accepts `"top-left"`, `"top-center"`, `"top-right"`,
+`"bottom-left"`, `"bottom-center"`, and `"bottom-right"`, defaulting to
+`"bottom-right"`.
+
+Mount exactly one `Toaster`. Two mounted at once both receive every toast and
+render it twice.
+
+## What a toast is not
+
+Toasts are for confirmations and low-stakes failures. They are the wrong tool
+when:
+
+- **The user must decide something.** Use [`AlertDialog`](/docs/components/alert-dialog) —
+  a toast can be dismissed without ever being read.
+- **The message explains a form error.** Put it next to the field, wired up with
+  `aria-describedby`. A toast disappears; the invalid field does not.
+- **The information matters later.** Nothing persists a toast. If it needs to be
+  retrievable, it belongs on the page.
+
+## Keyboard
+
+<KeyboardTable
+  shortcuts={[
+    { keys: "Tab", description: "Reaches the toast's action and close buttons while it is on screen." },
+    { keys: "Enter / Space", description: "Activates the focused action or dismisses the toast." },
+  ]}
+/>
+
+<Callout variant="tip" title="Give people time">
+  The default five seconds is short for anyone reading with a magnifier or
+  screen reader. Where a toast carries an action, lengthen `duration` — WCAG
+  2.2.1 expects timed content to be adjustable.
+</Callout>
+
+## Accessibility
+
+- Toasts render into a live region, so they are announced without moving focus
+  away from whatever the user is doing.
+- `destructive` toasts are announced assertively; the rest are polite, so
+  routine confirmations do not interrupt.
+- Every toast is dismissible by keyboard, and dismissal returns focus sensibly
+  rather than dropping it to the document body.
+- Entry and exit transitions are dropped under `prefers-reduced-motion`.
+
+## API reference
+
+### toast(options)
+
+<PropsTable name="ToastOptions" />
+
+### Toaster
+
+<PropsTable name="Toaster" />

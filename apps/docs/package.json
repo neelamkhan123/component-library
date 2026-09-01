@@ -1,0 +1,44 @@
+{
+  "name": "docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "npm run gen",
+    "dev": "next dev",
+    "gen": "node scripts/gen-examples.mjs && node scripts/gen-props.mjs",
+    "prebuild": "npm run gen",
+    "build": "next build",
+    "start": "next start",
+    "pretypecheck": "npm run gen",
+    "typecheck": "tsc --noEmit",
+    "scaffold": "node scripts/scaffold-components.mjs"
+  },
+  "dependencies": {
+    "@mdx-js/loader": "^3.1.0",
+    "@mdx-js/react": "^3.1.0",
+    "@neelamkhan21/ui": "*",
+    "@next/mdx": "^15.5.0",
+    "lucide-react": "^1.31.0",
+    "next": "^15.5.0",
+    "next-themes": "^0.4.6",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "recharts": "^2.15.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/mdx": "^2.0.13",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "react-docgen-typescript": "^2.4.0",
+    "rehype-autolink-headings": "^7.1.0",
+    "rehype-pretty-code": "^0.14.1",
+    "rehype-slug": "^6.0.0",
+    "remark-gfm": "^4.0.1",
+    "shiki": "^1.29.2",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3"
+  }
+}

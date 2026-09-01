@@ -1,0 +1,95 @@
+export const metadata = {
+  title: "Installation",
+  description: "Install @neelamkhan21/ui and configure Tailwind CSS v4 to scan it.",
+};
+
+<PageHeader
+  title="Installation"
+  description="Install the package, point Tailwind at it, and import your first component."
+/>
+
+## Install the package
+
+<InstallCommand packages="@neelamkhan21/ui" />
+
+React 18 or newer and a matching `react-dom` are peer dependencies.
+
+## Configure Tailwind
+
+This is the step that is easy to miss. The library ships Tailwind utility
+classes on its elements and **no stylesheet of its own** — nothing to import,
+nothing to override. That keeps your bundle free of CSS you did not ask for,
+but it means Tailwind has to be told to scan the package, or none of the
+classes the components reference will exist in your build.
+
+Add the package's `dist` folder as a source in your global stylesheet:
+
+```css
+@import "tailwindcss";
+@source "../node_modules/@neelamkhan21/ui/dist";
+```
+
+<Callout variant="warning" title="Symptom of a missing @source">
+  Components render with correct structure and behaviour but no visual styling
+  at all — an unstyled `<button>`, a dialog with no backdrop. If that is what you
+  are seeing, the `@source` line is missing or its relative path is wrong. The
+  path is resolved relative to the CSS file it appears in.
+</Callout>
+
+Tailwind CSS v4 is required. The components use v4-only features — `@custom-variant`,
+`starting:`, `backdrop:`, and `transition-discrete` among them — that have no v3 equivalent.
+
+## Enable dark mode
+
+Every component carries `dark:` variants that resolve against a `.dark` class
+rather than the `prefers-color-scheme` media query, so your app can offer a
+theme toggle. Declare the matching variant once:
+
+```css
+@custom-variant dark (&:where(.dark, .dark *));
+```
+
+See [Dark Mode](/docs/dark-mode) for wiring up the toggle itself.
+
+## Optional: charts
+
+`Chart` is a shell around a plot you supply — it owns the caption, legend,
+validated series palette, reserved plot box, and the accessible data-table
+fallback, and renders whatever you pass as children. [Recharts](https://recharts.org)
+is an **optional** peer dependency. Nothing is bundled from it and nothing is
+imported unless you install it:
+
+<InstallCommand packages="recharts" />
+
+Consumers who do not chart pay nothing for this.
+
+## Use a component
+
+```tsx
+import { Button, Dialog, DialogContent, DialogTrigger } from "@neelamkhan21/ui";
+
+export function Example() {
+  return (
+    <Dialog>
+      <DialogTrigger>Open</DialogTrigger>
+      <DialogContent>Hello</DialogContent>
+    </Dialog>
+  );
+}
+```
+
+<Callout variant="tip" title="React Server Components">
+  The package does not carry `"use client"` directives, so a file that imports an
+  interactive component into a React Server Components tree (Next.js App Router,
+  for example) needs its own `"use client"` at the top. Purely presentational
+  components — `Badge`, `Card`, `Separator`, `Skeleton` — render fine on the server.
+</Callout>
+
+## Requirements
+
+| Requirement | Version |
+| --- | --- |
+| React | 18 or newer |
+| Tailwind CSS | 4.0 or newer |
+| TypeScript | 5.0 or newer (optional, types are bundled) |
+| Recharts | 2 or newer (optional, only for `Chart`) |
