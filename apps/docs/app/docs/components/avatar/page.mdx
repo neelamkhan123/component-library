@@ -5,47 +5,76 @@ export const metadata = {
 
 <PageHeader
   title="Avatar"
-  description="A user image with a graceful initials fallback."
+  description="A round image for a user or entity, with a fallback shown until the image has actually loaded — and again if it fails, so there is never a broken-image glyph."
   componentName="Avatar"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="avatar-demo" />
 
 ## Usage
 
 ```tsx
-import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "neelam-ui";
+import { Avatar, AvatarFallback, AvatarImage } from "neelam-ui";
+
+<Avatar>
+  <AvatarImage src="/ada.jpg" alt="Ada Lovelace" />
+  <AvatarFallback>AL</AvatarFallback>
+</Avatar>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+Mount `AvatarImage` unconditionally — even with a `src` you are not sure will
+resolve. It tracks its own load state and renders nothing when there is no `src`
+or the image failed, so the fallback handles every case and the browser's broken
+image can never show through.
 
-## Examples
+## Sizes
 
-{/* TODO: add examples. Create apps/docs/examples/avatar-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="avatar-demo" /> */}
+`size` is `"sm"` (32px), `"md"` (40px, the default), or `"lg"` (48px). The box
+is a fixed height and width, which matters: the space is reserved before any
+image loads, so an avatar never causes a layout shift as it arrives.
+
+## The fallback delay
+
+`delayMs` on `AvatarFallback` holds it back briefly, so a fast-loading image
+does not flash initials before replacing them:
+
+```tsx
+<AvatarFallback delayMs={600}>AL</AvatarFallback>
+```
+
+Omit it and the fallback renders immediately, which is the right default when
+images are slow or often missing.
+
+## alt is required
+
+`AvatarImage`'s `alt` is a required prop, not an optional one. An avatar image
+conveys who it represents, so it needs a text alternative.
+
+<Callout variant="tip" title="When the name is already beside it">
+  In a [`Message`](/docs/components/message) row where the sender's name is
+  already visible, the avatar is decorative — pass `alt=""` so it is skipped
+  rather than announcing the name twice. Required does not mean non-empty; it
+  means you have to decide.
+</Callout>
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Not focusable. An avatar is an image — wrap it in a button or link if it should be actionable." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- The image carries a real `alt`, so it is announced or skipped according to
+  what you pass.
+- The fallback is text (initials or an icon), so it is announced normally — an
+  avatar is never a silent empty circle.
+- A fixed box means no layout shift as images resolve, which is a real usability
+  issue for screen magnifier users, not only a Core Web Vitals number.
+- Initials alone are ambiguous. Where identity matters, keep the name visible
+  next to the avatar rather than relying on "AL" to carry it.
 
 ## API reference
 
@@ -53,14 +82,10 @@ import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "neelam-ui";
 
 <PropsTable name="Avatar" />
 
-### AvatarFallback
-
-<PropsTable name="AvatarFallback" />
-
-### AvatarGroup
-
-<PropsTable name="AvatarGroup" />
-
 ### AvatarImage
 
 <PropsTable name="AvatarImage" />
+
+### AvatarFallback
+
+<PropsTable name="AvatarFallback" />

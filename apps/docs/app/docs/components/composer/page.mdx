@@ -5,50 +5,115 @@ export const metadata = {
 
 <PageHeader
   title="Composer"
-  description="A message input with attachments and a send action."
+  description="A textarea and a send button wired together — growing with its content, with Enter to send and Shift+Enter for a newline."
   componentName="Composer"
 />
 
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
-
-<ComponentPreview name="composer-demo" />
+<ComponentPreview name="composer-demo" align="start" />
 
 ## Usage
 
 ```tsx
 import { Composer } from "neelam-ui";
+
+<Composer
+  placeholder="Message…"
+  onSubmit={(value) => send(value)}
+/>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+`onSubmit` receives the trimmed, non-empty value. It fires for both routes —
+`Enter` and the send button — so there is one path to handle.
 
-## Examples
+## Enter sends
 
-{/* TODO: add examples. Create apps/docs/examples/composer-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="composer-demo" /> */}
+`Enter` submits; `Shift+Enter` inserts a newline. This inverts the usual
+[`Textarea`](/docs/components/textarea) behaviour, and does so deliberately:
+it is the convention every chat app shares, closely enough that it needs no
+explaining to users.
+
+Submitting is blocked when the value is empty or whitespace-only, and while
+`disabled` — so `Enter` on an empty box does nothing rather than sending a blank
+message.
+
+## Growing
+
+The field starts at one row and grows with its content up to `maxHeight` (200px
+by default), then scrolls instead of growing forever.
+
+There is no CSS-only way to size a textarea to its content: `scrollHeight` is a
+measured value, not a computed one. So the height is reset to `auto` before each
+measurement — otherwise a stale, taller height from the previous keystroke would
+be what gets read back.
+
+## Clearing after send
+
+An uncontrolled `Composer` clears itself after submitting; nobody wants their
+own message still sitting in the box. A **controlled** one does not — clearing
+is left entirely to whoever owns `value`:
+
+```tsx
+const [draft, setDraft] = useState("");
+
+<Composer
+  value={draft}
+  onValueChange={setDraft}
+  onSubmit={(value) => {
+    send(value);
+    setDraft("");
+  }}
+/>
+```
+
+This is the same "smart default when uncontrolled, hands-off when controlled"
+split [`Select`](/docs/components/select) and
+[`Accordion`](/docs/components/accordion) make.
+
+<Callout variant="note" title="The ref points at the textarea">
+  Not at the wrapping `<div>` — the thing you actually want after sending is the
+  field, to call `.focus()` on it again. That matches
+  [`Input`](/docs/components/input)'s and `Textarea`'s own ref targets.
+</Callout>
+
+## Attachments
+
+`Composer` does not manage files itself. Render
+[`Attachment`](/docs/components/attachment) chips with `onRemove` above it and
+keep the staged list in your own state — which is also what lets you decide when
+an upload starts.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Enter", description: "Sends the message. Does nothing when the field is empty or whitespace-only." },
+    { keys: "Shift+Enter", description: "Inserts a newline." },
+    { keys: "Tab", description: "Moves from the field to the send button, which is disabled while there is nothing to send." },
   ]}
 />
 
+Calling `preventDefault()` in your own `onKeyDown` cancels the send, which is
+the hook for a mention picker or slash-command menu that wants `Enter` first.
+
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- The send button always has a name via `sendLabel` (default "Send message") —
+  it renders an icon only, so without one it would announce as just "button".
+- The send icon is `aria-hidden`.
+- The button is `disabled` while the field is empty, so it is skipped by `Tab`
+  rather than being a focusable control that does nothing.
+- The wrapper shows focus with `focus-within`, so the whole composer reads as
+  focused while the caret is in the field.
+
+<Callout variant="warning" title="The field needs a label">
+  A `placeholder` is not one — it disappears as soon as the user types. Pass
+  `aria-label="Message"` (or point at a visible label with `aria-labelledby`),
+  the same rule [`Input`](/docs/components/input) documents.
+</Callout>
 
 ## API reference
 
-### Composer
-
 <PropsTable name="Composer" />
+
+Also accepts every native `<textarea>` attribute except `value`, `defaultValue`,
+`rows`, and `onSubmit`, each of which is taken over above.

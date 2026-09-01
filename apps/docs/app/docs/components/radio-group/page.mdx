@@ -5,47 +5,94 @@ export const metadata = {
 
 <PageHeader
   title="Radio Group"
-  description="A set of mutually exclusive options with roving focus."
+  description={'A set of mutually exclusive options. Real <input type="radio"> elements sharing a name, so both exclusivity and arrow-key navigation come from the browser.'}
   componentName="RadioGroup"
 />
 
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
-
-<ComponentPreview name="radio-group-demo" />
+<ComponentPreview name="radio-group-demo" align="start" />
 
 ## Usage
 
 ```tsx
 import { RadioGroup, RadioGroupItem } from "neelam-ui";
+
+<RadioGroup defaultValue="pro" aria-labelledby="plan-label">
+  <label>
+    <RadioGroupItem value="starter" />
+    Starter
+  </label>
+  <label>
+    <RadioGroupItem value="pro" />
+    Pro
+  </label>
+</RadioGroup>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## Labelling the group
 
-## Examples
+`RadioGroup` renders `<div role="radiogroup">`, which carries no name of its
+own. Point `aria-labelledby` at the visible heading, or pass `aria-label` if
+there isn't one — what a radio group represents is specific to each use, so it
+is not something the component could sensibly hardcode.
 
-{/* TODO: add examples. Create apps/docs/examples/radio-group-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="radio-group-demo" /> */}
+<Callout variant="warning" title="An unnamed radiogroup announces nothing">
+  Without `aria-label` or `aria-labelledby`, a screen reader reads out each
+  option but never says what the choice is *about*. This is the single most
+  common mistake with this component.
+</Callout>
+
+Individual options are labelled the ordinary way — an `<label>` wrapping the
+item and its text. There is no bundled per-item label, for the same reason
+[`Checkbox`](/docs/components/checkbox) has none.
+
+## The shared name
+
+Every `RadioGroupItem` inherits one `name` from the group, generated with
+`useId` unless you pass your own. That single attribute is what makes the
+browser treat them as one group — selecting one clears the rest, and the arrow
+keys move between them — with no key handling of our own.
+
+Pass `name` explicitly when the group is inside a real `<form>` and you need a
+stable field name in the submitted data.
+
+## Controlled
+
+```tsx
+const [plan, setPlan] = useState("pro");
+
+<RadioGroup value={plan} onValueChange={setPlan} aria-label="Plan">…</RadioGroup>
+```
+
+`disabled` on the group disables every option; an individual `RadioGroupItem`
+can still set its own.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Moves focus into the group — to the selected option, or the first one if nothing is selected." },
+    { keys: "↓ / →", description: "Selects the next option, wrapping at the end." },
+    { keys: "↑ / ←", description: "Selects the previous option, wrapping at the start." },
+    { keys: "Space", description: "Selects the focused option, when the group had nothing selected." },
   ]}
 />
 
+All of it is native radio-input behaviour from the shared `name` — none of these
+keys are intercepted.
+
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- The group is `role="radiogroup"`; each option is a native
+  `<input type="radio">`, so role, selection, and form participation come from
+  the platform.
+- The whole group is a **single tab stop**. `Tab` enters and leaves it; the
+  arrow keys move within. This is the roving-focus behaviour the APG specifies,
+  and here it is the browser's own.
+- The selected dot is `aria-hidden` — the input's `checked` property already
+  carries the state.
+- Selection follows focus, as it does for native radios. If choosing an option
+  triggers something expensive, debounce the effect rather than changing the
+  interaction.
 
 ## API reference
 

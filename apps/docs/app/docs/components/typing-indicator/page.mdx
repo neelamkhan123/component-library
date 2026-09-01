@@ -5,50 +5,70 @@ export const metadata = {
 
 <PageHeader
   title="Typing Indicator"
-  description="An animated hint that a reply is being generated."
+  description="Three bouncing dots in a bubble, standing in for an incoming message that has not arrived yet — and announcing itself as a live status."
   componentName="TypingIndicator"
 />
 
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
-
-<ComponentPreview name="typing-indicator-demo" />
+<ComponentPreview name="typing-indicator-demo" align="start" />
 
 ## Usage
 
 ```tsx
 import { TypingIndicator } from "neelam-ui";
+
+{isGenerating ? <TypingIndicator label="Assistant is typing…" /> : null}
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+It is styled to match [`Bubble`](/docs/components/bubble)'s incoming shape
+directly, because it sits exactly where that bubble will land.
 
-## Examples
+## The label is the announcement
 
-{/* TODO: add examples. Create apps/docs/examples/typing-indicator-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="typing-indicator-demo" /> */}
+There is no visible text, so `label` is what assistive tech reads. It defaults
+to "Typing…" — pass something specific when the UI knows who:
+
+```tsx
+<TypingIndicator label="Jane is typing…" />
+```
+
+## Announcing itself
+
+`TypingIndicator` carries `role="status"`, so it announces on its own. That is
+the opposite of [`Skeleton`](/docs/components/skeleton), which is explicitly
+`aria-hidden` and leaves announcing to whatever wraps a whole batch of them.
+
+The difference is cardinality: there is normally exactly one typing indicator,
+for whoever is currently typing, so it *is* the live status. A screen of
+skeletons is one loading state rendered many times, and announcing each would be
+a barrage.
+
+<Callout variant="warning" title="Don't leave it mounted">
+  `role="status"` is polite, but an indicator that never resolves is an
+  announcement that never completes. Unmount it as soon as the message arrives
+  or the request fails.
+</Callout>
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Not focusable. It is a status, not a control." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- `role="status"` implies `aria-live="polite"`, so the label is announced
+  without interrupting whatever the user is doing.
+- The three dots are `aria-hidden`. They are decoration; `label` carries the
+  meaning.
+- The bounce animation is dropped entirely under `prefers-reduced-motion`
+  (WCAG 2.3.3) — the dots simply sit still, and the status still announces.
+- The staggered `animationDelay` is inline style rather than three classes,
+  which keeps the dot count a loop rather than hand-written markup.
 
 ## API reference
 
-### TypingIndicator
-
 <PropsTable name="TypingIndicator" />
+
+Also accepts every native `<div>` attribute.

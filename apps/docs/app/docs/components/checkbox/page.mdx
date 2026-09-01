@@ -5,17 +5,9 @@ export const metadata = {
 
 <PageHeader
   title="Checkbox"
-  description="A binary control supporting an indeterminate state."
+  description={'A tri-state checkbox — checked, unchecked, or indeterminate — built on a real <input type="checkbox"> rather than a hidden input paired with a fake visual.'}
   componentName="Checkbox"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="checkbox-demo" />
 
@@ -23,32 +15,80 @@ export const metadata = {
 
 ```tsx
 import { Checkbox } from "neelam-ui";
+
+<label className="flex items-center gap-2.5">
+  <Checkbox defaultChecked />
+  Email me about product updates
+</label>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## Labelling
 
-## Examples
+There is no `CheckboxLabel`. An ordinary `<label>` wrapping the checkbox and its
+text already associates the two natively, and gives you the click target for
+free — a bundled component would only wrap what the platform does correctly.
 
-{/* TODO: add examples. Create apps/docs/examples/checkbox-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="checkbox-demo" /> */}
+<Callout variant="warning" title="A checkbox with no label has no name">
+  If the design has no visible text — a checkbox in a table header, say — pass
+  `aria-label`. A screen reader otherwise announces only "checkbox".
+</Callout>
+
+## Indeterminate
+
+Pass `checked="indeterminate"` for a parent whose children disagree. This is the
+"select all" case: the box is neither on nor off, and the mixed state says so
+rather than guessing.
+
+<ComponentPreview name="checkbox-indeterminate" align="start" />
+
+`indeterminate` is a DOM property, not an HTML attribute — `<input>` accepts no
+such React prop, so it can only be set imperatively. `Checkbox` does that for
+you in an effect; from the outside it is just another value of `checked`.
+
+<Callout variant="note" title="Indeterminate is a display state, not a value">
+  A form submits an indeterminate checkbox as unchecked, exactly as the platform
+  does. It communicates "partially selected" to the user; it is not a third
+  value you can read back.
+</Callout>
+
+## Controlled
+
+`checked` and `onCheckedChange` drive the checkbox from your own state. Omit
+both and it manages itself, the same as a plain `<input>`:
+
+```tsx
+const [checked, setChecked] = useState(false);
+
+<Checkbox checked={checked} onCheckedChange={setChecked} />
+```
+
+`onCheckedChange` receives a plain boolean. The underlying `onChange` still
+fires with the native event if you need it.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Moves focus to the checkbox. Disabled checkboxes are skipped." },
+    { keys: "Space", description: "Toggles the checkbox — native behaviour, not re-implemented." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- Renders a native `<input type="checkbox">`, so the role, the checked state,
+  `Space` activation, and participation in a `<form>`'s submitted data all come
+  from the browser.
+- The overlaid check and dash icons are `aria-hidden`. State is already carried
+  by the input's own `checked` and `indeterminate` properties, so announcing the
+  glyph too would be a duplicate.
+- Styling uses `appearance-none` with the `checked:` and `indeterminate:`
+  variants on the real input, so focus and hit target stay on the element
+  assistive tech is actually reporting.
 
 ## API reference
 
-### Checkbox
-
 <PropsTable name="Checkbox" />
+
+Also accepts every native `<input>` attribute except `type` and the tri-state
+`checked` — `name`, `value`, `required`, `disabled`, `aria-*`, and the rest.

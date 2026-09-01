@@ -5,48 +5,86 @@ export const metadata = {
 
 <PageHeader
   title="Skeleton"
-  description="A shimmering placeholder shown while content loads."
+  description="A pulsing placeholder standing in for content that has not loaded yet — always hidden from assistive tech, with the announcing left to the region around it."
   componentName="Skeleton"
 />
 
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
-
-<ComponentPreview name="skeleton-demo" />
+<ComponentPreview name="skeleton-demo" align="start" />
 
 ## Usage
 
 ```tsx
 import { Skeleton } from "neelam-ui";
+
+<Skeleton className="h-4 w-32" />
+<Skeleton className="h-10 w-10 rounded-full" />
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## Size every instance
 
-## Examples
+There is no default size, on purpose. A text line, an avatar circle, and a card
+block are shaped completely differently, so any guess would be wrong as often as
+it is right. Give each one a `className`:
 
-{/* TODO: add examples. Create apps/docs/examples/skeleton-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="skeleton-demo" /> */}
+- a line of text — `h-4 w-32`
+- an avatar — `h-10 w-10 rounded-full`
+- a card block — `h-32 w-full`
+
+Match the skeleton to the real content's dimensions. A placeholder that is a
+different size from what replaces it makes the page jump on load.
+
+## Announcing the loading state
+
+`Skeleton` is **always** `aria-hidden`. It is a visual stand-in with nothing to
+read, the same treatment
+[`BreadcrumbSeparator`](/docs/components/breadcrumb)'s decorative marks get.
+
+That deliberately leaves announcing the *loading* state to you. Wrap the whole
+batch in one status region with a single label:
+
+```tsx
+<div role="status" aria-label="Loading profile">
+  <Skeleton className="h-12 w-12 rounded-full" />
+  <Skeleton className="h-4 w-full" />
+  <Skeleton className="h-4 w-2/3" />
+</div>
+```
+
+<Callout variant="note" title="Why not announce per skeleton">
+  A screen of skeletons is one loading state rendered many times. If each
+  announced itself, a list of ten rows would fire ten identical messages. Only
+  the caller knows how many there will be and what the region represents —
+  which is the opposite of
+  [`TypingIndicator`](/docs/components/typing-indicator), where there is
+  normally exactly one, so it announces itself.
+</Callout>
+
+Remember to drop the `role="status"` region once the content arrives, so the
+label does not linger.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Not focusable, and skipped entirely — a skeleton is never a tab stop." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- `aria-hidden="true"` is applied by default, which is what keeps a loading
+  screen from being read out as a wall of empty boxes. It is set before the
+  prop spread, so you *can* override it — but there is essentially no good
+  reason to, and doing so is how a skeleton starts announcing nothing to
+  everyone.
+- The pulse animation is dropped under `prefers-reduced-motion` (WCAG 2.3.3).
+  The placeholder still shows; it simply stops pulsing.
+- Because skeletons are hidden, a loading screen made only of them has **no**
+  accessible content at all until you add the status region above. That is the
+  one thing to get right on this page.
 
 ## API reference
 
-<PropsTable name="Skeleton" />
+`Skeleton` adds no props of its own — `SkeletonProps` is React's
+`HTMLAttributes<HTMLDivElement>`. Every native `<div>` attribute passes through,
+and `className` is how you size it.

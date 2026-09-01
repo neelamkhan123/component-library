@@ -5,50 +5,113 @@ export const metadata = {
 
 <PageHeader
   title="Popover"
-  description="Rich floating content anchored to a trigger."
+  description="A non-modal panel anchored to its trigger — for content that is richer than a tooltip but lighter than a dialog."
   componentName="Popover"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="popover-demo" />
 
 ## Usage
 
 ```tsx
-import { Popover } from "neelam-ui";
+import { Popover, PopoverContent, PopoverTrigger } from "neelam-ui";
+
+<Popover>
+  <PopoverTrigger>Dimensions</PopoverTrigger>
+  <PopoverContent>
+    <label>Width <Input size="sm" defaultValue="480" /></label>
+  </PopoverContent>
+</Popover>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## Popover, dialog, or tooltip?
 
-## Examples
+- **[`Tooltip`](/docs/components/tooltip)** — a few words of label. Never
+  focusable, never interactive.
+- **Popover** — interactive content the user can work through, without the page
+  behind being blocked.
+- **[`Dialog`](/docs/components/dialog)** — an interruption that must be
+  resolved before anything else. Traps focus and inerts the page.
 
-{/* TODO: add examples. Create apps/docs/examples/popover-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="popover-demo" /> */}
+`PopoverContent` is `role="dialog"`, not `role="menu"` or `"listbox"` — its
+content is arbitrary rather than a list of choices. For a list of actions, use
+[`DropdownMenu`](/docs/components/dropdown-menu).
+
+## Naming the panel
+
+A `role="dialog"` needs an accessible name; axe's `aria-dialog-name` rule flags
+its absence. Rather than making every caller remember that, `PopoverContent`
+defaults `aria-labelledby` to the trigger's own `id` — reusing whatever already
+names the trigger, for free.
+
+Pass `aria-label` or `aria-labelledby` explicitly when the trigger's label does
+not double as a good name for the panel:
+
+```tsx
+<PopoverTrigger aria-label="Account">
+  <Avatar … />
+</PopoverTrigger>
+<PopoverContent aria-label="Account settings">…</PopoverContent>
+```
+
+## What the platform provides
+
+`PopoverContent` is a native popover (`popover="auto"`), so `Escape` and
+outside-click dismissal come from the browser, and top-layer rendering means the
+panel escapes any `overflow: hidden` ancestor without a portal.
+
+On open, focus moves to the first focusable element inside — a form's first
+field — or to the panel itself when there is nothing focusable, as with a purely
+informational card. On close it returns to the trigger, through every dismissal
+path. The page behind is scroll-locked while the panel is open, so it cannot
+drift away from its anchor.
+
+<Callout variant="note" title="Non-modal, but scroll-locked">
+  Scroll locking is positional, not a focus trap. `Tab` still leaves the popover
+  and continues into the page — which is the difference between this and a
+  [`Dialog`](/docs/components/dialog).
+</Callout>
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Enter / Space", description: "Toggles the popover when focus is on the trigger." },
+    { keys: "Tab / Shift+Tab", description: "Moves through the panel's contents, then out into the page — focus is not trapped." },
+    { keys: "Escape", description: "Closes the popover and returns focus to the trigger." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- The trigger is a native `<button>` with `aria-haspopup="dialog"`,
+  `aria-expanded`, and `aria-controls` pointing at the panel — the WAI-ARIA
+  non-modal dialog pattern.
+- The panel is `role="dialog"` and always resolves to an accessible name, from
+  the trigger by default.
+- Focus moves in on open and back to the trigger on close, including on outside
+  click, where it is easiest to lose.
+- Open and close transitions are dropped under `prefers-reduced-motion`.
 
 ## API reference
 
 ### Popover
 
 <PropsTable name="Popover" />
+
+### PopoverTrigger
+
+Adds no props of its own — it renders a native `<button>` and accepts every
+`<button>` attribute. The ARIA wiring (`aria-haspopup`, `aria-expanded`,
+`aria-controls`) is applied for you.
+
+### PopoverContent
+
+Adds no props of its own beyond the native `<div>` attributes. `aria-label` and
+`aria-labelledby` are the two worth knowing about — see
+[Naming the panel](#naming-the-panel).
+
+### PopoverClose
+
+Renders a native `<button>` that closes the popover. Accepts every `<button>`
+attribute.

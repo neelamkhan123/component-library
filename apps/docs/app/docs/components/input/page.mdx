@@ -5,17 +5,9 @@ export const metadata = {
 
 <PageHeader
   title="Input"
-  description="A single-line text field with label, description, and error wiring."
+  description="A single-line text field. A native <input> underneath, so typing, selection, and every type variant come from the browser — this adds sizing and the visual language shared with Button."
   componentName="Input"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="input-demo" />
 
@@ -23,32 +15,76 @@ export const metadata = {
 
 ```tsx
 import { Input } from "neelam-ui";
+
+<label className="flex flex-col gap-1.5">
+  Email
+  <Input type="email" placeholder="ada@example.com" />
+</label>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+`type` passes straight through, so `email`, `password`, `search`, `number`, and
+the rest behave — and validate, and summon the right mobile keyboard — exactly
+as the platform intends.
 
-## Examples
+## Sizes
 
-{/* TODO: add examples. Create apps/docs/examples/input-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="input-demo" /> */}
+<ComponentPreview name="input-sizes" />
+
+## Labelling
+
+There is no bundled label or helper-text component. A `<label>` wrapping the
+input, or linked with `htmlFor`, already associates the two natively.
+
+<Callout variant="warning" title="Placeholder is not a label">
+  A placeholder disappears the moment the user types — exactly when they most
+  need to remember what the field is for — and is not reliably announced. Use it
+  for an example value, never as the field's name.
+</Callout>
+
+## Invalid state
+
+The error styling keys off `aria-invalid` directly rather than a separate
+`invalid` prop. `aria-invalid` is already the real signal assistive tech reads,
+so a second prop carrying the same fact would just be something else to keep in
+sync with it.
+
+<ComponentPreview name="input-invalid" />
+
+Pair it with `aria-describedby` pointing at the message, so the error is
+announced as part of the field rather than being red text that happens to sit
+nearby:
+
+```tsx
+<Input id="email" aria-invalid aria-describedby="email-error" />
+<p id="email-error">Enter a valid email address.</p>
+```
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Moves focus to the field. Disabled fields are skipped." },
+    { keys: "Escape", description: "Clears the field when type=\"search\", in browsers that implement it." },
   ]}
 />
 
+Everything else — caret movement, selection, undo, clipboard — is native text
+input behaviour and is deliberately untouched.
+
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- Renders a native `<input>`; role, focus, and form participation come from the
+  platform.
+- Invalid styling is driven by `aria-invalid`, so the visual state and the
+  announced state cannot drift apart.
+- Focus-visible uses a layered `box-shadow` rather than `outline`, so the ring
+  stays visible inside overflow containers.
+- The disabled palette keeps placeholder text above the contrast floor rather
+  than fading it out entirely.
 
 ## API reference
 
-### Input
-
 <PropsTable name="Input" />
+
+Also accepts every native `<input>` attribute apart from `size`, which is taken
+over for the visual scale — use `maxLength` or a `className` width for sizing.

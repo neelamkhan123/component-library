@@ -5,53 +5,123 @@ export const metadata = {
 
 <PageHeader
   title="Alert Dialog"
-  description="A modal that interrupts to confirm a destructive or irreversible action."
+  description="A confirmation modal that cannot be dismissed by accident — the same native <dialog> foundation as Dialog, with every dismissal path that isn't an explicit choice switched off."
   componentName="AlertDialog"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="alert-dialog-demo" />
 
 ## Usage
 
 ```tsx
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent } from "neelam-ui";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "neelam-ui";
+
+<AlertDialog>
+  <AlertDialogTrigger>Delete project</AlertDialogTrigger>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Delete this project?</AlertDialogTitle>
+      <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel>Cancel</AlertDialogCancel>
+      <AlertDialogAction variant="destructive">Delete</AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## How it differs from Dialog
 
-## Examples
+Mechanically it *is* a [`Dialog`](/docs/components/dialog) — same native
+`<dialog>`, same focus trapping, same top-layer stacking. Three deliberate
+subtractions make it an alert dialog:
 
-{/* TODO: add examples. Create apps/docs/examples/alert-dialog-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="alert-dialog-demo" /> */}
+- **No outside-click dismissal.** Not a prop that defaults to off — simply never
+  available. A stray click silently discarding a destructive confirmation is
+  exactly what this component exists to prevent.
+- **No `Escape`.** A native `<dialog>` fires a cancelable `cancel` event before
+  `Escape` closes it, so `onCancel` calls `preventDefault()` on it. The close is
+  stopped before it starts, rather than closing and reopening.
+- **No corner close button.** Every way out should read as a deliberate choice
+  between the two footer buttons, not a third, easier-to-misclick escape hatch.
+
+<Callout variant="warning" title="Reserve it for consequences">
+  An alert dialog takes away every casual way out. That is correct for deleting
+  an account and hostile for "you have unsaved changes". If dismissing is a
+  reasonable thing to want, use [`Dialog`](/docs/components/dialog).
+</Callout>
+
+`AlertDialogTrigger`, `AlertDialogHeader`, `AlertDialogTitle`,
+`AlertDialogDescription`, and `AlertDialogFooter` are the exact same components
+as their `Dialog` counterparts, re-exported under alert-flavoured names. Only
+`AlertDialogContent`, `AlertDialogAction`, and `AlertDialogCancel` are new.
+
+## Action and Cancel
+
+Both close the dialog. They differ only in default styling, so the pair reads as
+primary/secondary without either needing an explicit `variant`:
+
+- `AlertDialogAction` defaults to `variant="default"`.
+- `AlertDialogCancel` defaults to `variant="outline"`.
+
+Both accept `Button`'s full `variant` and `size` set, which is the whole
+affordance for a destructive confirmation:
+
+```tsx
+<AlertDialogAction variant="destructive">Delete</AlertDialogAction>
+```
+
+Calling `preventDefault()` in your own `onClick` stops the dialog closing — the
+hook for keeping it open while an async delete is in flight.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Enter / Space", description: "Opens the dialog from the trigger; activates the focused footer button when open." },
+    { keys: "Tab / Shift+Tab", description: "Cycles focus within the dialog and cannot leave it." },
+    { keys: "Escape", description: "Deliberately does nothing. Cancel is the way out." },
   ]}
 />
 
+<Callout variant="note" title="Escape doing nothing is a real trade-off">
+  It breaks a convention users rely on. That is the point — but it means the
+  cancel button must always be visible and obvious, never scrolled out of view
+  on a small screen.
+</Callout>
+
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- The panel carries `role="alertdialog"` rather than the `<dialog>` element's
+  implicit `dialog` role, which is what tells assistive tech this one requires
+  an immediate, explicit response.
+- `AlertDialogTitle` supplies the accessible name via `aria-labelledby` and is
+  **required**. `AlertDialogDescription` is wired up with `aria-describedby`.
+- Focus moves into the dialog on open and returns to the trigger on close.
+- Background content is made inert by the platform, so it is removed from the
+  accessibility tree rather than merely covered.
+- Transitions are dropped under `prefers-reduced-motion`.
 
 ## API reference
 
 ### AlertDialog
 
 <PropsTable name="AlertDialog" />
+
+### AlertDialogContent
+
+<PropsTable name="AlertDialogContent" />
 
 ### AlertDialogAction
 
@@ -60,7 +130,3 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent }
 ### AlertDialogCancel
 
 <PropsTable name="AlertDialogCancel" />
-
-### AlertDialogContent
-
-<PropsTable name="AlertDialogContent" />

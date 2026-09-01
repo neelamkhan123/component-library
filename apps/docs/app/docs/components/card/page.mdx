@@ -5,48 +5,121 @@ export const metadata = {
 
 <PageHeader
   title="Card"
-  description="A surface for grouping related content and actions."
+  description="A bordered surface for grouping related content — a set of thin, styled wrappers that own layout only, leaving the content entirely to you."
   componentName="Card"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="card-demo" />
 
 ## Usage
 
 ```tsx
-import { Card } from "neelam-ui";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "neelam-ui";
+
+<Card>
+  <CardHeader>
+    <CardTitle>Create a project</CardTitle>
+    <CardDescription>Deploy your new project in one click.</CardDescription>
+  </CardHeader>
+  <CardContent>…</CardContent>
+  <CardFooter>…</CardFooter>
+</Card>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+Every part is optional and they compose in any order. A card with just
+`CardContent` is perfectly normal.
 
-## Examples
+## The parts
 
-{/* TODO: add examples. Create apps/docs/examples/card-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="card-demo" /> */}
+| Component | Element | Role |
+| --- | --- | --- |
+| `Card` | `<div>` | The bordered, rounded surface |
+| `CardHeader` | `<div>` | Stacks title and description with the right spacing |
+| `CardTitle` | `<h3>` | The heading |
+| `CardDescription` | `<p>` | Supporting text under the title |
+| `CardContent` | `<div>` | The body |
+| `CardFooter` | `<div>` | Actions, usually buttons |
+
+This is the same layout-versus-content split
+[`Dialog`](/docs/components/dialog)'s `DialogHeader` and
+[`Message`](/docs/components/message) draw for their own families: the wrappers
+own spacing and alignment, never what goes inside.
+
+## Heading levels
+
+`CardTitle` renders an `<h3>`. That is a sensible default, not a claim about
+your page — heading levels must descend without skipping to be useful for
+navigation, and a card does not know what surrounds it.
+
+There is no `as` prop. When the outline calls for a different level, render the
+heading yourself inside `CardHeader` — the styling is three utility classes:
+
+```tsx
+<CardHeader>
+  <h2 className="text-lg leading-none font-semibold tracking-tight">
+    Create a project
+  </h2>
+  <CardDescription>Deploy your new project in one click.</CardDescription>
+</CardHeader>
+```
+
+<Callout variant="warning" title="Check the heading order on the page">
+  A grid of cards inside an `<h2>` section wants `<h3>` titles — the default is
+  right. Cards directly under an `<h1>` want `<h2>`. Skipped levels are one of
+  the most common accessibility problems in card-heavy layouts.
+</Callout>
+
+## Clickable cards
+
+There is no `href` or `onClick` on `Card`, deliberately. Making a whole card
+clickable well is subtle: a `<div onClick>` is invisible to the keyboard, and
+wrapping everything in an `<a>` swallows any buttons inside it.
+
+The reliable pattern is to keep the card static and let one real link inside it
+cover the surface:
+
+```tsx
+<Card className="relative">
+  <CardHeader>
+    <CardTitle>
+      <a href="/projects/1" className="after:absolute after:inset-0">
+        Project one
+      </a>
+    </CardTitle>
+  </CardHeader>
+</Card>
+```
+
+The link is the accessible name and the only tab stop; the pseudo-element gives
+it the card's whole hit area.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Not focusable itself. Focus moves through whatever interactive content the card holds, in DOM order." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- Every part is a plain element with no ARIA role. A card is a visual grouping,
+  and giving it a role would tell assistive tech something untrue.
+- `CardTitle` is a real heading, so it appears in the document outline and can
+  be jumped to — which is what makes a page of cards navigable.
+- If a card needs to be a landmark or a labelled region, wrap it yourself in a
+  `<section aria-labelledby>` pointing at the title's `id`.
+- Nothing here traps or reorders focus, so DOM order stays reading order.
 
 ## API reference
 
-<PropsTable name="Card" />
+The card parts add no props of their own — each is a styled wrapper around a
+native element, and every attribute passes straight through. See the table
+above for which element each renders.

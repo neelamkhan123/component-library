@@ -5,50 +5,87 @@ export const metadata = {
 
 <PageHeader
   title="Separator"
-  description="A semantic or decorative divider between content."
+  description="A thin dividing line — a native <hr>, decorative by default, because most dividers in a UI are visual rather than meaningful."
   componentName="Separator"
 />
 
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
-
-<ComponentPreview name="separator-demo" />
+<ComponentPreview name="separator-demo" align="start" />
 
 ## Usage
 
 ```tsx
 import { Separator } from "neelam-ui";
+
+<Separator className="my-4" />
+<Separator orientation="vertical" />
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## Decorative by default
 
-## Examples
+`decorative` defaults to `true`, which sets `aria-hidden` and keeps the
+separator out of the accessibility tree entirely.
 
-{/* TODO: add examples. Create apps/docs/examples/separator-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="separator-demo" /> */}
+That default is deliberate. Most separators divide things that are already
+visually related — two buttons in a toolbar, a card's header from its body —
+rather than marking a genuine thematic shift a screen reader user needs told
+about. It is the same bias
+[`BreadcrumbSeparator`](/docs/components/breadcrumb) takes.
+
+Pass `decorative={false}` when the line really does mark a break between
+sections:
+
+```tsx
+<Separator decorative={false} />
+```
+
+A native `<hr>` already carries an implicit `separator` role, so a meaningful
+separator needs no ARIA beyond `aria-orientation` for the vertical case — the
+orientation `<hr>`'s role implies is horizontal. A decorative one is hidden
+outright rather than having its implicit role stripped.
+
+## Vertical separators
+
+`orientation="vertical"` uses `self-stretch`, not `h-full`, so it takes the
+height of its flex container.
+
+<Callout variant="warning" title="A vertical separator needs a flex row">
+  `self-stretch` only stretches inside a flex container. Outside one there is
+  nothing to stretch to and the separator collapses to zero height — set one
+  explicitly via `className` if you need it there.
+</Callout>
+
+The reason it is `self-stretch` rather than `h-full` is a real bug this library
+hit in [`Resizable`](/docs/components/resizable): a percentage height cannot
+resolve against a container whose own height is intrinsic rather than explicit.
+`self-stretch` sidesteps percentage resolution entirely.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Not focusable in either mode. A separator is never interactive — for a draggable divider, see Resizable." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- Renders a native `<hr>`, so a non-decorative separator gets its role from the
+  platform.
+- Decorative separators are `aria-hidden`, so they add nothing to what a screen
+  reader announces.
+- `aria-orientation="vertical"` is set only when the separator is both vertical
+  *and* meaningful — on a hidden element it would be pointless.
+- The line is drawn with `border-0` and a background colour, which gives the
+  same 1px rule in both orientations without a border-side to switch.
+
+<Callout variant="tip" title="Never carry meaning by the line alone">
+  A separator is a visual grouping cue. In forced-colours mode, and for anyone
+  not seeing the layout, the grouping has to also come from headings, landmarks,
+  or list structure — a rule between two blocks conveys nothing on its own.
+</Callout>
 
 ## API reference
 
-### Separator
-
 <PropsTable name="Separator" />
+
+Also accepts every native `<hr>` attribute.

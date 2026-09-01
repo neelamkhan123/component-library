@@ -117,12 +117,23 @@ for (const file of files) {
   if (!sourceFile) continue;
 
   ts.forEachChild(sourceFile, (node) => {
-    const isPropsType =
-      (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) &&
-      node.name.text.endsWith("Props");
-    if (!isPropsType) return;
+    const isTypeDeclaration =
+      ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node);
+    if (!isTypeDeclaration) return;
 
-    const componentName = node.name.text.replace(/Props$/, "");
+    // A `<Name>Props` type documents the component `<Name>`. Any *other*
+    // exported type is documented under its own name — `ToastOptions` and
+    // `DataTableColumn` are part of the public API and get their own table,
+    // but neither is a component's props, so neither ends in `Props`.
+    const isPropsType = node.name.text.endsWith("Props");
+    const isExported = node.modifiers?.some(
+      (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword,
+    );
+    if (!isPropsType && !isExported) return;
+
+    const componentName = isPropsType
+      ? node.name.text.replace(/Props$/, "")
+      : node.name.text;
     if (result[componentName]) return; // pass 1 already covered it
 
     const type = checker.getTypeAtLocation(node.name);

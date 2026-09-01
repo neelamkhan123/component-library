@@ -5,50 +5,84 @@ export const metadata = {
 
 <PageHeader
   title="Attachment"
-  description="A file chip shown alongside a message or composer."
+  description="A file or image attached to a message — a download link once posted, or a removable chip while staged in a composer."
   componentName="Attachment"
 />
 
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
-
-<ComponentPreview name="attachment-demo" />
+<ComponentPreview name="attachment-demo" align="start" />
 
 ## Usage
 
 ```tsx
 import { Attachment } from "neelam-ui";
+
+<Attachment name="release-notes.pdf" size="248 KB" url="/release-notes.pdf" />
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+`name` is the visible filename, and doubles as the `alt` text for an image
+attachment. `size` is a human-readable string like `"2.4 MB"` — formatting bytes
+is left to you, since the right units and locale vary.
 
-## Examples
+## Posted or pending
 
-{/* TODO: add examples. Create apps/docs/examples/attachment-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="attachment-demo" /> */}
+The component has two modes, and `onRemove` is what selects between them:
+
+- **Without `onRemove`** — an attachment already posted in a message. Given a
+  `url` it becomes a real link, and an image renders full-size and clickable.
+- **With `onRemove`** — a file staged in a composer before sending. A remove
+  button appears, and an image switches to a small captioned thumbnail, because
+  a pending upload is not something to click through to yet.
+
+<ComponentPreview name="attachment-pending" align="start" />
+
+## Links and downloads
+
+Given a `url`, the clickable element is a real `<a>` *inside* the component, not
+a `<div>` with a click handler. The outer element stays a plain `<div>` either
+way, so the forwarded ref's type does not depend on whether a prop was passed.
+
+For `type="file"` the anchor carries `download`; for `type="image"` it opens in
+a new tab.
+
+<Callout variant="warning" title="download is same-origin only">
+  Browsers honour the `download` attribute only for same-origin URLs, or ones a
+  CORS response explicitly permits. Point it at a cross-origin CDN and the file
+  will open rather than save — serve it from your own origin, or set the
+  appropriate headers.
+</Callout>
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Reaches the file link (when url is set), then the remove button (when onRemove is set)." },
+    { keys: "Enter", description: "Follows the link — downloading a file, or opening an image in a new tab." },
+    { keys: "Enter / Space", description: "Activates the remove button." },
   ]}
 />
 
+An attachment with neither `url` nor `onRemove` is static content and is not
+focusable at all, which is correct — there is nothing to do with it.
+
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- The remove button always has a name: `removeLabel`, defaulting to
+  `"Remove {name}"`, so a row of chips does not announce three identical
+  "Remove" buttons.
+- The file icon is `aria-hidden` — the filename beside it is the content.
+- An image attachment uses `name` as its `alt`, so the file is identified rather
+  than announced as an unlabelled image.
+- External links carry `rel="noopener noreferrer"`.
+
+<Callout variant="tip" title="Say when a link leaves the page">
+  An image attachment opens in a new tab. If that is surprising in context, add
+  a visually hidden "(opens in a new tab)" to the name — an unexpected context
+  switch is disorienting for screen reader and screen magnifier users alike.
+</Callout>
 
 ## API reference
 
-### Attachment
-
 <PropsTable name="Attachment" />
+
+Also accepts every native `<div>` attribute except `children` — the content is
+built from `name`, `size`, and `type`.

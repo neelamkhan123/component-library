@@ -5,17 +5,9 @@ export const metadata = {
 
 <PageHeader
   title="Switch"
-  description="An on/off control for settings that apply immediately."
+  description={'A binary on/off control, built on a real <input type="checkbox" role="switch"> — which is exactly what WAI-ARIA describes a switch as.'}
   componentName="Switch"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="switch-demo" />
 
@@ -23,32 +15,70 @@ export const metadata = {
 
 ```tsx
 import { Switch } from "neelam-ui";
+
+<label className="flex items-center gap-3">
+  <Switch defaultChecked />
+  Enable notifications
+</label>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## Switch or checkbox?
 
-## Examples
+They are the same element underneath, and the choice is about meaning rather
+than mechanics:
 
-{/* TODO: add examples. Create apps/docs/examples/switch-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="switch-demo" /> */}
+- **Switch** — the change takes effect immediately. Turning it on *is* the
+  action. Think a settings pane with no Save button.
+- **Checkbox** — the value is collected now and submitted later, as part of a
+  form. Think terms-and-conditions, or a filter you apply afterwards.
+
+<Callout variant="tip" title="A switch needs no Save button">
+  If the surrounding form has one, the control almost certainly wants to be a
+  [`Checkbox`](/docs/components/checkbox) instead.
+</Callout>
+
+`Switch` is `Checkbox`'s sibling in every respect but the visual and the
+tri-state: there is no `indeterminate` here, because a switch is always simply
+on or off.
+
+## Controlled
+
+```tsx
+const [enabled, setEnabled] = useState(false);
+
+<Switch checked={enabled} onCheckedChange={setEnabled} />
+```
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Moves focus to the switch. Disabled switches are skipped." },
+    { keys: "Space", description: "Toggles the switch — native checkbox behaviour." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- A native `<input type="checkbox">` carrying `role="switch"`, so keyboard
+  toggling, form participation, and checked-state exposure all come from the
+  platform. A hand-rolled `<button role="switch">` would have to re-implement
+  each of those.
+- Screen readers announce "on"/"off" rather than "checked"/"unchecked", which is
+  what the `switch` role buys over a plain checkbox.
+- The sliding thumb is `aria-hidden` — the input's own `checked` property
+  already carries the state.
+- The thumb's transition is dropped under `prefers-reduced-motion`.
+
+<Callout variant="warning" title="Label the switch, not just the row">
+  `<label>` wrapping the switch and its text is the reliable association. A
+  heading sitting above a column of switches names the group, not any one
+  control.
+</Callout>
 
 ## API reference
 
-### Switch
-
 <PropsTable name="Switch" />
+
+Also accepts every native `<input>` attribute except `type` — `name`,
+`disabled`, `required`, `aria-*`, and the rest.

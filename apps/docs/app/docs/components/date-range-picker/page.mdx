@@ -5,50 +5,122 @@ export const metadata = {
 
 <PageHeader
   title="Date Range Picker"
-  description="Two linked calendars plus presets for choosing a range."
+  description="The time-period filter a dashboard is read through — a trigger showing the current range, relative presets, and two labelled calendars for a custom span."
   componentName="DateRangePicker"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="date-range-picker-demo" />
 
 ## Usage
 
 ```tsx
-import { DateRangePicker } from "neelam-ui";
+import { DateRangePicker, type DateRange } from "neelam-ui";
+
+const [range, setRange] = useState<DateRange | undefined>();
+
+<DateRangePicker
+  value={range}
+  onValueChange={setRange}
+  disabled={(date) => date > new Date()}
+/>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+`DateRange` is an inclusive span: `from` and `to` may be the same day.
 
-## Examples
+## Assembled from what already exists
 
-{/* TODO: add examples. Create apps/docs/examples/date-range-picker-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="date-range-picker-demo" /> */}
+Almost none of this is new machinery:
+
+- [`Popover`](/docs/components/popover) for the panel — and with it `Escape`,
+  outside-click dismissal, and top-layer rendering, none of it reimplemented.
+- Two [`Calendar`](/docs/components/calendar)s for the custom range.
+- [`RadioGroup`](/docs/components/radio-group) for the presets.
+
+That last one matters most. The presets are mutually exclusive options, which is
+exactly a radio group — so making them real `<input type="radio">`s means
+arrow-key navigation, mutual exclusivity, and the "3 of 5" announcement all come
+from the browser rather than from a hand-rolled listbox with its own roving
+focus.
+
+## Two calendars, not one
+
+A single grid with range-painting has to express "click once for the start,
+again for the end" through hover preview alone — invisible to keyboard and touch
+users, and unannounced to assistive tech.
+
+Two labelled start/end grids make the same selection unambiguous on every input
+mode, and let `Calendar` stay the single-date component it already is. The end
+grid disables everything before the start, and vice versa, so **an inverted
+range cannot be produced at all**.
+
+## Presets
+
+`defaultDateRangePresets` covers what a dashboard filter usually wants. Replace
+them with `presets`, or pass `[]` for a custom-range-only picker.
+
+A preset stores a **function**, not a range, so "Last 7 days" is recomputed at
+selection time:
+
+```tsx
+{ label: "Last 7 days", getValue: () => ({ from: addDays(new Date(), -6), to: new Date() }) }
+```
+
+<Callout variant="note" title="Why a function, not a value">
+  A stored range would silently mean *last* week in a tab left open overnight.
+  Recomputing on selection is what keeps a relative preset relative.
+</Callout>
+
+## Sizing the trigger
+
+Use the `size` prop — `"sm"`, `"md"` (default), or `"lg"` — rather than a
+`className` height.
+
+<Callout variant="warning" title="A className height will not replace the default">
+  The trigger already carries `buttonVariants({ size: "md" })`. A plain
+  `className="h-8"` does not replace those classes, it sits alongside the
+  existing `h-10` — two conflicting utilities on one element, with whichever
+  Tailwind emits later in its generated stylesheet silently winning.
+</Callout>
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Enter / Space", description: "Opens the panel from the trigger." },
+    { keys: "↑ / ↓", description: "Moves between presets — native radio-group behaviour." },
+    { keys: "Tab", description: "Moves from the presets into the start grid, then the end grid." },
+    { keys: "← / → / ↑ / ↓", description: "Moves within a calendar grid, once focus is inside one." },
+    { keys: "Escape", description: "Closes the panel and returns focus to the trigger." },
   ]}
 />
 
+Everything is reachable without a pointer — which is the point of choosing a
+radio group and two grids over a hover-driven single grid.
+
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- The trigger's accessible name comes from `label` (default `"Date range"`), and
+  the formatted range is its visible text.
+- Presets are real radio inputs in a labelled group, so their count and position
+  are announced by the platform.
+- Each calendar is labelled as the start or end grid, so it is never ambiguous
+  which endpoint is being set.
+- Invalid ranges are prevented structurally by disabling dates, rather than
+  reported as an error after the fact — the better of the two, since there is no
+  error state to announce or recover from.
+- `disabled` blocks dates in both grids, so a rule like "no future dates" is
+  enforced on either endpoint.
 
 ## API reference
 
 ### DateRangePicker
 
 <PropsTable name="DateRangePicker" />
+
+### DateRange
+
+<PropsTable name="DateRange" />
+
+### DateRangePreset
+
+<PropsTable name="DateRangePreset" />

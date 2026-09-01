@@ -5,50 +5,133 @@ export const metadata = {
 
 <PageHeader
   title="Pagination"
-  description="Navigation across a paged set of results."
+  description="Page controls for a paged set of results — deliberately presentational, plus one helper for the range arithmetic that is easy to get subtly wrong."
   componentName="Pagination"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="pagination-demo" />
 
 ## Usage
 
 ```tsx
-import { PaginationLink } from "neelam-ui";
+import {
+  getPaginationRange,
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "neelam-ui";
+
+<Pagination>
+  <PaginationContent>
+    <PaginationItem>
+      <PaginationPrevious disabled={page === 1} onClick={previous} />
+    </PaginationItem>
+    {getPaginationRange({ currentPage: page, totalPages }).map((item, index) => (
+      <PaginationItem key={item === "ellipsis" ? `gap-${index}` : item}>
+        {item === "ellipsis" ? (
+          <PaginationEllipsis />
+        ) : (
+          <PaginationLink isActive={item === page} onClick={() => setPage(item)}>
+            {item}
+          </PaginationLink>
+        )}
+      </PaginationItem>
+    ))}
+    <PaginationItem>
+      <PaginationNext disabled={page === totalPages} onClick={next} />
+    </PaginationItem>
+  </PaginationContent>
+</Pagination>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## Presentational by design
 
-## Examples
+There is no internal "current page" state and no context threading it around.
+In a real app the current page already lives in a URL or query state the caller
+owns, so inventing a second copy here would only create something to keep in
+sync. `PaginationLink`'s `isActive` and `getPaginationRange` are how that
+external state becomes markup.
 
-{/* TODO: add examples. Create apps/docs/examples/pagination-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="pagination-demo" /> */}
+The same reasoning applies to `PaginationPrevious` and `PaginationNext`: pass
+`disabled` yourself, because the component has no page count to derive it from.
+
+## getPaginationRange
+
+The one piece worth providing. It computes which page numbers to show and where
+runs of skipped pages collapse:
+
+```tsx
+getPaginationRange({ currentPage: 6, totalPages: 20 });
+// [1, "ellipsis", 5, 6, 7, "ellipsis", 20]
+```
+
+`siblingCount` (default `1`) controls how many numbers sit on each side of the
+current page. Getting the boundaries right near the start and end — so the range
+does not flicker into "1 2 3 … 3" and similar off-by-ones — is common enough to
+get wrong that it is worth not re-deriving in every app.
+
+## Buttons, not links
+
+`PaginationLink` renders a native `<button>`, despite the name. An `<a>` with no
+`href` is not keyboard-focusable, and whether changing page should actually
+navigate — versus updating local or query state without a URL change — varies by
+app. So this does not assume a URL the way
+[`BreadcrumbLink`](/docs/components/breadcrumb) reasonably can.
+
+<Callout variant="tip" title="If your pagination does navigate">
+  Render your router's link inside `PaginationLink`, or swap the element for an
+  `<a href>` of your own and keep the same classes. Real URLs per page are
+  better for sharing and for the back button when the option is open to you.
+</Callout>
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Moves to the next control. Every page button is its own tab stop." },
+    { keys: "Enter / Space", description: "Activates the focused control — native button behaviour." },
   ]}
 />
 
+There is no arrow-key roving here. These are ordinary buttons in a nav landmark,
+not a composite widget, so each is independently reachable.
+
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- The wrapper is `<nav aria-label="pagination">`, so it is reachable by
+  landmark. Like [`Breadcrumb`](/docs/components/breadcrumb)'s, this label can
+  be hardcoded because the meaning never varies.
+- The current page carries `aria-current="page"`, driven by `isActive`.
+- `PaginationEllipsis` is decorative and hidden from assistive tech — the gap is
+  a rendering detail, not information.
+- Disabled previous/next controls use the native `disabled` attribute, so they
+  are skipped by `Tab` rather than being focusable dead ends.
+
+<Callout variant="warning" title="Announce the page change">
+  Moving to a new page usually replaces content elsewhere, which is silent for a
+  screen reader user. Move focus to the results heading after a page change, or
+  announce it in a live region — the pagination controls alone cannot do this
+  for you.
+</Callout>
 
 ## API reference
+
+### getPaginationRange
+
+<PropsTable name="GetPaginationRangeOptions" />
+
+Returns `Array<number | "ellipsis">`.
 
 ### PaginationLink
 
 <PropsTable name="PaginationLink" />
+
+### Everything else
+
+`Pagination` (`<nav>`), `PaginationContent` (`<ul>`), `PaginationItem` (`<li>`),
+`PaginationPrevious` and `PaginationNext` (`<button>`), and `PaginationEllipsis`
+add no props of their own — every native attribute passes through.

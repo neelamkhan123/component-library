@@ -5,47 +5,100 @@ export const metadata = {
 
 <PageHeader
   title="Context Menu"
-  description="A menu opened by right-click or the context-menu key."
+  description="A menu opened by right-clicking a region, replacing the browser's own — the base implementation DropdownMenu is built on."
   componentName="ContextMenu"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="context-menu-demo" />
 
 ## Usage
 
 ```tsx
-import { ContextMenu, ContextMenuItem } from "neelam-ui";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuShortcut,
+  ContextMenuTrigger,
+} from "neelam-ui";
+
+<ContextMenu>
+  <ContextMenuTrigger>
+    <div>Right-click anywhere here</div>
+  </ContextMenuTrigger>
+  <ContextMenuContent>
+    <ContextMenuItem>Back</ContextMenuItem>
+    <ContextMenuSeparator />
+    <ContextMenuItem>Reload</ContextMenuItem>
+  </ContextMenuContent>
+</ContextMenu>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+`ContextMenuTrigger` is a plain `<div>` around its children and suppresses the
+browser's own context menu in favour of this one.
 
-## Examples
+<Callout variant="danger" title="Right-click is not discoverable">
+  Nothing on screen advertises that a region has a context menu, and there is no
+  right-click on touch at all. **Every action here must also be reachable
+  another way** — a [`DropdownMenu`](/docs/components/dropdown-menu) button, a
+  toolbar, a keyboard shortcut. Treat a context menu as an accelerator, never as
+  the only path.
+</Callout>
 
-{/* TODO: add examples. Create apps/docs/examples/context-menu-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="context-menu-demo" /> */}
+## Positioning
+
+The menu opens at the cursor and is clamped to the viewport, so a right-click
+near an edge shifts the panel rather than letting it run off-screen. It is a
+native popover, so it renders in the top layer and escapes any
+`overflow: hidden` ancestor without a portal.
+
+Opening is deferred a frame past the `contextmenu` event before `showPopover()`
+is called — the sequence this library uses for every popover.
+
+## Items
+
+`ContextMenuItem` closes the menu after activating by default; pass
+`closeOnSelect={false}` to keep it open. `ContextMenuLabel` is a
+non-interactive heading for a group, and `ContextMenuShortcut` is a muted,
+right-aligned hint placed as an item's last child.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Menu / Shift+F10", description: "Opens the menu — but only while focus is on a focusable element inside the trigger region. See the note below." },
+    { keys: "↓ / ↑", description: "Moves between items, wrapping at the ends. Disabled items are skipped." },
+    { keys: "Home / End", description: "Moves to the first or last item." },
+    { keys: "Enter / Space", description: "Activates the focused item." },
+    { keys: "Escape", description: "Closes the menu." },
   ]}
 />
 
+<Callout variant="danger" title="The trigger is not focusable">
+  `ContextMenuTrigger` renders a plain `<div>` with no `tabIndex`, and opens
+  only from a `contextmenu` event. The platform's context-menu key fires that
+  event at the *focused* element, so it reaches the trigger only by bubbling up
+  from a focusable child. Wrap genuinely interactive content — a row of buttons,
+  a link, a grid cell with `tabIndex={0}` — and keyboard users get the menu. Put
+  a static `<div>` inside, as the demo above does, and there is **no keyboard
+  path to it at all**. This is the concrete form of the discoverability warning
+  above: always provide another route to every action.
+</Callout>
+
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- The panel is `role="menu"`; each item is a native `<button>` recategorized as
+  `role="menuitem"`, so activation stays native rather than being rebuilt on key
+  handlers.
+- Roving focus moves **real DOM focus** between items — unlike
+  [`Command`](/docs/components/command), which keeps focus in its input and uses
+  `aria-activedescendant`, because there the user must be able to keep typing.
+- `ContextMenuSeparator` is `role="separator"` with
+  `aria-orientation="horizontal"`.
+- The first item is focused on open, and the page behind is scroll-locked so the
+  menu cannot drift from where it was opened.
+- Open and close transitions are dropped under `prefers-reduced-motion`.
 
 ## API reference
 

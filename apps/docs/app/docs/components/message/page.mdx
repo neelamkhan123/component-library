@@ -5,50 +5,81 @@ export const metadata = {
 
 <PageHeader
   title="Message"
-  description="A full chat turn: author, content, and actions."
+  description="One row in a conversation — an optional avatar, an optional sender and timestamp line, and the message content underneath."
   componentName="Message"
 />
 
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
-
-<ComponentPreview name="message-demo" />
+<ComponentPreview name="message-demo" align="start" />
 
 ## Usage
 
 ```tsx
-import { Message } from "neelam-ui";
+import { Avatar, AvatarFallback, Bubble, Message } from "neelam-ui";
+
+<Message
+  avatar={<Avatar><AvatarFallback>AL</AvatarFallback></Avatar>}
+  sender="Ada Lovelace"
+  timestamp="09:24"
+>
+  <Bubble>Morning — is the API doc ready to review?</Bubble>
+</Message>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## Layout, not content
 
-## Examples
+`Message` owns the row's layout and nothing else: alignment, where the avatar
+sits, and the sender/timestamp line. The message body is composed in as
+`children` rather than baked in — the same split
+[`Card`](/docs/components/card)'s `CardHeader` and
+[`Dialog`](/docs/components/dialog)'s `DialogHeader` draw for their own
+families.
 
-{/* TODO: add examples. Create apps/docs/examples/message-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="message-demo" /> */}
+That is why more than one child works: a quick burst of messages sent together
+is several `Bubble`s in one `Message`, sharing a single avatar and timestamp.
+
+## Variants
+
+`variant` matches [`Bubble`](/docs/components/bubble)'s — `"incoming"` (default)
+or `"outgoing"`, which reverses the row and right-aligns the content. **Set it
+on both**: `Message` positions the row, `Bubble` colours itself, and they do not
+read each other.
+
+`avatar` is optional. Leaving it off for your own outgoing messages is normal —
+plenty of chat UIs show no avatar there at all.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Not focusable itself. Interactive content inside — an attachment link, a retry button — keeps its own tab stop, in DOM order." },
   ]}
 />
 
+<Callout variant="note" title="Reversal is visual only">
+  `variant="outgoing"` uses `flex-row-reverse`, which moves the avatar visually
+  but does not change DOM order — so keyboard order still matches reading order.
+  That is the correct behaviour, and worth remembering if you nest controls in
+  the avatar slot.
+</Callout>
+
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- A plain `<div>` with no role. A message row is content, not a widget.
+- The sender name is real text in the row, not an `aria-label`, so it is
+  available to everyone rather than only to assistive tech.
+- Pass a machine-readable timestamp yourself when precision matters —
+  `timestamp` accepts any node, so a `<time dateTime="…">` fits:
+
+  ```tsx
+  <Message timestamp={<time dateTime="2026-09-01T09:24">09:24</time>}>…</Message>
+  ```
+
+- The avatar you pass is responsible for its own accessible name. An
+  [`Avatar`](/docs/components/avatar) with a fallback and no `alt` is decorative,
+  which is right when the sender's name is already in the row.
 
 ## API reference
 
-### Message
-
 <PropsTable name="Message" />
+
+Also accepts every native `<div>` attribute.

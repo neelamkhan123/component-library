@@ -5,48 +5,121 @@ export const metadata = {
 
 <PageHeader
   title="Table"
-  description="A styled semantic table."
+  description="A native <table>, styled — so row and column associations, and a screen reader's table-navigation commands, all come from the browser."
   componentName="Table"
 />
 
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
-
-<ComponentPreview name="table-demo" />
+<ComponentPreview name="table-demo" align="start" />
 
 ## Usage
 
 ```tsx
-import { Table } from "neelam-ui";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "neelam-ui";
+
+<Table>
+  <TableCaption>Recent invoices.</TableCaption>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Invoice</TableHead>
+      <TableHead className="text-right">Amount</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableHead scope="row">INV-001</TableHead>
+      <TableCell className="text-right">$250.00</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## The parts
 
-## Examples
+| Component | Element | Notes |
+| --- | --- | --- |
+| `Table` | `<table>` | Wrapped in a horizontally scrolling container |
+| `TableHeader` | `<thead>` | |
+| `TableBody` | `<tbody>` | |
+| `TableFooter` | `<tfoot>` | Totals row |
+| `TableRow` | `<tr>` | |
+| `TableHead` | `<th>` | `scope="col"` by default |
+| `TableCell` | `<td>` | |
+| `TableCaption` | `<caption>` | Rendered below the table |
 
-{/* TODO: add examples. Create apps/docs/examples/table-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="table-demo" /> */}
+## Scrolling, not reflowing
+
+`Table` wraps itself in an `overflow-x-auto` container. A table's columns do not
+reflow the way text wraps, so on a narrow viewport the wrapper scrolls rather
+than the table overflowing the page.
+
+<Callout variant="warning" title="A scrolling region needs to be keyboard-scrollable">
+  WCAG 2.1.1 requires that anything scrollable by pointer also be scrollable by
+  keyboard, which means the scroll container has to be focusable. If you build
+  your own wrapper instead of using `Table`'s, give it `tabIndex={0}` and an
+  `aria-label` — that is exactly what the props tables on this site do.
+</Callout>
+
+## Row headers
+
+`TableHead` defaults to `scope="col"`, which is right in `TableHeader`. For the
+cell that identifies a row — an invoice number, a person's name — use
+`TableHead scope="row"` rather than a `TableCell`:
+
+```tsx
+<TableHead scope="row">INV-001</TableHead>
+```
+
+This is what lets a screen reader announce "INV-001, Amount, $250.00" as it
+moves across the row, instead of reading bare values with no anchor.
+
+## Table or DataTable?
+
+`Table` is presentational — you render the rows. Reach for
+[`DataTable`](/docs/components/data-table) when you want sorting, filtering, and
+pagination over a set of rows without wiring them yourself. `DataTable` is built
+on these same parts.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Reaches the scroll container, then any interactive content in cells. Cells themselves are not focusable." },
+    { keys: "← / →", description: "Scrolls the container horizontally when it has focus." },
   ]}
 />
 
+A table is content, not a composite widget, so there is no grid-style arrow-key
+navigation between cells. Screen readers provide their own table-navigation
+commands, which work because the markup is a real `<table>`.
+
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- Real `<table>` markup throughout, so header/cell associations, row and column
+  counts, and table navigation come from the platform rather than from ARIA.
+- `TableCaption` renders a real `<caption>`, which names the table for assistive
+  tech. It is visually placed below via `caption-bottom` but remains the first
+  thing announced.
+- `scope` is set on every `TableHead` — `"col"` by default, `"row"` when you say
+  so — which is what makes cell announcements meaningful.
+- Alignment is done with utility classes on cells rather than the deprecated
+  `align` attribute.
+
+<Callout variant="tip" title="Never use a table for layout">
+  If the content is not tabular, a table's semantics actively mislead — screen
+  readers announce dimensions and offer navigation that makes no sense. Use CSS
+  grid or flex instead.
+</Callout>
 
 ## API reference
 
-<PropsTable name="Table" />
+The table parts add no props of their own beyond `TableHead`'s `scope` default —
+each is a styled wrapper around its native element, and every attribute passes
+straight through. See the table above for which element each renders.

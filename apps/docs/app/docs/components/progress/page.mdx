@@ -5,50 +5,87 @@ export const metadata = {
 
 <PageHeader
   title="Progress"
-  description="A determinate or indeterminate progress indicator."
+  description="A track with a filled portion showing how far along something is — or a pulsing bar when the duration is unknown."
   componentName="Progress"
 />
 
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
-
-<ComponentPreview name="progress-demo" />
+<ComponentPreview name="progress-demo" align="start" />
 
 ## Usage
 
 ```tsx
 import { Progress } from "neelam-ui";
+
+<Progress value={62} aria-label="Upload progress" />
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+`value` runs from `0` to `max` (default `100`) and is clamped, so a value
+outside the range cannot produce a bar wider than its track.
 
-## Examples
+## Indeterminate
 
-{/* TODO: add examples. Create apps/docs/examples/progress-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="progress-demo" /> */}
+Omit `value` entirely and the bar pulses at full width instead of filling — for
+work whose duration is not known:
+
+```tsx
+<Progress aria-label="Loading" />
+```
+
+`aria-valuenow` is left unset in this mode, which is exactly how assistive tech
+distinguishes "in progress, amount unknown" from "0% done".
+
+## It needs a label
+
+<Callout variant="danger" title="A progressbar has no name from its content">
+  Unlike a `<button>`, a `role="progressbar"` takes no name from what is inside
+  it — there is nothing inside it. Without `aria-label` or `aria-labelledby`,
+  axe flags `aria-progressbar-name` and a screen reader announces a bare
+  percentage with nothing to attach it to. **Always pass one.**
+</Callout>
+
+Say what is progressing, not that it is a progress bar: `aria-label="Upload
+progress"`, not `aria-label="Progress bar"`.
+
+## Why not `<progress>`
+
+Everywhere else this library styles the real native element. `<progress>` is an
+exception alongside [`Select`](/docs/components/select): its fill is drawn
+inside vendor-prefixed pseudo-elements (`::-webkit-progress-value`,
+`::-moz-progress-bar`) that render inconsistently across engines and cannot be
+reached with a plain utility class. A track `<div>` with a width-driven fill
+inside it is the one that can be styled consistently — so the ARIA is supplied
+by hand instead.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Not focusable. Progress reports state; it is not a control. For a draggable value, see Resizable's handle." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- `role="progressbar"` with `aria-valuemin`, `aria-valuemax`, and
+  `aria-valuenow` — the last omitted in indeterminate mode, which is what
+  signals the unknown duration.
+- The value is clamped before it reaches `aria-valuenow`, so the announced
+  number can never exceed the maximum.
+- The indeterminate pulse and the determinate width transition are both dropped
+  under `prefers-reduced-motion`.
+- Progress is not announced automatically as it changes. If completion matters
+  — an upload finishing — announce that in a live region or move focus; a
+  silently filling bar tells a screen reader user nothing.
+
+<Callout variant="tip" title="Show the number too">
+  Sighted users read a percentage far faster than they estimate a bar's width.
+  The demo above puts "62%" in the visible label, which also gives the
+  progressbar something meaningful to be labelled by.
+</Callout>
 
 ## API reference
 
-### Progress
-
 <PropsTable name="Progress" />
+
+Also accepts every native `<div>` attribute — and you should always pass one of
+`aria-label` or `aria-labelledby`.

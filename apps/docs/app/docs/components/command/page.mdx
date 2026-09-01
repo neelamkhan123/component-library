@@ -5,47 +5,113 @@ export const metadata = {
 
 <PageHeader
   title="Command"
-  description="A searchable command palette for fast keyboard navigation."
+  description="A searchable list of actions — the embeddable form of a command palette, which CommandDialog wraps into the ⌘K overlay most people picture."
   componentName="Command"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="command-demo" />
 
 ## Usage
 
 ```tsx
-import { Command, CommandDialog, CommandGroup, CommandItem } from "neelam-ui";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "neelam-ui";
+
+<Command>
+  <CommandInput placeholder="Type a command or search…" />
+  <CommandList>
+    <CommandGroup heading="Suggestions">
+      <CommandItem value="calendar" onSelect={run}>Calendar</CommandItem>
+    </CommandGroup>
+    <CommandEmpty>No results found.</CommandEmpty>
+  </CommandList>
+</Command>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+`Command` on its own works planted directly in a page — a docs site's search
+box, for instance. It is not tied to a modal.
 
-## Examples
+## As a ⌘K dialog
 
-{/* TODO: add examples. Create apps/docs/examples/command-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="command-demo" /> */}
+`CommandDialog` wraps the same parts in a [`Dialog`](/docs/components/dialog):
+
+```tsx
+const [open, setOpen] = useState(false);
+
+<CommandDialog open={open} onOpenChange={setOpen}>
+  <CommandInput placeholder="Type a command…" />
+  <CommandList>…</CommandList>
+</CommandDialog>
+```
+
+Its `title` is the dialog's accessible name and is visually hidden by default
+("Command palette"), since a palette jumps straight to its input rather than
+showing a heading. Binding the keyboard shortcut is yours to do — the component
+does not install a global listener on your behalf.
+
+## Item labels must be plain strings
+
+`CommandItem`'s `children` is typed as `string`, not arbitrary nodes. Filtering
+needs an item's text *before* deciding whether to render it at all, so the label
+has to be knowable up front.
+
+<Callout variant="danger" title="Mixing an icon into children crashes">
+  This is not a style rule. Filtering short-circuits past `.toLowerCase()` while
+  the query is still empty, so a non-string child does not fail on mount — it
+  fails the moment someone actually types. Use the `icon` prop, which exists for
+  exactly this.
+</Callout>
+
+```tsx
+<CommandItem value="profile" icon={<User className="h-4 w-4" aria-hidden="true" />}>
+  Profile
+</CommandItem>
+```
+
+`value` identifies the item, is what the query matches against, and is what
+`onSelect` receives.
+
+## Empty and filtered states
+
+A non-matching `CommandItem` renders `null` entirely, not merely hidden.
+`CommandGroup` hides itself — heading included — once every item inside it has
+been filtered out, rather than leaving a heading floating over nothing.
+`CommandEmpty` renders only when nothing at all matches; include it, or a
+fruitless search collapses into a blank box.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "A–Z", description: "Filters the list. Focus never leaves the input." },
+    { keys: "↓ / ↑", description: "Moves the highlight through the visible results." },
+    { keys: "Enter", description: "Runs the highlighted item's onSelect." },
+    { keys: "Escape", description: "Closes the palette, when used inside CommandDialog." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- `CommandInput` is a native `<input>` with `aria-autocomplete="list"` and
+  `aria-controls`. It is deliberately **not** `role="combobox"`: there is no
+  persistent selected value here the way there is in
+  [`Combobox`](/docs/components/combobox), only a live filter.
+- The highlight is tracked with `aria-activedescendant`, so **real focus stays
+  in the input** and the user can keep typing to refine the search.
+- `CommandList` is `role="listbox"` and defaults `aria-label` to "Results" — a
+  listbox takes no name from its content, so without it axe reports no
+  accessible name at all. Override it for something more specific.
+- When filtering leaves nothing visible, the `listbox` role is dropped
+  altogether: a listbox whose only child is an empty-state message is an
+  `aria-required-children` violation, and `aria-activedescendant` would have
+  nothing to point at.
+- `CommandGroup` is labelled by its own heading via `aria-labelledby`.
 
 ## API reference
 

@@ -5,57 +5,129 @@ export const metadata = {
 
 <PageHeader
   title="Select"
-  description="A listbox for choosing one option from a list."
+  description="A single-value select built from a trigger button and a popup listbox — the one place this library does not restyle the native element, because most browsers will not let you."
   componentName="Select"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="select-demo" />
 
 ## Usage
 
 ```tsx
-import { Select, SelectItem, SelectTrigger, SelectValue } from "neelam-ui";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "neelam-ui";
+
+<Select defaultValue="utc">
+  <SelectTrigger>
+    <SelectValue placeholder="Select a timezone" />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectItem value="utc">UTC</SelectItem>
+    <SelectItem value="est">Eastern (EST)</SelectItem>
+  </SelectContent>
+</Select>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## Why not a native `<select>`?
 
-## Examples
+Everywhere else this library styles the real native control. A `<select>` is the
+exception: its open dropdown cannot be restyled in most browsers — padding,
+hover colour, and the radius of the `<option>` list itself are all outside CSS's
+reach. So the popup is rebuilt, and the pieces the platform *can* still provide
+are used deliberately:
 
-{/* TODO: add examples. Create apps/docs/examples/select-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="select-demo" /> */}
+- `SelectContent` is a native popover (`popover="auto"`), so `Escape` and
+  outside-click dismissal come from the browser.
+- Focus returns to the trigger on close via the popover's own `toggle` event —
+  covering choosing an option, `Escape`, and clicking away with one path, the
+  way a native `<select>` does.
+- The panel's `min-width` is set from the trigger, so it never renders narrower
+  than the control it belongs to.
+
+<Callout variant="note" title="Not built on ContextMenu">
+  It uses the same techniques — native popover, deferred opening, scroll lock,
+  roving DOM focus — but a listbox's semantics (`role="listbox"`/`"option"`, a
+  persistent selection) differ enough from a menu's (`role="menu"`/`"menuitem"`,
+  activate-and-close) that sharing the components would mean parameterizing
+  their roles for a second pattern. See `DECISIONS.md`.
+</Callout>
+
+## Labelling
+
+`SelectTrigger` is a `<button>`, which is a labelable element, so a wrapping
+`<label>` names it. `SelectValue`'s `placeholder` is not a label — it is what
+shows before a choice is made.
+
+## Selected text comes from the item
+
+`SelectValue` displays the selected option's *rendered text*, not its `value`.
+Each `SelectItem` registers its own label, so `value="est"` can display as
+"Eastern (EST)" with nothing to keep in sync.
+
+## Grouping
+
+`SelectSeparator` divides runs of options. It renders with **no ARIA role** —
+unlike `ContextMenuSeparator`, which is `role="separator"`. That is not a
+stylistic choice: `role="listbox"` does not permit a `separator` child the way
+`role="menu"` does, and this was verified against axe. A role here would be
+invalid ARIA structure.
+
+## Controlled
+
+Both the value and the open state can be controlled, independently:
+
+```tsx
+const [value, setValue] = useState("utc");
+
+<Select value={value} onValueChange={setValue}>…</Select>
+```
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Enter / Space", description: "Opens the listbox when focus is on the trigger." },
+    { keys: "↓ / ↑", description: "Opens the listbox from the trigger; once open, moves between options and wraps at either end." },
+    { keys: "Home / End", description: "Moves to the first or last option." },
+    { keys: "Escape", description: "Closes without changing the value, and returns focus to the trigger." },
+    { keys: "Tab", description: "Reaches the trigger. The open listbox is a popover, so it is not a separate tab stop." },
   ]}
 />
 
+Opening moves focus to the **selected** option, or the first one if nothing is
+selected yet — so re-opening a select lands where the user left it.
+
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+Implements the [APG select-only combobox pattern](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/):
+
+- The trigger is `role="combobox"` with `aria-haspopup="listbox"`,
+  `aria-expanded`, and `aria-controls` pointing at the panel.
+- The panel is `role="listbox"`; each option is a native `<button>`
+  recategorized as `role="option"` with `aria-selected`, so click, `Enter`, and
+  `Space` activation stay native.
+- Focus moves into the list on open and back to the trigger on close, through
+  every dismissal path.
+- The page behind is scroll-locked while the list is open, so the panel cannot
+  drift away from its trigger.
+- Open and close transitions are dropped under `prefers-reduced-motion`.
+
+<Callout variant="tip" title="Long lists want a Combobox">
+  Past a couple of dozen options, arrow-keying becomes the bottleneck.
+  [`Combobox`](/docs/components/combobox) is the same control with a text input
+  that filters as you type.
+</Callout>
 
 ## API reference
 
 ### Select
 
 <PropsTable name="Select" />
-
-### SelectItem
-
-<PropsTable name="SelectItem" />
 
 ### SelectTrigger
 
@@ -64,3 +136,7 @@ import { Select, SelectItem, SelectTrigger, SelectValue } from "neelam-ui";
 ### SelectValue
 
 <PropsTable name="SelectValue" />
+
+### SelectItem
+
+<PropsTable name="SelectItem" />

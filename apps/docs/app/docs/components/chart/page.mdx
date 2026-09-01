@@ -5,47 +5,124 @@ export const metadata = {
 
 <PageHeader
   title="Chart"
-  description="An accessible shell around a plot you supply, with a data table fallback."
+  description="The accessible, themed shell a chart sits inside — caption, description, legend, a reserved plot box, and the data-table equivalent of the marks."
   componentName="Chart"
 />
 
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
-
-<ComponentPreview name="chart-demo" />
+<ComponentPreview name="chart-demo" align="start" />
 
 ## Usage
 
 ```tsx
 import { Chart, ChartDataTable, ChartLegend, ChartLegendItem } from "neelam-ui";
+
+<Chart
+  title="Signups and activations"
+  description="Activations have tracked signups closely since March."
+  legend={
+    <ChartLegend>
+      <ChartLegendItem color="var(--chart-1)">Signups</ChartLegendItem>
+      <ChartLegendItem color="var(--chart-2)">Activations</ChartLegendItem>
+    </ChartLegend>
+  }
+  dataTable={<ChartDataTable caption="…" columns={columns} data={data} />}
+>
+  <ResponsiveContainer width="100%" height="100%">
+    <LineChart data={data}>…</LineChart>
+  </ResponsiveContainer>
+</Chart>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## Not a charting library
 
-## Examples
+The plot is whatever you pass as `children` — a Recharts `<LineChart>`, a
+`<BarChart>`, or hand-written SVG. Recharts is an **optional** peer dependency:
+never bundled, never imported here, and consumers who do not chart pay nothing
+for it. It also means this component does not rot when Recharts changes its API.
 
-{/* TODO: add examples. Create apps/docs/examples/chart-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="chart-demo" /> */}
+What `Chart` owns is everything that is easy to get wrong and identical across
+every chart.
+
+## Series colour
+
+`Chart` sets `--chart-1` … `--chart-8`, so plot children reference
+`var(--chart-1)` and theme correctly in both light and dark — the dark steps are
+re-stepped, not flipped.
+
+The palette is validated as a set against this library's own surfaces for
+lightness band, chroma floor, adjacent-pair separation under simulated
+protanopia, deuteranopia and tritanopia, and contrast against the surface.
+
+<Callout variant="danger" title="Assign slots in order; never cycle them">
+  A ninth series folds into an "Other" bucket or splits into small multiples. It
+  does not get a generated hue — that would be a colour nothing has checked.
+  Reordering or re-stepping the existing slots invalidates the validation.
+</Callout>
+
+For scatter, bubble, and small multiples — where *every* pair can end up
+adjacent rather than only neighbouring ones — `chartAllPairsSeriesLimit` (3) is
+how many stay distinguishable. Line and bar charts can use all eight.
+
+## The data table is not optional
+
+The plot is `aria-hidden`, and `dataTable` is the real accessible content. That
+is what makes the numbers reachable by screen reader, by keyboard, and by anyone
+who cannot separate two hues (WCAG 1.4.1).
+
+`ChartDataTable` is `sr-only` by default. Pass `visuallyHidden={false}` to show
+it to everyone — which is also the relief for the three light-mode series steps
+that sit below 3:1 against white:
+
+```tsx
+<ChartDataTable visuallyHidden={false} caption="…" columns={columns} data={data} />
+```
+
+It is a separate component rather than something `Chart` derives, because only
+you know how your series map to columns and how each value should be formatted
+for reading aloud.
+
+<Callout variant="note" title="Why the hidden table isn't wrapped in Table">
+  [`Table`](/docs/components/table) puts its `<table>` in an `overflow-x-auto`
+  container so narrow viewports scroll. Correct when visible — but `sr-only`
+  clips its container to 1×1px, so the content always overflows and axe flags a
+  scrollable region no keyboard user can reach. A table nobody can see needs no
+  scroll affordance.
+</Callout>
+
+## Legend
+
+`ChartLegend` is always present for two or more series; a single-series chart
+needs none, because the title already says what the line is.
+
+## Layout stability
+
+`height` (260px by default) reserves the plot box before the chart renders, so
+an async chart does not shift the page when it arrives — the same concern
+[`AvatarGroup`](/docs/components/avatar-group) addresses for images.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Skips the plot, which is aria-hidden. A visible data table's scroll container is reachable; a sr-only one is deliberately not." },
   ]}
 />
 
+Any interaction your plot library adds — tooltips, brushes — is its own concern.
+Whatever it offers on hover must have a keyboard or textual equivalent, which is
+what `dataTable` guarantees regardless.
+
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- Renders a `<figure>` with a `<figcaption>` — exactly the referenced, captioned
+  content that element is for. `title` becomes the accessible name via
+  `aria-labelledby`; `description` is wired with `aria-describedby`.
+- Write `description` as the **takeaway** — the sentence a reader would
+  otherwise have to derive from the marks — not a restatement of the axes.
+- The plot is `aria-hidden` so assistive tech reads the data table instead of
+  crawling hundreds of unlabelled SVG nodes.
+- Colour is never the only channel: the legend names each series and the table
+  gives every value.
 
 ## API reference
 
@@ -53,14 +130,10 @@ import { Chart, ChartDataTable, ChartLegend, ChartLegendItem } from "neelam-ui";
 
 <PropsTable name="Chart" />
 
-### ChartDataTable
-
-<PropsTable name="ChartDataTable" />
-
-### ChartLegend
-
-<PropsTable name="ChartLegend" />
-
 ### ChartLegendItem
 
 <PropsTable name="ChartLegendItem" />
+
+### ChartDataTableColumn
+
+<PropsTable name="ChartDataTableColumn" />

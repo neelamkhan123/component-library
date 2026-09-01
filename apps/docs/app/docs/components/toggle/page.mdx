@@ -5,17 +5,9 @@ export const metadata = {
 
 <PageHeader
   title="Toggle"
-  description="A two-state button that stays pressed."
+  description="A two-state button for toolbar-style on/off actions — a native <button> carrying aria-pressed, which per WAI-ARIA is already a complete toggle button."
   componentName="Toggle"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="toggle-demo" />
 
@@ -23,32 +15,86 @@ export const metadata = {
 
 ```tsx
 import { Toggle } from "neelam-ui";
+
+<Toggle size="icon" aria-label="Bold" defaultPressed>
+  <Bold className="h-4 w-4" aria-hidden="true" />
+</Toggle>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## Toggle, switch, or checkbox?
 
-## Examples
+`Toggle` is an *action* that stays on — bold in an editor, a view filter in a
+toolbar. It is not a form value:
 
-{/* TODO: add examples. Create apps/docs/examples/toggle-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="toggle-demo" /> */}
+- **Toggle** — a button that stays pressed. Not submitted with a form.
+- **[`Switch`](/docs/components/switch)** — a setting that applies immediately.
+- **[`Checkbox`](/docs/components/checkbox)** — a value collected now, submitted
+  later.
+
+If the control belongs in a `<form>`'s data, it is one of the other two.
+
+<Callout variant="warning" title="Icon-only toggles need a name">
+  `size="icon"` renders no text, so there is no accessible name unless you pass
+  `aria-label`. Without it a screen reader announces only "button, not pressed".
+</Callout>
+
+## Variants and sizes
+
+`variant` is `default` (transparent until pressed) or `outline` (a visible
+border at rest, for a toolbar where the buttons need to read as a set). Sizes
+are `sm`, `md`, `lg`, and `icon`.
+
+```tsx
+<Toggle variant="outline" size="sm">Grid</Toggle>
+```
+
+## Controlled
+
+Unlike `Checkbox` and `Switch`, whose state lives on the native input, a plain
+`<button>` has no built-in notion of a persistent pressed state — so `Toggle`
+tracks `defaultPressed` in its own state. Pass `pressed` and `onPressedChange`
+to drive it yourself:
+
+```tsx
+const [pressed, setPressed] = useState(false);
+
+<Toggle pressed={pressed} onPressedChange={setPressed} aria-label="Bold">
+  <Bold className="h-4 w-4" aria-hidden="true" />
+</Toggle>
+```
+
+Calling `preventDefault()` in your own `onClick` cancels the toggle, which is
+the escape hatch for "confirm before turning this off".
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Moves focus to the toggle. Disabled toggles are skipped." },
+    { keys: "Enter / Space", description: "Toggles the pressed state — native button activation." },
   ]}
 />
 
+<Callout variant="note" title="Arrow keys are not handled here">
+  A row of toggles is a set of independent buttons, each its own tab stop. A
+  single-tab-stop toolbar with arrow-key roving is a different pattern, and this
+  component deliberately does not impose it.
+</Callout>
+
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- `aria-pressed` does double duty: it is the state assistive tech reports *and*
+  the hook the pressed styling is written against, so the two cannot disagree.
+- A native `<button>`, so role, focusability, and `Enter`/`Space` activation
+  come from the platform. Nothing is recategorized.
+- `type` defaults to `"button"`, so a toggle inside a `<form>` never submits it
+  by accident.
+- Screen readers announce "pressed" / "not pressed", which is the distinction
+  between a toggle button and a plain one.
 
 ## API reference
 
-### Toggle
-
 <PropsTable name="Toggle" />
+
+Also accepts every native `<button>` attribute apart from `onChange` — use
+`onPressedChange`.

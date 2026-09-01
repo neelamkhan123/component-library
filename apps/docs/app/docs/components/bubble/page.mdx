@@ -5,50 +5,68 @@ export const metadata = {
 
 <PageHeader
   title="Bubble"
-  description="A single chat bubble for a user or assistant turn."
+  description="A single chat message bubble. Self-aligning, so a plain column of them already reads as a conversation with nothing else required."
   componentName="Bubble"
 />
 
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
-
-<ComponentPreview name="bubble-demo" />
+<ComponentPreview name="bubble-demo" align="start" />
 
 ## Usage
 
 ```tsx
 import { Bubble } from "neelam-ui";
+
+<div className="flex flex-col gap-2">
+  <Bubble>Hey — did the deploy finish?</Bubble>
+  <Bubble variant="outgoing">Just went green a minute ago.</Bubble>
+</div>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## Variants
 
-## Examples
+`variant` is `"incoming"` (the default) or `"outgoing"`. An outgoing bubble
+pushes itself to the right with `margin-left: auto` and takes the inverted
+colour, so you do not need a wrapper or an alignment prop on the container —
+stacking bubbles in a `flex flex-col` is the whole setup.
 
-{/* TODO: add examples. Create apps/docs/examples/bubble-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="bubble-demo" /> */}
+Each bubble is `w-fit` and capped at 75% width, and the tail corner flips sides
+with the variant.
+
+## Bubble or Message?
+
+`Bubble` is the lowest-ceremony way to get a working chat log. Reach for
+[`Message`](/docs/components/message) once you also need an avatar, a sender
+name, or a timestamp alongside the bubble — it owns the row layout and takes
+bubbles as children.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Not focusable. A bubble is static content — anything interactive inside it keeps its own tab stop." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- A plain `<div>` with no ARIA role. A chat bubble is ordinary text content, and
+  inventing a role for it would tell assistive tech something untrue.
+- Colour is not the only signal for who sent a message: alignment and the tail
+  corner carry it too. Even so, colour and position alone do not *name* the
+  sender — use [`Message`](/docs/components/message)'s `sender`, or visible
+  text, when that matters.
+- `break-words` is set, so a long unbroken URL wraps rather than forcing the
+  conversation to scroll sideways.
+
+<Callout variant="warning" title="Announce new messages yourself">
+  Appending a bubble to a list is silent for a screen reader user. A live region
+  around the conversation — or moving focus deliberately — is what makes an
+  arriving message noticeable. `Bubble` does not assume either, because the
+  right choice depends on how chatty the feed is.
+</Callout>
 
 ## API reference
 
-### Bubble
-
 <PropsTable name="Bubble" />
+
+Also accepts every native `<div>` attribute.

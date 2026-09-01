@@ -5,17 +5,9 @@ export const metadata = {
 
 <PageHeader
   title="Aspect Ratio"
-  description="Constrains content to a fixed width-to-height ratio."
+  description="Constrains its content to a fixed width-to-height ratio, so media keeps a consistent shape regardless of its own dimensions."
   componentName="AspectRatio"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="aspect-ratio-demo" />
 
@@ -23,32 +15,56 @@ export const metadata = {
 
 ```tsx
 import { AspectRatio } from "neelam-ui";
+
+<AspectRatio ratio={16 / 9}>
+  <img
+    src="/cover.jpg"
+    alt="Sunrise over the harbour"
+    className="absolute inset-0 h-full w-full object-cover"
+  />
+</AspectRatio>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+`ratio` is a plain number — `16 / 9`, `4 / 3`, `1` (the default, square). The
+wrapper is `relative` with `overflow-hidden`, so fill your media with
+`absolute inset-0 h-full w-full object-cover`, the same technique
+[`Avatar`](/docs/components/avatar) uses inside its own fixed-size box.
 
-## Examples
+## Why inline style
 
-{/* TODO: add examples. Create apps/docs/examples/aspect-ratio-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="aspect-ratio-demo" /> */}
+The ratio is applied through the native CSS `aspect-ratio` property in an inline
+`style`, not a Tailwind `aspect-[…]` class. A caller-supplied *continuous* value
+— any ratio, not a fixed set of variants — is exactly what `style` is for, the
+same reason [`Progress`](/docs/components/progress)'s fill width is set inline
+rather than picked from preset classes.
+
+<Callout variant="note" title="Written as “<ratio> / 1”, not a bare number">
+  jsdom rejects a plain unitless number for `aspect-ratio` and silently drops
+  the whole declaration, even though real browsers accept it. Writing the same
+  ratio as `"1.777… / 1"` is a form both accept — which is what keeps this
+  component's own tests meaningful.
+</Callout>
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Not focusable. It is a layout wrapper — anything interactive inside keeps its own tab stop." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- A plain `<div>` with no role. It constrains layout and says nothing about
+  content, which is correct.
+- It does not touch the `alt` text of media inside it. A decorative image still
+  needs `alt=""`; a meaningful one still needs a real description.
+- `overflow-hidden` means `object-cover` will crop. Check that nothing essential
+  — a face, text baked into an image — sits near an edge at the ratio you pick.
 
 ## API reference
 
-### AspectRatio
-
 <PropsTable name="AspectRatio" />
+
+Also accepts every native `<div>` attribute. A `style` you pass is merged after
+the ratio, so you can override it.
