@@ -62,6 +62,16 @@ export default defineConfig({
           // fail with "found multiple elements" for markup earlier tests
           // left behind.
           globals: true,
+          // The jest-axe passes are CPU-bound, and this project runs 92 files
+          // in parallel, so their wall-clock time depends heavily on how much
+          // CPU they actually get. DateRangePicker's axe test — two full
+          // calendar grids, so several hundred nodes — measures ~1.1s run on
+          // its own but 5.2s to 6.1s under a loaded suite, which straddles the
+          // 5s default and fails the run perhaps half the time. The work is
+          // legitimate rather than hung, so the budget is the thing that is
+          // wrong; 20s leaves room for a slower runner while still surfacing a
+          // genuine hang in reasonable time.
+          testTimeout: 20_000,
           include: ["src/**/*.test.{ts,tsx}"],
           setupFiles: [path.join(dirname, "vitest.setup.ts")],
         },
