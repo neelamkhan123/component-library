@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@neelamkhan21/ui";
+import { Button } from "neelam-ui";
 
 export default function ButtonLoading() {
   const [loading, setLoading] = useState(false);

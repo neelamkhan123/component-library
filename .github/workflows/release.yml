@@ -1,7 +1,7 @@
 name: Release
 
 # NOTE: this filename is registered with npm as a trusted publisher for
-# @neelamkhan21/ui. Renaming this file breaks publishing until the trusted
+# neelam-ui. Renaming this file breaks publishing until the trusted
 # publisher config on npmjs.com is updated to match.
 
 on:
@@ -42,7 +42,7 @@ jobs:
 
       # The tarball is `files: ["dist", ...]`, so dist must exist and be
       # current. packages/ui also has a prepublishOnly that rebuilds it.
-      - run: npm run build -w @neelamkhan21/ui
+      - run: npm run build -w neelam-ui
 
       # Only opens or updates the "Version packages" PR — no `publish:` input.
       # Letting this action run the publish command means npm publish is
@@ -76,7 +76,7 @@ jobs:
         run: |
           version=$(node -p "require('./packages/ui/package.json').version")
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          if npm view "@neelamkhan21/ui@$version" version >/dev/null 2>&1; then
+          if npm view "neelam-ui@$version" version >/dev/null 2>&1; then
             echo "Version $version is already published; nothing to do."
             echo "publish=false" >> "$GITHUB_OUTPUT"
           else

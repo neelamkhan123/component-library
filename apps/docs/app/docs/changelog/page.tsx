@@ -6,7 +6,7 @@ import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Changelog",
-  description: "Release notes for @neelamkhan21/ui, generated from the package changelog.",
+  description: "Release notes for neelam-ui, generated from the package changelog.",
 };
 
 const badgeStyles: Record<string, string> = {

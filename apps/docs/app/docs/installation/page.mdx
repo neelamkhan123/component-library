@@ -1,6 +1,6 @@
 export const metadata = {
   title: "Installation",
-  description: "Install @neelamkhan21/ui and configure Tailwind CSS v4 to scan it.",
+  description: "Install neelam-ui and configure Tailwind CSS v4 to scan it.",
 };
 
 <PageHeader
@@ -10,7 +10,7 @@ export const metadata = {
 
 ## Install the package
 
-<InstallCommand packages="@neelamkhan21/ui" />
+<InstallCommand packages="neelam-ui" />
 
 React 18 or newer and a matching `react-dom` are peer dependencies.
 
@@ -26,7 +26,7 @@ Add the package's `dist` folder as a source in your global stylesheet:
 
 ```css
 @import "tailwindcss";
-@source "../node_modules/@neelamkhan21/ui/dist";
+@source "../node_modules/neelam-ui/dist";
 ```
 
 <Callout variant="warning" title="Symptom of a missing @source">
@@ -66,7 +66,7 @@ Consumers who do not chart pay nothing for this.
 ## Use a component
 
 ```tsx
-import { Button, Dialog, DialogContent, DialogTrigger } from "@neelamkhan21/ui";
+import { Button, Dialog, DialogContent, DialogTrigger } from "neelam-ui";
 
 export function Example() {
   return (

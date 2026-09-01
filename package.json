@@ -1,25 +1,25 @@
 {
-  "name": "@neelamkhan21/component-library",
+  "name": "neelam-ui-monorepo",
   "version": "0.0.0",
   "private": true,
-  "description": "Monorepo for @neelamkhan21/ui and its documentation site",
+  "description": "Monorepo for neelam-ui and its documentation site",
   "type": "module",
   "workspaces": [
     "packages/*",
     "apps/*"
   ],
   "scripts": {
-    "build": "npm run build -w @neelamkhan21/ui",
-    "build:docs": "npm run build -w @neelamkhan21/ui && npm run build -w docs",
+    "build": "npm run build -w neelam-ui",
+    "build:docs": "npm run build -w neelam-ui && npm run build -w docs",
     "dev": "npm run dev -w docs",
-    "storybook": "npm run storybook -w @neelamkhan21/ui",
-    "build-storybook": "npm run build-storybook -w @neelamkhan21/ui",
-    "test": "npm run test -w @neelamkhan21/ui",
-    "test-storybook": "npm run test-storybook -w @neelamkhan21/ui",
-    "lint": "npm run lint -w @neelamkhan21/ui",
+    "storybook": "npm run storybook -w neelam-ui",
+    "build-storybook": "npm run build-storybook -w neelam-ui",
+    "test": "npm run test -w neelam-ui",
+    "test-storybook": "npm run test-storybook -w neelam-ui",
+    "lint": "npm run lint -w neelam-ui",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "npm run build -w @neelamkhan21/ui && changeset publish"
+    "release": "npm run build -w neelam-ui && changeset publish"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.1"

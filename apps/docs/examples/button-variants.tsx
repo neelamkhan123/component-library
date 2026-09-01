@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@neelamkhan21/ui";
+import { Button } from "neelam-ui";
 
 export default function ButtonVariants() {
   return (

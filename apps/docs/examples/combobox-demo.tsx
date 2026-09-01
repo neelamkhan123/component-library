@@ -7,7 +7,7 @@ import {
   ComboboxInput,
   ComboboxItem,
   ComboboxTriggerIcon,
-} from "@neelamkhan21/ui";
+} from "neelam-ui";
 
 const fruits = [
   "Apple",

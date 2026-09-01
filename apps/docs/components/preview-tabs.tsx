@@ -1,12 +1,12 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@neelamkhan21/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "neelam-ui";
 
 /**
  * The tab strip is the library's own Tabs component — the docs run on the
  * thing they document. It has to live in a client file because nothing in
- * `@neelamkhan21/ui` carries a "use client" directive of its own.
+ * `neelam-ui` carries a "use client" directive of its own.
  */
 export function PreviewTabs({
   preview,

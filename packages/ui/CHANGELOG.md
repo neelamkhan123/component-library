@@ -1,4 +1,4 @@
-# @neelamkhan21/ui
+# neelam-ui
 
 ## 1.2.2
 

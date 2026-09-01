@@ -4,7 +4,7 @@
  * The library ships Tailwind utility classes and no stylesheet of its own,
  * so its compiled output has to be scanned as a source here — exactly the
  * setup documented for consumers in the package README. Pointing at the
- * workspace path rather than `node_modules/@neelamkhan21/ui` keeps the scan
+ * workspace path rather than `node_modules/neelam-ui` keeps the scan
  * working regardless of how npm chooses to hoist the symlink.
  */
 @source "../../../packages/ui/dist";

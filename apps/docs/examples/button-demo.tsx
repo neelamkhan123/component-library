@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@neelamkhan21/ui";
+import { Button } from "neelam-ui";
 
 export default function ButtonDemo() {
   return <Button>Get started</Button>;

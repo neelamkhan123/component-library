@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge, DataTable, type DataTableColumn } from "@neelamkhan21/ui";
+import { Badge, DataTable, type DataTableColumn } from "neelam-ui";
 
 interface Person {
   id: number;

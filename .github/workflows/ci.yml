@@ -43,7 +43,7 @@ jobs:
       - run: npm ci
       # The docs site imports the built package the same way a consumer does,
       # so the library has to be built before Next can resolve or scan it.
-      - run: npm run build -w @neelamkhan21/ui
+      - run: npm run build -w neelam-ui
       - run: npm run typecheck -w docs
       # The deployed site lives under /preview in a shared bucket, so the
       # artifact has to be built for that path — basePath is baked in at build

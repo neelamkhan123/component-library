@@ -1,17 +1,17 @@
 ![CI](https://github.com/neelamkhan123/component-library/actions/workflows/ci.yml/badge.svg)
 
-# @neelamkhan21/ui
+# neelam-ui
 
 An accessible React component library, built with a focus on keyboard
 navigation, focus management, and ARIA correctness.
 
-📖 **[Documentation](https://df22wszov2zdy.cloudfront.net)** · 🧪 **[Storybook](https://df22wszov2zdy.cloudfront.net)**  
-📦 **[npm package](https://www.npmjs.com/package/@neelamkhan21/ui)**
+📖 **[Documentation](https://df22wszov2zdy.cloudfront.net/preview)** · 🧪 **[Storybook](https://df22wszov2zdy.cloudfront.net)**  
+📦 **[npm package](https://www.npmjs.com/package/neelam-ui)**
 
 ## Installation
 
 ```bash
-npm install @neelamkhan21/ui
+npm install neelam-ui
 ```
 
 React 18+ and `react-dom` 18+ are peer dependencies.
@@ -32,7 +32,7 @@ chart pay nothing.
 ## Usage
 
 ```tsx
-import { Button, Dialog } from '@neelamkhan21/ui';
+import { Button, Dialog } from 'neelam-ui';
 ```
 
 Components are styled with Tailwind CSS v4 utility classes and ship no
@@ -41,7 +41,7 @@ package included as a source:
 
 ```css
 @import "tailwindcss";
-@source "../node_modules/@neelamkhan21/ui/dist";
+@source "../node_modules/neelam-ui/dist";
 ```
 
 ## Accessibility approach
@@ -86,10 +86,10 @@ This package lives in a monorepo alongside its documentation site; see the
 repository root, then:
 
 ```bash
-npm run storybook -w @neelamkhan21/ui        # Storybook at localhost:6006
-npm run test -w @neelamkhan21/ui             # unit + a11y tests (vitest + jest-axe)
-npm run test-storybook -w @neelamkhan21/ui   # axe-core run over every story
-npm run build -w @neelamkhan21/ui            # build the package
+npm run storybook -w neelam-ui        # Storybook at localhost:6006
+npm run test -w neelam-ui             # unit + a11y tests (vitest + jest-axe)
+npm run test-storybook -w neelam-ui   # axe-core run over every story
+npm run build -w neelam-ui            # build the package
 ```
 
 The root package.json aliases the common ones, so `npm run test`,

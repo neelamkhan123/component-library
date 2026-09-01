@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
   useDialog,
-} from "@neelamkhan21/ui";
+} from "neelam-ui";
 
 // `useDialog` lets any control inside the dialog drive its open state — here
 // a real Button, which DialogClose is not.

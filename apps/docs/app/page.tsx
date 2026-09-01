@@ -96,7 +96,7 @@ export default function HomePage() {
               </div>
 
               <div className="mt-8 max-w-md">
-                <CodeBlock code="npm install @neelamkhan21/ui" lang="bash" />
+                <CodeBlock code="npm install neelam-ui" lang="bash" />
               </div>
             </div>
 

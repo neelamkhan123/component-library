@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
-import { Button, Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@neelamkhan21/ui";
+import { Button, Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "neelam-ui";
 import { sidebarNav } from "@/lib/nav";
 import { cn, normalizePath } from "@/lib/utils";
 

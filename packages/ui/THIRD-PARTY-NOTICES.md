@@ -1,6 +1,6 @@
 # Third-party notices
 
-`@neelamkhan21/ui` is distributed as a bundle: the build inlines its runtime
+`neelam-ui` is distributed as a bundle: the build inlines its runtime
 dependencies into `dist/index.js` and `dist/index.cjs`. The licenses and
 copyright notices for that bundled code are reproduced below, as those
 licenses require. Everything else in this package is covered by the MIT

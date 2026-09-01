@@ -37,10 +37,10 @@ const nextConfig = {
   // the same S3 bucket + CloudFront distribution that serves Storybook today.
   output: "export",
   images: { unoptimized: true },
-  // `@neelamkhan21/ui` is a workspace symlink whose published entry is ESM.
+  // `neelam-ui` is a workspace symlink whose published entry is ESM.
   // Transpiling it keeps Next from treating the linked package as an opaque
   // external, which is what breaks `dark:` class output and RSC boundaries.
-  transpilePackages: ["@neelamkhan21/ui"],
+  transpilePackages: ["neelam-ui"],
 };
 
 export default withMDX(nextConfig);

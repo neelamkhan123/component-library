@@ -2,7 +2,7 @@
 
 # component-library
 
-Monorepo for **[@neelamkhan21/ui](./packages/ui)** — an accessible React
+Monorepo for **[neelam-ui](./packages/ui)** — an accessible React
 component library — and its documentation site.
 
 ```
@@ -34,18 +34,18 @@ Run from the repository root:
 | `npm run release` | Build and publish the package |
 
 Anything scoped to one workspace also works directly:
-`npm run <script> -w @neelamkhan21/ui` or `-w docs`.
+`npm run <script> -w neelam-ui` or `-w docs`.
 
 ## How the docs site consumes the library
 
-`apps/docs` depends on `@neelamkhan21/ui` as a workspace package and imports
+`apps/docs` depends on `neelam-ui` as a workspace package and imports
 its **built** `dist`, exactly as an outside consumer does — including the
 Tailwind `@source` scan of the compiled output. That means the site dogfoods
 the real published surface rather than a privileged internal path, but it also
 means **the library must be built before the docs will pick up a change**:
 
 ```bash
-npm run build -w @neelamkhan21/ui    # or `npm run build -w @neelamkhan21/ui -- --watch`
+npm run build -w neelam-ui    # or `npm run build -w neelam-ui -- --watch`
 ```
 
 Two files under `apps/docs/lib` are generated at build time and git-ignored:

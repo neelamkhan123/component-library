@@ -35,7 +35,7 @@ element. This is how a `DialogTrigger` — which is not a `Button` — is made t
 look like one:
 
 ```tsx
-import { buttonVariants, DialogTrigger } from "@neelamkhan21/ui";
+import { buttonVariants, DialogTrigger } from "neelam-ui";
 
 <DialogTrigger className={buttonVariants({ variant: "outline" })}>
   Edit profile
@@ -54,7 +54,7 @@ utilities:
 
 ```css
 @import "tailwindcss";
-@source "../node_modules/@neelamkhan21/ui/dist";
+@source "../node_modules/neelam-ui/dist";
 
 @theme {
   /* Warm the neutrals: every slate-* utility in the library follows. */
@@ -77,7 +77,7 @@ Radius is set per component (`rounded-xl` on `Button`, `rounded-full` on
 it. Change it where it matters with `className`, or wrap the component:
 
 ```tsx
-import { Button, type ButtonProps } from "@neelamkhan21/ui";
+import { Button, type ButtonProps } from "neelam-ui";
 
 export function SquareButton({ className, ...props }: ButtonProps) {
   return <Button className={`rounded-md ${className ?? ""}`} {...props} />;

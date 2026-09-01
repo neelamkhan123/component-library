@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@neelamkhan21/ui";
+} from "neelam-ui";
 
 export default function DialogDestructive() {
   return (
