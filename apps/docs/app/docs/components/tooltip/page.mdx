@@ -5,50 +5,109 @@ export const metadata = {
 
 <PageHeader
   title="Tooltip"
-  description="A short label revealed on hover or focus."
+  description="A short, supplementary label shown near its trigger on hover or focus — a transient hint alongside what you are already doing, not something you interact with."
   componentName="Tooltip"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="tooltip-demo" />
 
 ## Usage
 
 ```tsx
-import { Tooltip } from "neelam-ui";
+import { Tooltip, TooltipContent, TooltipTrigger } from "neelam-ui";
+
+<Tooltip>
+  <TooltipTrigger>per cycle</TooltipTrigger>
+  <TooltipContent>Resets on the 1st of each month.</TooltipContent>
+</Tooltip>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## Sides
 
-## Examples
+`side` picks which edge of the trigger the bubble sits on — `"top"` by default.
+It is a preference, not a guarantee: the position is clamped to the viewport, so
+a tooltip near an edge shifts rather than getting cut off.
 
-{/* TODO: add examples. Create apps/docs/examples/tooltip-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="tooltip-demo" /> */}
+<ComponentPreview name="tooltip-sides" />
+
+## Timing
+
+Hover waits `delayDuration` milliseconds (300 by default). **Focus shows
+immediately.** That asymmetry is deliberate: a keyboard user has committed to
+the element by focusing it, whereas a pointer sweeping across the screen has
+not, and the hover delay exists to absorb exactly that.
+
+```tsx
+<Tooltip delayDuration={0}>…</Tooltip>
+```
+
+## The trigger is a span
+
+`TooltipTrigger` renders `<span tabIndex={0}>`, not a `<button>`. A tooltip
+often annotates something that is not actionable — a truncated label, a status
+icon — and claiming button semantics for content with no click behaviour would
+misdescribe it. The `tabIndex` is what makes it reachable by keyboard at all,
+which WAI-ARIA requires: a tooltip must not be mouse-only.
+
+<Callout variant="warning" title="Never put essential information in a tooltip">
+  Tooltips are unavailable on touch, where there is no hover. Anything the user
+  must have to complete the task belongs in the page — a description under a
+  field, not a hint beside it.
+</Callout>
+
+<Callout variant="tip" title="Wrapping a real button">
+  To annotate something actionable, put the interactive element *inside*
+  `TooltipTrigger`. Nesting a `<button>` inside another button would be invalid
+  HTML — this is exactly why the trigger is a `<span>`.
+</Callout>
+
+## Why it portals
+
+`TooltipContent` renders into `document.body`. `TooltipTrigger` is inline so a
+tooltip can annotate a word in running text — but the bubble is a `<div>`, and a
+`<div>` inside a `<p>` is invalid HTML no matter how it is positioned. The
+portal fixes that where it can actually be fixed: where the element really lives
+in the DOM.
+
+It is also `popover="manual"` rather than `"auto"`. Top-layer rendering still
+comes from the browser — so a tooltip inside a scrolling card is not clipped —
+but light dismissal does not, because a tooltip closes on mouse-leave, blur,
+`Escape`, or a scroll, none of which `"auto"`'s outside-click handling is the
+right mechanism for.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Moves focus to the trigger, which shows the tooltip immediately." },
+    { keys: "Escape", description: "Dismisses the tooltip, including one opened by hover while focus is elsewhere." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- The bubble is `role="tooltip"`, and the trigger points at it with
+  `aria-describedby` — so it is announced as a description of the trigger rather
+  than replacing its name.
+- Focus shows the tooltip with no delay, satisfying the requirement that it be
+  keyboard-reachable rather than hover-only.
+- `Escape` dismisses it (WCAG 1.4.13, *Content on Hover or Focus*), even when
+  the tooltip was opened by the pointer and focus is somewhere else entirely.
+- The arrow is `aria-hidden`; it is decoration, not content.
+- The tooltip never takes focus itself, so it cannot become a keyboard trap.
 
 ## API reference
 
 ### Tooltip
 
 <PropsTable name="Tooltip" />
+
+### TooltipTrigger
+
+Adds no props of its own — it renders a `<span tabIndex={0}>` and accepts every
+native `<span>` attribute. `aria-describedby` is wired to the bubble for you.
+
+### TooltipContent
+
+Adds no props of its own beyond the native `<div>` attributes. It is positioned
+and portalled for you; `className` styles the bubble.

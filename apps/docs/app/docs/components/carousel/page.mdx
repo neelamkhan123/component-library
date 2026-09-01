@@ -5,50 +5,105 @@ export const metadata = {
 
 <PageHeader
   title="Carousel"
-  description="A slideshow of content panels."
+  description="A horizontally scrolling set of slides built on native CSS scroll-snap — so swipe, trackpad scrolling, and momentum all come from the browser."
   componentName="Carousel"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="carousel-demo" />
 
 ## Usage
 
 ```tsx
-import { Carousel } from "neelam-ui";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselDots,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "neelam-ui";
+
+<Carousel aria-label="Featured items">
+  <CarouselContent>
+    <CarouselItem>One</CarouselItem>
+    <CarouselItem>Two</CarouselItem>
+  </CarouselContent>
+  <CarouselPrevious />
+  <CarouselNext />
+  <CarouselDots />
+</Carousel>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+`CarouselDots` reads the current slide from context, so it must live **inside**
+`Carousel` — it throws otherwise.
 
-## Examples
+## Scroll-snap, not transforms
 
-{/* TODO: add examples. Create apps/docs/examples/carousel-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="carousel-demo" /> */}
+The strip is a native scroll container with CSS scroll-snap rather than a
+drag-and-transform implementation. Swipe physics, trackpad scrolling, and
+momentum are the browser's, not a re-implementation — the same reasoning behind
+[`Dialog`](/docs/components/dialog) using the native `<dialog>` element.
+
+Which slide counts as current is tracked with an `IntersectionObserver` watching
+each item against the strip, rather than computed from `scrollLeft` and an
+assumed item width, so it stays correct even when slides are different sizes.
+
+## Showing more than one slide
+
+`CarouselItem` fills the carousel by default. Override its `className` with a
+fractional basis to show several at once:
+
+```tsx
+<CarouselItem className="basis-1/2">…</CarouselItem>
+<CarouselItem className="basis-1/3">…</CarouselItem>
+```
+
+## Label it
+
+`Carousel` is `role="region"` with `aria-roledescription="carousel"`. A region
+needs an accessible name, so pass `aria-label` describing what the slides are —
+"Featured items", "Customer quotes".
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Reaches the scroll strip, then the previous, next, and dot controls." },
+    { keys: "← / →", description: "Moves to the previous or next slide when the carousel has focus." },
+    { keys: "Enter / Space", description: "Activates the focused control." },
   ]}
 />
 
+The scrolling viewport itself is focusable, which is what satisfies WCAG 2.1.1
+for a region scrollable by pointer — the previous/next buttons are an
+affordance, not the only route.
+
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- `role="region"` with `aria-roledescription="carousel"`; each slide is
+  `role="group"` with `aria-roledescription="slide"`, so a screen reader
+  announces where the user is.
+- Previous and next are icon-only buttons with explicit `aria-label`s, and they
+  **disable themselves** at the ends rather than silently doing nothing.
+- Dots carry `aria-label="Go to slide N"` and `aria-current` on the active one.
+- Nothing auto-advances. That is deliberate: motion the user did not start is a
+  WCAG 2.2.2 problem, and a slide that moves out from under someone reading it
+  is hostile.
+
+<Callout variant="warning" title="Carousels hide content">
+  Anything past the first slide is unseen by most people. If the content
+  matters, consider a grid or a list instead — a carousel is a space-saving
+  device, and the space it saves is paid for in attention.
+</Callout>
 
 ## API reference
 
 ### Carousel
 
 <PropsTable name="Carousel" />
+
+### CarouselItem, CarouselPrevious, CarouselNext, CarouselDots
+
+These add no props of their own — each is a styled wrapper around a native
+element, and every attribute passes through. `CarouselItem` is a `<div>`; the
+controls are `<button>`s with their labels applied for you.

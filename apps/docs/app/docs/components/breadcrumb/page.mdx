@@ -5,48 +5,111 @@ export const metadata = {
 
 <PageHeader
   title="Breadcrumb"
-  description="A trail showing the current page's place in the hierarchy."
+  description={'A trail of links showing where the current page sits in a hierarchy. A native <nav aria-label="breadcrumb"> wrapping an ordered list — purely presentational, with no state to coordinate.'}
   componentName="Breadcrumb"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="breadcrumb-demo" />
 
 ## Usage
 
 ```tsx
-import { Breadcrumb } from "neelam-ui";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "neelam-ui";
+
+<Breadcrumb>
+  <BreadcrumbList>
+    <BreadcrumbItem>
+      <BreadcrumbLink href="/docs">Docs</BreadcrumbLink>
+    </BreadcrumbItem>
+    <BreadcrumbSeparator />
+    <BreadcrumbItem>
+      <BreadcrumbPage>Breadcrumb</BreadcrumbPage>
+    </BreadcrumbItem>
+  </BreadcrumbList>
+</Breadcrumb>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## The last item is not a link
 
-## Examples
+`BreadcrumbPage` renders a `<span aria-current="page">`, not an anchor. Per the
+WAI-ARIA breadcrumb pattern there is nowhere for the current page to navigate
+to, and `aria-current` is what tells assistive tech which item you are on.
 
-{/* TODO: add examples. Create apps/docs/examples/breadcrumb-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="breadcrumb-demo" /> */}
+<Callout variant="warning" title="Don't link the current page">
+  A link that goes to the page you are already on is a dead end for keyboard and
+  screen reader users, and `aria-current` on an `<a href>` is not a substitute
+  for simply not making it a link.
+</Callout>
+
+## Collapsing a long trail
+
+`BreadcrumbEllipsis` stands in for the middle of a deep hierarchy:
+
+<ComponentPreview name="breadcrumb-collapsed" />
+
+Like `BreadcrumbSeparator`, it is decorative and hidden from assistive tech, but
+it carries an `sr-only` "More" so it is not a completely silent gap if you wrap
+it in something interactive.
+
+## Custom separators
+
+`BreadcrumbSeparator` renders a chevron by default. Pass `children` for anything
+else:
+
+```tsx
+<BreadcrumbSeparator>/</BreadcrumbSeparator>
+```
+
+## Links and routers
+
+`BreadcrumbLink` is a plain `<a>`, so `href` works as it always does. With a
+client-side router, render the router's own link inside it, or spread its props
+onto it — nothing here depends on the element being an anchor this library
+created.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Moves to the next link in the trail. The current page is not focusable — it is not a link." },
+    { keys: "Enter", description: "Follows the focused link. Native anchor behaviour." },
   ]}
 />
 
+There is no arrow-key navigation here. A breadcrumb is a short list of ordinary
+links, not a composite widget, so each link is its own tab stop.
+
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- The wrapper is `<nav aria-label="breadcrumb">`, which is what lets a screen
+  reader user jump to it by landmark. Unlike a radio group's label, this one
+  *can* be hardcoded — a breadcrumb is always a breadcrumb.
+- The trail is an `<ol>`, because it is a strict hierarchy rather than an
+  arbitrary group. Assistive tech announces each item's position from the list
+  itself.
+- The current page carries `aria-current="page"`.
+- Separators are `role="presentation"` and `aria-hidden`. The list already
+  conveys the structure, so an announced chevron between every pair of items
+  would be pure noise.
 
 ## API reference
 
-<PropsTable name="Breadcrumb" />
+The breadcrumb parts add no props of their own — each is a thin, styled wrapper
+around a native element, and every attribute passes straight through:
+
+| Component | Element | Notes |
+| --- | --- | --- |
+| `Breadcrumb` | `<nav>` | `aria-label="breadcrumb"` applied for you |
+| `BreadcrumbList` | `<ol>` | |
+| `BreadcrumbItem` | `<li>` | |
+| `BreadcrumbLink` | `<a>` | Pass `href` |
+| `BreadcrumbPage` | `<span>` | `aria-current="page"` applied for you |
+| `BreadcrumbSeparator` | `<li>` | Decorative; `children` overrides the chevron |
+| `BreadcrumbEllipsis` | `<span>` | Decorative |

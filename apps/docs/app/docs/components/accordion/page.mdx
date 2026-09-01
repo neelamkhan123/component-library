@@ -5,66 +5,117 @@ export const metadata = {
 
 <PageHeader
   title="Accordion"
-  description="Vertically stacked sections that expand and collapse."
+  description="Stacked headings that each reveal a section of content — a heading, a button, and a labelled region, exactly as the WAI-ARIA Accordion pattern specifies."
   componentName="Accordion"
 />
 
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
-
-<ComponentPreview name="accordion-demo" />
+<ComponentPreview name="accordion-demo" align="start" />
 
 ## Usage
 
 ```tsx
-import { Accordion, AccordionItem, AccordionMultiple, AccordionNormalized, AccordionSingle } from "neelam-ui";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionHeader,
+  AccordionItem,
+  AccordionTrigger,
+} from "neelam-ui";
+
+<Accordion defaultValue="item-1">
+  <AccordionItem value="item-1">
+    <AccordionHeader>
+      <AccordionTrigger>Is it accessible?</AccordionTrigger>
+    </AccordionHeader>
+    <AccordionContent>Yes.</AccordionContent>
+  </AccordionItem>
+</Accordion>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+`AccordionHeader` wrapping `AccordionTrigger` is not optional decoration — the
+pattern is a heading *containing* a button, which is what puts each section in
+the document outline.
 
-## Examples
+## Single or multiple
 
-{/* TODO: add examples. Create apps/docs/examples/accordion-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="accordion-demo" /> */}
+`type="single"` (the default) keeps at most one item open, and `value` is a
+string. `collapsible` lets you close the open one by activating it again;
+without it, one item is always open.
+
+`type="multiple"` allows any number open at once, and `value` becomes an array:
+
+<ComponentPreview name="accordion-multiple" align="start" />
+
+## Heading levels
+
+`AccordionHeader` renders an `<h3>`. Nest the accordion under an appropriate
+heading in your own outline so the levels descend without skipping — the same
+consideration [`Card`](/docs/components/card)'s title has.
+
+## Closed content stays mounted
+
+`AccordionContent` animates with a `grid-template-rows` transition from `0fr` to
+`1fr`, because `height: auto` is not a transitionable value. That means closed
+content remains in the DOM.
+
+<Callout variant="note" title="Closed panels are inert, not just clipped">
+  Content hidden by the collapsed row would otherwise still be tabbable and
+  still exposed to assistive tech. `AccordionContent` marks itself `inert` while
+  closed, so it is genuinely unreachable — the same problem
+  [`Sidebar`](/docs/components/sidebar) solves when it collapses.
+</Callout>
+
+This differs from [`Tabs`](/docs/components/tabs), which unmounts inactive
+panels outright: tabs are not animated, so there is nothing to keep them around
+for. Here, a panel's internal state *does* survive being closed.
+
+## Controlled
+
+```tsx
+const [open, setOpen] = useState("item-1");
+
+<Accordion value={open} onValueChange={setOpen}>…</Accordion>
+```
+
+For `type="multiple"`, `value` and `onValueChange` work with `string[]`.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Moves to the next trigger, then into an open panel's content. Closed panels are inert and skipped." },
+    { keys: "Enter / Space", description: "Toggles the focused section — native button activation." },
   ]}
 />
 
+<Callout variant="note" title="Arrow keys are not bound here">
+  The APG lists arrow-key movement between headers as optional, and each trigger
+  is an ordinary tab stop instead. That keeps browser find-in-page and normal
+  tabbing behaving predictably across a long page of sections.
+</Callout>
+
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- The structure is the pattern: `<h3>` → `<button aria-expanded aria-controls>`
+  → `<div role="region" aria-labelledby>`. Each panel is named by its own
+  trigger.
+- `aria-expanded` on the trigger is what announces open or closed; the chevron
+  is `aria-hidden` decoration.
+- Closed panels are `inert`, so collapsed content is never a set of invisible
+  tab stops.
+- The expand transition is dropped entirely under `prefers-reduced-motion`
+  (WCAG 2.3.3) — sections snap open instead.
 
 ## API reference
 
-### Accordion
+### Accordion (single)
 
-<PropsTable name="Accordion" />
+<PropsTable name="AccordionSingle" />
+
+### Accordion (multiple)
+
+<PropsTable name="AccordionMultiple" />
 
 ### AccordionItem
 
 <PropsTable name="AccordionItem" />
-
-### AccordionMultiple
-
-<PropsTable name="AccordionMultiple" />
-
-### AccordionNormalized
-
-<PropsTable name="AccordionNormalized" />
-
-### AccordionSingle
-
-<PropsTable name="AccordionSingle" />

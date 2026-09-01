@@ -5,49 +5,133 @@ export const metadata = {
 
 <PageHeader
   title="Sidebar"
-  description="A collapsible application navigation region."
+  description="A docked, collapsible navigation panel and the flex layout that holds it beside your main content."
   componentName="Sidebar"
 />
 
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
-
-<ComponentPreview name="sidebar-demo" />
+<ComponentPreview name="sidebar-demo" align="start" />
 
 ## Usage
 
 ```tsx
-import { Sidebar, SidebarMenuButton, SidebarProvider } from "neelam-ui";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from "neelam-ui";
+
+<SidebarProvider>
+  <Sidebar>
+    <SidebarHeader>Acme</SidebarHeader>
+    <SidebarContent>
+      <SidebarGroup>
+        <SidebarGroupLabel>Workspace</SidebarGroupLabel>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton href="/" isActive>Overview</SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarGroup>
+    </SidebarContent>
+  </Sidebar>
+  <main className="flex-1">
+    <SidebarTrigger />
+  </main>
+</SidebarProvider>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+`SidebarProvider` renders the shared flex row itself, rather than leaving it to
+you. Unlike [`Dialog`](/docs/components/dialog) — whose provider holds only
+context, because the content portals into the top layer — a docked sidebar and
+its main content are ordinary flex siblings that need a wrapper.
 
-## Examples
+## Collapsing
 
-{/* TODO: add examples. Create apps/docs/examples/sidebar-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="sidebar-demo" /> */}
+`open` and `defaultOpen` control it, and `useSidebar()` exposes the state plus a
+setter and toggle for a control `SidebarTrigger` does not cover.
+
+`defaultOpen` is `true`: unlike a dialog, a docked sidebar is normally visible
+from the start.
+
+Collapsing animates the `<aside>`'s own width. Its children sit in an inner
+`<div>` held at a **constant** width instead of collapsing with it, so header
+and nav text does not visibly reflow and wrap mid-animation as the outer width
+crosses toward zero.
+
+<Callout variant="note" title="Collapsed means inert, not just invisible">
+  A collapsed sidebar is marked `inert`, so it is unreachable by keyboard and
+  removed from the accessibility tree while still present for the closing
+  transition. Without that, `Tab` would walk through invisible links — the same
+  problem `Dialog` and `Drawer` solve by inerting the page behind them.
+</Callout>
+
+## Width
+
+`width` is a CSS length (default `"16rem"`) applied as an inline style, not a
+Tailwind `w-*` class. That is deliberate: this library hit a real bug in
+[`Resizable`](/docs/components/resizable) where a component's own default class
+silently beat a caller's override of the same property, because which of two
+equal-specificity classes wins is decided by their order in the *generated*
+stylesheet, not by anything in the `className` string. An inline style has no
+such ambiguity.
+
+So change the width with the `width` prop rather than by fighting a class:
+
+```tsx
+<Sidebar width="20rem" />
+```
+
+## Marking the current page
+
+`SidebarMenuButton` renders a native `<a>` and takes `isActive`, which sets
+`aria-current="page"` alongside the highlight. Pass `icon` for a leading glyph —
+it is placed and hidden from assistive tech for you.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Moves through the sidebar's links in order. A collapsed sidebar is inert and skipped entirely." },
+    { keys: "Enter", description: "Follows the focused link. Native anchor behaviour." },
+    { keys: "Enter / Space", description: "Toggles the sidebar when focus is on SidebarTrigger." },
   ]}
 />
 
+There is no arrow-key roving. A sidebar is a list of ordinary links inside a
+landmark, not a composite widget, so each link is its own tab stop and browser
+find-in-page works normally.
+
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- `Sidebar` renders a native `<aside>`, whose implicit `complementary` landmark
+  needs no `role` — the same reasoning
+  [`Breadcrumb`](/docs/components/breadcrumb) renders a plain `<nav>`.
+- `SidebarMenu` is a real `<ul>` of `<li>`s, so assistive tech announces how
+  many items there are and which one you are on.
+- The current page carries `aria-current="page"`, not just a colour.
+- `SidebarTrigger` is an icon-only button with a default
+  `aria-label="Toggle sidebar"` — override it if that does not fit.
+- The collapsed panel is `inert`, so it never becomes a set of invisible tab
+  stops.
+
+<Callout variant="tip" title="Two landmarks, not one">
+  `<aside>` marks the sidebar; give your main region a real `<main>`, as the
+  usage snippet does. Landmark navigation is how many screen reader users move
+  around an app, and it only works if both halves are marked.
+</Callout>
 
 ## API reference
+
+### SidebarProvider
+
+<PropsTable name="SidebarProvider" />
 
 ### Sidebar
 
@@ -56,7 +140,3 @@ import { Sidebar, SidebarMenuButton, SidebarProvider } from "neelam-ui";
 ### SidebarMenuButton
 
 <PropsTable name="SidebarMenuButton" />
-
-### SidebarProvider
-
-<PropsTable name="SidebarProvider" />

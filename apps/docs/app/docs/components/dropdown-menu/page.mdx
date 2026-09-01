@@ -5,47 +5,112 @@ export const metadata = {
 
 <PageHeader
   title="Dropdown Menu"
-  description="A menu of actions triggered by a button."
+  description="A menu of actions revealed by clicking a button, per the WAI-ARIA Menu Button pattern — a ContextMenu opened by click and anchored to its trigger."
   componentName="DropdownMenu"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="dropdown-menu-demo" />
 
 ## Usage
 
 ```tsx
-import { DropdownMenu, DropdownMenuItem, DropdownMenuTrigger } from "neelam-ui";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "neelam-ui";
+
+<DropdownMenu>
+  <DropdownMenuTrigger>Actions</DropdownMenuTrigger>
+  <DropdownMenuContent>
+    <DropdownMenuLabel>Project</DropdownMenuLabel>
+    <DropdownMenuItem>Rename</DropdownMenuItem>
+    <DropdownMenuSeparator />
+    <DropdownMenuItem>Delete</DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## Built on ContextMenu
 
-## Examples
+A dropdown menu *is* a [`ContextMenu`](/docs/components/context-menu) with a
+different way in: clicking a real button instead of right-clicking, and
+positioned against that button instead of at the cursor. Everything about the
+panel — the native popover, its deferred opening, roving keyboard focus, scroll
+lock, light dismissal — is identical, so it is built directly on `ContextMenu`
+rather than duplicated. `DropdownMenuContent`, `DropdownMenuItem`,
+`DropdownMenuSeparator`, `DropdownMenuLabel`, and `DropdownMenuShortcut` are the
+same components under menu-flavoured names.
 
-{/* TODO: add examples. Create apps/docs/examples/dropdown-menu-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="dropdown-menu-demo" /> */}
+Only `DropdownMenuTrigger` is genuinely new.
+
+## Side
+
+`side` picks which side of the trigger the menu opens on — `"bottom"` by
+default. `"top"` is for a trigger near the bottom of the viewport, such as an
+account menu in a sidebar footer: opening below would run off-screen, and once
+the viewport clamp caught that, the panel would land pinned to the bottom of the
+*viewport* rather than next to its trigger.
+
+```tsx
+<DropdownMenuTrigger side="top">Account</DropdownMenuTrigger>
+```
+
+## Menu, select, or popover?
+
+- **Dropdown menu** — a list of *actions*. Activating one does something and
+  closes the menu.
+- **[`Select`](/docs/components/select)** — a list of *values*. One stays
+  chosen, and the trigger shows it.
+- **[`Popover`](/docs/components/popover)** — arbitrary content the user works
+  through, not a list at all.
+
+Choosing wrongly here is not cosmetic: the roles differ (`menu`/`menuitem`
+versus `listbox`/`option`), and so does what a screen reader tells the user to
+expect.
+
+## Items
+
+`DropdownMenuItem` closes the menu after activating by default. Pass
+`closeOnSelect={false}` for an item that toggles something the user may want to
+change again straight away.
+
+`DropdownMenuShortcut` renders a muted, right-aligned hint — place it as the
+last child of an item. It is a label for a shortcut you have bound yourself; it
+does not bind anything.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Enter / Space", description: "Opens the menu from the trigger, or activates the focused item." },
+    { keys: "↓", description: "Opens the menu with the first item focused, without needing it open already." },
+    { keys: "↑", description: "Opens the menu with the last item focused." },
+    { keys: "Home / End", description: "Moves to the first or last item." },
+    { keys: "Escape", description: "Closes the menu and returns focus to the trigger." },
   ]}
 />
 
+The ArrowDown/ArrowUp mapping stays fixed to the *key*, not to `side` — it is
+about where focus lands, not which way the menu opened.
+
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- The trigger is a native `<button>` with `aria-haspopup="menu"` and
+  `aria-expanded`, per the Menu Button pattern.
+- The panel is `role="menu"`; each item is a native `<button>` recategorized as
+  `role="menuitem"`, so click, `Enter`, and `Space` activation stay native.
+- Roving focus: arrow keys move real DOM focus between items, wrapping at the
+  ends. Disabled items are skipped.
+- `DropdownMenuSeparator` is `role="separator"` with `aria-orientation`, which
+  `role="menu"` does permit — unlike `role="listbox"`, which is why
+  [`Select`](/docs/components/select)'s separator carries no role at all.
+- Focus returns to the trigger on every dismissal path, and the page behind is
+  scroll-locked while the menu is open.
 
 ## API reference
 
@@ -53,10 +118,10 @@ import { DropdownMenu, DropdownMenuItem, DropdownMenuTrigger } from "neelam-ui";
 
 <PropsTable name="DropdownMenu" />
 
-### DropdownMenuItem
-
-<PropsTable name="DropdownMenuItem" />
-
 ### DropdownMenuTrigger
 
 <PropsTable name="DropdownMenuTrigger" />
+
+### DropdownMenuItem
+
+<PropsTable name="DropdownMenuItem" />

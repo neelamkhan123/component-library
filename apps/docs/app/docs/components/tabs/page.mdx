@@ -5,17 +5,9 @@ export const metadata = {
 
 <PageHeader
   title="Tabs"
-  description="Switch between panels of related content."
+  description="A set of panels, one shown at a time, switched between via a strip of tabs — with arrow keys moving focus and selection together, as the WAI-ARIA Tabs pattern specifies."
   componentName="Tabs"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="tabs-demo" />
 
@@ -23,39 +15,98 @@ export const metadata = {
 
 ```tsx
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "neelam-ui";
+
+<Tabs defaultValue="account">
+  <TabsList>
+    <TabsTrigger value="account">Account</TabsTrigger>
+    <TabsTrigger value="password">Password</TabsTrigger>
+  </TabsList>
+  <TabsContent value="account">Update your display name.</TabsContent>
+  <TabsContent value="password">Change your password.</TabsContent>
+</Tabs>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+Each `TabsContent` is matched to its `TabsTrigger` by `value`.
 
-## Examples
+## Orientation
 
-{/* TODO: add examples. Create apps/docs/examples/tabs-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="tabs-demo" /> */}
+`orientation="vertical"` stacks the strip beside the panels. The arrow keys
+follow: Up/Down replace Left/Right, and `aria-orientation` is set to match, so
+assistive tech announces the right ones.
+
+<ComponentPreview name="tabs-vertical" align="start" />
+
+## Automatic activation
+
+Arrow keys move focus **and** selection together — "automatic activation" in the
+pattern's terms. Arrowing along the strip switches panels as you go, the way a
+browser's own tab strip behaves.
+
+That differs from the roving focus in
+[`Select`](/docs/components/select) or
+[`DropdownMenu`](/docs/components/dropdown-menu), where arrows only move focus
+and a separate `Enter` confirms. The distinction is deliberate: a menu item
+might be destructive or hard to undo, so it should not fire just because you
+moved through it. Switching a tab is cheap and reversible.
+
+<Callout variant="warning" title="Automatic activation assumes cheap panels">
+  If a panel triggers an expensive fetch on mount, arrowing across five tabs
+  fires five requests. Cache or debounce the load rather than changing the
+  interaction — the keyboard behaviour here is what the pattern expects.
+</Callout>
+
+## Inactive panels are unmounted
+
+Only the active `TabsContent` is rendered at all. Unlike
+[`Accordion`](/docs/components/accordion), which keeps closed content mounted so
+it can animate, switching tabs is not animated, so there is nothing to gain from
+keeping inactive panels around.
+
+The trade-off is real and worth stating plainly: a panel's internal state — a
+scroll position, an uncontrolled input's value — is **lost** when you switch
+away and will not be there when you switch back. Lift anything that must
+survive into your own state.
+
+## Controlled
+
+```tsx
+const [tab, setTab] = useState("account");
+
+<Tabs value={tab} onValueChange={setTab}>…</Tabs>
+```
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Moves focus to the active tab, then past the whole strip to the panel — not through every tab." },
+    { keys: "← / →", description: "Moves to the previous or next tab, wrapping at the ends. Horizontal orientation." },
+    { keys: "↑ / ↓", description: "The same, when orientation=\"vertical\"." },
+    { keys: "Home / End", description: "Jumps to the first or last tab." },
+    { keys: "Enter / Space", description: "Activates the focused tab — though arrowing has already selected it." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+Implements the [APG tabs pattern](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/):
+
+- The strip is `role="tablist"` with `aria-orientation`; each tab is a native
+  `<button>` recategorized as `role="tab"` with `aria-selected` and
+  `aria-controls` pointing at its panel.
+- Roving tabindex: only the active tab is in the page's tab order
+  (`tabIndex={0}`), the rest are `-1`. `Tab` therefore steps *past* the strip
+  rather than through every tab in it.
+- Each panel is `role="tabpanel"` with `tabIndex={0}`, so a keyboard user can
+  move from the tab straight into the panel even when its content has nothing
+  focusable in it.
+- Disabled tabs are skipped by the arrow keys rather than trapping focus.
 
 ## API reference
 
 ### Tabs
 
 <PropsTable name="Tabs" />
-
-### TabsContent
-
-<PropsTable name="TabsContent" />
 
 ### TabsList
 
@@ -64,3 +115,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "neelam-ui";
 ### TabsTrigger
 
 <PropsTable name="TabsTrigger" />
+
+### TabsContent
+
+<PropsTable name="TabsContent" />

@@ -5,17 +5,9 @@ export const metadata = {
 
 <PageHeader
   title="Textarea"
-  description="A multi-line text field that can grow with its content."
+  description="A multi-line text field — Input's sibling in every respect but the element itself, with resizing restricted to the vertical axis."
   componentName="Textarea"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="textarea-demo" />
 
@@ -23,30 +15,71 @@ export const metadata = {
 
 ```tsx
 import { Textarea } from "neelam-ui";
+
+<label className="flex flex-col gap-1.5">
+  Feedback
+  <Textarea placeholder="Tell us what you think…" />
+</label>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## Resizing
 
-## Examples
+The browser's default handle resizes on both axes. This one is `resize-y`:
+horizontal resizing routinely breaks a form's column layout in a way vertical
+resizing does not. Once the field is `disabled`, resizing is off entirely —
+there is nothing to type, so there is nothing to make room for.
 
-{/* TODO: add examples. Create apps/docs/examples/textarea-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="textarea-demo" /> */}
+`rows` defaults to `3` rather than the native `2`, which reads as cramped for a
+field meant to hold more than a single line. Override it like any other
+attribute:
+
+```tsx
+<Textarea rows={8} />
+```
+
+## Invalid state
+
+As with [`Input`](/docs/components/input), the error styling keys off
+`aria-invalid` directly rather than a separate prop, so the visual state and the
+announced state cannot drift apart:
+
+```tsx
+<Textarea aria-invalid aria-describedby="bio-error" />
+<p id="bio-error">Keep this under 200 characters.</p>
+```
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Moves focus to the field, and out of it again — Tab does not insert a tab character." },
+    { keys: "Enter", description: "Inserts a newline. It does not submit the surrounding form." },
   ]}
 />
 
+<Callout variant="note" title="Enter behaves differently here">
+  In a single-line `Input`, `Enter` submits the form. In a `Textarea` it inserts
+  a newline. If you need submit-on-Enter — a chat composer, say — see
+  [`Composer`](/docs/components/composer), which handles that pairing already.
+</Callout>
+
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- Renders a native `<textarea>`; text editing, scrolling, and form participation
+  come from the platform.
+- Invalid styling is driven by `aria-invalid`, the same signal assistive tech
+  reads.
+- Focus-visible uses a layered `box-shadow` rather than `outline`, so the ring
+  survives inside scrolling containers.
+- No character counter is bundled. If you add one, point at it with
+  `aria-describedby` and mark live updates politely, so the count is available
+  without interrupting typing.
 
 ## API reference
 
-<PropsTable name="Textarea" />
+`Textarea` adds no props of its own — `TextareaProps` is exactly React's
+`TextareaHTMLAttributes<HTMLTextAreaElement>`. Every native `<textarea>`
+attribute passes straight through to the element: `rows`, `maxLength`,
+`readOnly`, `required`, `disabled`, `name`, `aria-*`, and the rest.
+
+The only defaulted one is `rows`, which is `3` instead of the native `2`.

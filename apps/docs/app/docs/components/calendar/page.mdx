@@ -5,17 +5,9 @@ export const metadata = {
 
 <PageHeader
   title="Calendar"
-  description="A date grid with full keyboard navigation."
+  description="A month grid for picking a date — the WAI-ARIA date-picker grid on its own, rather than pre-wired to a popover and an input."
   componentName="Calendar"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="calendar-demo" />
 
@@ -23,32 +15,90 @@ export const metadata = {
 
 ```tsx
 import { Calendar } from "neelam-ui";
+
+const [selected, setSelected] = useState<Date | undefined>(new Date());
+
+<Calendar selected={selected} onSelect={setSelected} />
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## Composing a date picker
 
-## Examples
+`Calendar` deliberately owns no opinion about how it is triggered. Put it in a
+[`Popover`](/docs/components/popover) behind a button showing the formatted date
+and you have the usual date-picker widget:
 
-{/* TODO: add examples. Create apps/docs/examples/calendar-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="calendar-demo" /> */}
+```tsx
+<Popover>
+  <PopoverTrigger>{format(selected)}</PopoverTrigger>
+  <PopoverContent>
+    <Calendar selected={selected} onSelect={setSelected} />
+  </PopoverContent>
+</Popover>
+```
+
+That is the same reasoning
+[`DateRangePicker`](/docs/components/date-range-picker) follows — it is built
+from `Popover`, two `Calendar`s, and a `RadioGroup` rather than reimplementing
+any of them.
+
+## Disabling dates
+
+`disabled` is a predicate, so any rule works:
+
+```tsx
+<Calendar disabled={(date) => date < new Date()} />
+```
+
+Keyboard navigation skips disabled dates rather than landing on them, searching
+in the direction you were already moving. The search is bounded to a year, so a
+caller who disables *every* date cannot hang the component in an infinite loop.
+
+## Week start
+
+`weekStartsOn` takes `0` (Sunday, the default) through `6`. It is not derived
+from the locale — that, along with range selection and year-jump shortcuts, is
+deliberately out of scope here.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
+The grid is fully operable, which is the whole point of the component:
 
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Enters the grid at the focusable day — one at a time, roving. Tab again leaves the grid entirely." },
+    { keys: "← / →", description: "Moves one day back or forward." },
+    { keys: "↑ / ↓", description: "Moves one week back or forward." },
+    { keys: "Home / End", description: "Moves to the first or last day of the current week." },
+    { keys: "PageUp / PageDown", description: "Moves to the same day in the previous or next month." },
+    { keys: "Enter / Space", description: "Selects the focused day." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- A native `<table role="grid">`: rows are weeks, cells are days — a genuinely
+  clean fit for a structure that already is a grid.
+- Each day is a real `<button>` recategorized as `role="gridcell"`, so
+  activation stays native. Selection is `aria-selected`, and today carries
+  `aria-current="date"`.
+- Roving `tabIndex` means the whole grid is one tab stop, and real DOM focus is
+  moved by the arrow keys — not `aria-activedescendant`, matching
+  [`Select`](/docs/components/select) and
+  [`ContextMenu`](/docs/components/context-menu).
+- The month heading is `aria-live="polite"`, so changing month announces the new
+  one — otherwise paging through months is silent.
+- The previous/next buttons are icon-only with explicit `aria-label`s, and their
+  chevrons are `aria-hidden`.
+
+<Callout variant="tip" title="Offer a text input too">
+  A grid is excellent for browsing and poor for entering a date you already
+  know. Pairing the calendar with a typed date field is faster for many users,
+  and essential for anyone for whom arrowing across weeks is laborious.
+</Callout>
 
 ## API reference
 
-### Calendar
-
 <PropsTable name="Calendar" />
+
+Also accepts every native `<div>` attribute except `onSelect`, which is taken
+over above.

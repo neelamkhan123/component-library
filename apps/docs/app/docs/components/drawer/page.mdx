@@ -5,47 +5,100 @@ export const metadata = {
 
 <PageHeader
   title="Drawer"
-  description="A panel that slides in from an edge of the screen."
+  description="A panel pinned to one edge of the viewport. A Dialog with different panel styling — everything about opening, closing, and labelling is identical."
   componentName="Drawer"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="drawer-demo" />
 
 ## Usage
 
 ```tsx
-import { Drawer, DrawerContent } from "neelam-ui";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "neelam-ui";
+
+<Drawer>
+  <DrawerTrigger>Open filters</DrawerTrigger>
+  <DrawerContent side="right">
+    <DrawerHeader>
+      <DrawerTitle>Filters</DrawerTitle>
+      <DrawerDescription>Narrow the results.</DrawerDescription>
+    </DrawerHeader>
+  </DrawerContent>
+</Drawer>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## Sides
 
-## Examples
+`side` picks the edge the panel slides in from — `"right"` by default.
 
-{/* TODO: add examples. Create apps/docs/examples/drawer-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="drawer-demo" /> */}
+<ComponentPreview name="drawer-sides" />
+
+`left` and `right` are full-height and capped at `max-w-sm`; `top` and `bottom`
+are full-width and capped at `80vh`, so a drawer never quite covers the page it
+came from.
+
+## Built on Dialog
+
+`DrawerContent` is a real `<dialog>` opened with `showModal()`, so focus
+trapping, `Escape`, inert background content, and top-layer stacking all come
+from the browser rather than being re-implemented. `DrawerTrigger`,
+`DrawerClose`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, and
+`DrawerFooter` are the same components as their [`Dialog`](/docs/components/dialog)
+counterparts under drawer-flavoured names.
+
+<Callout variant="note" title="Why m-0 matters here">
+  A `<dialog>` defaults to `margin: auto`. Left alone, that fights the panel's
+  own `inset` and `h-dvh` sizing: with top, height, and bottom all set, the
+  browser resolves the over-constrained box by splitting the leftover space into
+  equal margins — shrinking and centring the drawer instead of pinning it flush
+  to the edge.
+</Callout>
+
+## Dismissal
+
+Unlike [`AlertDialog`](/docs/components/alert-dialog), a drawer is meant to be
+easy to leave. All three routes are on by default:
+
+- `closeOnOutsideClick` — clicking the backdrop closes it. Pass `false` to
+  require an explicit choice.
+- `hideCloseButton` — pass `true` to drop the corner button, which is otherwise
+  rendered with `aria-label="Close"`.
+- `Escape` — native `<dialog>` behaviour.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Enter / Space", description: "Opens the drawer when focus is on DrawerTrigger." },
+    { keys: "Escape", description: "Closes the drawer. Native <dialog> behaviour." },
+    { keys: "Tab / Shift+Tab", description: "Cycles focus within the drawer and cannot leave it." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- `DrawerTitle` supplies the accessible name through `aria-labelledby` and is
+  **required** — without it, screen reader users get an unnamed modal.
+- `DrawerDescription`, when present, is wired up with `aria-describedby`.
+- Focus moves into the drawer on open and returns to the trigger on close.
+- The page behind is inert via the platform, so it cannot be reached by keyboard
+  or virtual cursor while the drawer is open.
+- The slide transition is dropped entirely under `prefers-reduced-motion`
+  (WCAG 2.3.3); the drawer simply appears.
+
+<Callout variant="warning" title="A drawer is still a modal">
+  It looks lighter than a dialog, but it traps focus and inerts the page just
+  the same. For something the user should be able to work alongside, reach for
+  [`Popover`](/docs/components/popover) instead.
+</Callout>
 
 ## API reference
 

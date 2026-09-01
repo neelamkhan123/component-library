@@ -98,13 +98,58 @@ export const componentGroupOrder = [
   "AI & Chat",
 ] as const;
 
-/** Component pages with hand-written prose. Everything else renders a stub notice. */
+/**
+ * Component pages with hand-written prose. Everything else renders a stub
+ * notice and a WIP badge in the nav, so a component scaffolded by
+ * `npm run scaffold` is flagged as a draft until it is added here.
+ */
 export const documented = new Set([
+  "aspect-ratio",
+  "card",
+  "resizable",
+  "separator",
+  "sidebar",
   "button",
-  "dialog",
+  "checkbox",
   "combobox",
-  "data-table",
+  "input",
+  "radio-group",
+  "select",
+  "switch",
+  "textarea",
+  "toggle",
+  "breadcrumb",
+  "command",
+  "context-menu",
+  "dropdown-menu",
+  "pagination",
+  "tabs",
+  "alert-dialog",
+  "dialog",
+  "drawer",
+  "popover",
   "toast",
+  "tooltip",
+  "accordion",
+  "avatar",
+  "avatar-group",
+  "badge",
+  "calendar",
+  "carousel",
+  "chart",
+  "data-table",
+  "date-range-picker",
+  "empty-state",
+  "progress",
+  "skeleton",
+  "sparkline",
+  "stat-card",
+  "table",
+  "attachment",
+  "bubble",
+  "composer",
+  "message",
+  "typing-indicator",
 ]);
 
 export const gettingStarted: NavGroup = {

@@ -5,17 +5,9 @@ export const metadata = {
 
 <PageHeader
   title="Sparkline"
-  description="A compact inline trend line."
+  description="A tiny, axis-less trend line sized to sit inline — in a StatCard, a table cell, or beside a heading. Decorative by default."
   componentName="Sparkline"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="sparkline-demo" />
 
@@ -23,32 +15,75 @@ export const metadata = {
 
 ```tsx
 import { Sparkline } from "neelam-ui";
+
+<Sparkline data={visits} className="h-6 w-24 text-emerald-600" />
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+`data` is the series, oldest value first. Fewer than two points renders nothing.
 
-## Examples
+## Sizing and colour
 
-{/* TODO: add examples. Create apps/docs/examples/sparkline-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="sparkline-demo" /> */}
+`width` and `height` set the SVG's **coordinate space**, not its rendered size —
+they only fix the aspect ratio. The actual size comes from CSS, so size it with
+`className`.
+
+Colour comes from `currentColor`, the way `lucide-react`'s icons work, so tint
+it by setting `text-*` on the sparkline or any ancestor rather than through a
+colour prop that would need re-theming for dark mode.
+
+`showEndPoint` draws a filled dot on the most recent value — the "current period
+in the accent" end marker.
+
+## Decorative by default
+
+A sparkline is nearly always a redundant restatement of a number written out
+right beside it, so announcing it too would be noise. With no `label` it renders
+`aria-hidden`.
+
+Pass `label` for the rare standalone case, which switches it to
+`role="img"` with that name:
+
+```tsx
+<Sparkline data={visits} label="Visits trending up over the last twelve months" />
+```
+
+<Callout variant="warning" title="A label is not a substitute for the data">
+  A sentence describing a trend loses every actual value. Where the trend *is*
+  the content rather than a garnish, use [`Chart`](/docs/components/chart) and
+  its `dataTable`, which gives the numbers to everyone.
+</Callout>
+
+## Why it is hand-drawn
+
+A sparkline is a polyline through normalized points plus an optional dot — a few
+lines of arithmetic. Pulling in a charting library for that would add a
+dependency for something [`Chart`](/docs/components/chart) already covers when a
+real chart engine is warranted, and this library keeps its dependency count
+where [`Calendar`](/docs/components/calendar)'s hand-rolled date maths and
+[`DataTable`](/docs/components/data-table)'s lack of a headless-table dependency
+already put it.
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Not focusable in either mode. There is nothing to interact with — for hoverable values, use a Chart." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- `aria-hidden` with no `label`; `role="img"` with an accessible name when one
+  is given. There is no in-between state where it is announced as an unlabelled
+  graphic.
+- `currentColor` means it inherits whatever contrast the surrounding text has
+  already been checked for.
+- Ten to fifteen points reads best. A denser series compresses into noise at
+  this size, which is a legibility problem for everyone.
 
 ## API reference
 
-### Sparkline
-
 <PropsTable name="Sparkline" />
+
+Also accepts every native `<svg>` attribute except `children`, `width`, and
+`height`, which are taken over above.

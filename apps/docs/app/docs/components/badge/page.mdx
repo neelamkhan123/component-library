@@ -5,17 +5,9 @@ export const metadata = {
 
 <PageHeader
   title="Badge"
-  description="A small label for status, counts, or categories."
+  description="A small status pill — a count, a tag, a state label. A plain <span>, because a badge is informational rather than an action."
   componentName="Badge"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="badge-demo" />
 
@@ -23,32 +15,73 @@ export const metadata = {
 
 ```tsx
 import { Badge } from "neelam-ui";
+
+<Badge>Default</Badge>
+<Badge variant="secondary">Secondary</Badge>
+<Badge variant="outline">Outline</Badge>
+<Badge variant="destructive">Destructive</Badge>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+`variant` reuses [`Button`](/docs/components/button)'s vocabulary so the two
+share one visual language — minus `ghost` and `link`, which describe interaction
+states a static badge does not have.
 
-## Examples
+## Not a button
 
-{/* TODO: add examples. Create apps/docs/examples/badge-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="badge-demo" /> */}
+`Badge` renders a `<span>`, the same non-interactive default
+[`Card`](/docs/components/card) and [`Avatar`](/docs/components/avatar) take.
+
+<Callout variant="warning" title="Don't bolt a click handler onto a badge">
+  A `<span onClick>` is invisible to the keyboard and announces as nothing. If
+  the badge is a filter chip the user can remove, render a real
+  [`Button`](/docs/components/button) — or use
+  [`Attachment`](/docs/components/attachment)'s `onRemove` pattern, which is
+  the removable-chip design this library already has.
+</Callout>
+
+There is no built-in dismiss button here, deliberately: it was not duplicated
+from `Attachment` without a concrete need driving its design.
+
+## Composition
+
+`badgeVariants` is exported for the cases where the element has to be something
+else — a link that looks like a badge:
+
+```tsx
+import { badgeVariants } from "neelam-ui";
+
+<a href="/releases/v2" className={badgeVariants({ variant: "outline" })}>
+  v2.0
+</a>
+```
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Not focusable. A badge is static text — if yours needs to be reachable, it should be a button or a link." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- A plain `<span>` with no role. It is read as part of the surrounding text,
+  which is what a status label should be.
+- Colour is never the only signal: the badge's **text** carries the meaning, so
+  "Failed" reads as failed without depending on the red (WCAG 1.4.1). Never ship
+  a badge whose only content is a colour.
+- A badge used as a count next to a control needs to be part of that control's
+  accessible name, or announced separately — a bare "3" beside "Notifications"
+  is not automatically associated with it.
+
+<Callout variant="tip" title="Counts belong in the label">
+  Rather than a loose badge, fold the number into the name:
+  `aria-label="Notifications, 3 unread"`. The badge then becomes the visual
+  presentation of something already announced correctly.
+</Callout>
 
 ## API reference
 
-### Badge
-
 <PropsTable name="Badge" />
+
+Also accepts every native `<span>` attribute.

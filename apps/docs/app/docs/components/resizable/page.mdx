@@ -5,58 +5,95 @@ export const metadata = {
 
 <PageHeader
   title="Resizable"
-  description="Panels a user can resize by dragging or with the keyboard."
+  description="A row or column of panels resized by dragging the handles between them — or, just as fully, with the arrow keys."
   componentName="Resizable"
 />
 
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
-
-<ComponentPreview name="resizable-demo" />
+<ComponentPreview name="resizable-demo" align="start" />
 
 ## Usage
 
 ```tsx
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "neelam-ui";
+
+<ResizablePanelGroup className="h-64">
+  <ResizablePanel defaultSize={30} minSize={15}>Sidebar</ResizablePanel>
+  <ResizableHandle withHandle />
+  <ResizablePanel>Content</ResizablePanel>
+</ResizablePanelGroup>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+Compose them alternating: panel, handle, panel, handle, panel. A handle resizes
+only its immediate previous and next sibling.
 
-## Examples
+## Sizing
 
-{/* TODO: add examples. Create apps/docs/examples/resizable-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="resizable-demo" /> */}
+`defaultSize`, `minSize`, and `maxSize` are percentages of the group's main
+axis. Omit `defaultSize` and a panel fills whatever is left over, split evenly
+with any other unsized panels.
+
+<Callout variant="warning" title="A vertical group needs an explicit height">
+  Panels resolve their percentage sizes against the group's main-axis size, and
+  a flex container with no definite height cannot give them one. Set `h-80`,
+  `h-screen`, or similar on a `direction="vertical"` group. Width is not the
+  same problem — the group defaults to `w-full`, which is almost always what is
+  wanted.
+</Callout>
+
+## Adjacency, not registration
+
+A handle reads `minSize` and `maxSize` straight back off its neighbours' own
+`data-*` attributes rather than through context. A handle only ever needs to
+know about its two immediate siblings, never the whole group — the same
+approach [`Carousel`](/docs/components/carousel) takes reading its slides from
+the DOM instead of an id-registration system.
+
+## Resizing by keyboard
+
+This is not a mouse-only control. `ResizableHandle` is a WAI-ARIA **window
+splitter**: focusable, with `role="separator"`, and fully operable from the
+keyboard. Dragging is one input method, not the only one.
+
+<Callout variant="tip" title="Try it above">
+  Tab to the divider in the demo and press the arrow keys. If a resizable
+  layout in your own app cannot do this, it is not finished.
+</Callout>
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Moves focus to the handle. Each handle is its own tab stop." },
+    { keys: "← / →", description: "Shrinks or grows the previous panel, in a horizontal group." },
+    { keys: "↑ / ↓", description: "The same, in a vertical group." },
+    { keys: "Home", description: "Collapses the previous panel to its minimum." },
+    { keys: "End", description: "Expands the previous panel to its maximum." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- The handle is `role="separator"` with `aria-orientation`, the WAI-ARIA window
+  splitter pattern.
+- `aria-valuenow` is required the moment a `separator` becomes focusable, and is
+  kept current as the panel resizes — along with `aria-valuemin` and
+  `aria-valuemax`, which reflect the neighbours' real bounds rather than a fixed
+  0–100.
+- The handle is a genuine tab stop (`tabIndex={0}`), which is what makes the
+  keyboard path work at all.
+- The grip icon (`withHandle`) is decorative; the handle's own role and values
+  carry the meaning.
 
 ## API reference
 
-### ResizableHandle
+### ResizablePanelGroup
 
-<PropsTable name="ResizableHandle" />
+<PropsTable name="ResizablePanelGroup" />
 
 ### ResizablePanel
 
 <PropsTable name="ResizablePanel" />
 
-### ResizablePanelGroup
+### ResizableHandle
 
-<PropsTable name="ResizablePanelGroup" />
+<PropsTable name="ResizableHandle" />

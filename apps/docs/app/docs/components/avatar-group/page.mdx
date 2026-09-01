@@ -5,50 +5,86 @@ export const metadata = {
 
 <PageHeader
   title="Avatar Group"
-  description="Overlapping avatars with an overflow count."
+  description="A stack of overlapping Avatars — the “who is on this” cluster — with a +N counter for everyone who did not fit."
   componentName="AvatarGroup"
 />
-
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
 
 <ComponentPreview name="avatar-group-demo" />
 
 ## Usage
 
 ```tsx
-import { AvatarGroup } from "neelam-ui";
+import { Avatar, AvatarFallback, AvatarGroup } from "neelam-ui";
+
+<AvatarGroup label="Project collaborators" max={4} total={12}>
+  <Avatar><AvatarFallback>AL</AvatarFallback></Avatar>
+  <Avatar><AvatarFallback>GH</AvatarFallback></Avatar>
+</AvatarGroup>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+## label is required
 
-## Examples
+A bare stack of images has no accessible meaning on its own, so `label` is a
+required prop — it names the set: `"Project collaborators"`, `"Attendees"`.
 
-{/* TODO: add examples. Create apps/docs/examples/avatar-group-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="avatar-group-demo" /> */}
+## max and total
+
+`max` caps how many avatars render; the rest collapse into a `+N` counter.
+
+`total` is for when `children` is already only the first few of a much larger
+set — a paginated API returning 5 of 12. It drives the counter in place of the
+child count:
+
+```tsx
+<AvatarGroup label="Attendees" max={4} total={12}>
+  {/* 5 children, but the counter reads +8 */}
+</AvatarGroup>
+```
+
+Omit both and every child renders with no counter.
+
+## Sizing is the group's job
+
+`size` is applied to every `Avatar` child, overriding whatever each set itself.
+Callers therefore cannot accidentally mix sizes within one stack — the group
+clones its children to enforce it.
+
+Because `Avatar`'s sizes are fixed and its fallback fills the same box while
+loading, the group's width is settled at first paint and does not reflow as
+images arrive. Avoiding that layout shift is much of why this component exists.
+
+<Callout variant="note" title="The ring is not decoration">
+  A ring in the surface colour separates adjacent circles, following the same
+  “2px surface gap between touching fills” rule
+  [`Chart`](/docs/components/chart) uses — without it the stack reads as one
+  blob rather than distinct people.
+</Callout>
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Not focusable. The group is a static cluster — make individual avatars links yourself if they should navigate." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- `role="group"` with the required `label`, rather than a list. The stack is one
+  compound unit, and per-avatar list semantics would add announcement noise
+  without giving the user navigation they want here.
+- The overflow counter is **not** `aria-hidden`. It renders an `sr-only`
+  "and 4 more" alongside the visible `+4`, because that count is information a
+  screen reader user needs as much as a sighted one, and it is stated nowhere
+  else in the group.
+- Each child `Avatar` still owns its own `alt` and fallback text.
+- The layout is stable from first paint, so nothing shifts under a magnified
+  viewport as images load.
 
 ## API reference
 
-### AvatarGroup
-
 <PropsTable name="AvatarGroup" />
+
+Also accepts every native `<div>` attribute. Children must be
+[`Avatar`](/docs/components/avatar) elements — the group clones them to apply
+`size` and the overlap.

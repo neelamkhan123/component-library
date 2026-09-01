@@ -5,50 +5,101 @@ export const metadata = {
 
 <PageHeader
   title="Stat Card"
-  description="A single headline metric with supporting context."
+  description="The “big number, and which way it's going” tile a dashboard overview is built from — label, value, an optional signed delta, and an optional sparkline."
   componentName="StatCard"
 />
 
-<Callout variant="note" title="Documentation in progress">
-  The API reference below is generated from the library's own source, so it is
-  accurate and current. The prose, examples, and keyboard table on this page are
-  still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
-  in the meantime.
-</Callout>
-
-<ComponentPreview name="stat-card-demo" />
+<ComponentPreview name="stat-card-demo" align="start" />
 
 ## Usage
 
 ```tsx
 import { StatCard } from "neelam-ui";
+
+<StatCard
+  label="Active users"
+  value="12.9K"
+  delta={0.124}
+  deltaLabel="vs. previous 30 days"
+  trend={[180, 190, 210, 240, 290, 340]}
+/>
 ```
 
-{/* TODO: replace with a real usage snippet. */}
+`value` is pre-formatted by you — `12.9K`, `$4.2M`, `3.4 hrs`. `delta` is a
+signed **ratio**, so `0.124` renders as `+12.4%`; override the rendering with
+`formatDelta`.
 
-## Examples
+It wraps [`Card`](/docs/components/card) rather than restyling a bare `div`, so
+a KPI row and the cards around it share one surface, border, and shadow.
 
-{/* TODO: add examples. Create apps/docs/examples/stat-card-demo.tsx,
-    run `npm run gen`, then reference it with:
-    <ComponentPreview name="stat-card-demo" /> */}
+## Up is not always good
+
+`deltaDirection` decides the delta's colour, because a rise is not universally
+good news:
+
+- `"up-is-good"` (the default) — active users, revenue.
+- `"down-is-good"` — response time, error rate, churn.
+- `"neutral"` — no judgement, rendered muted.
+
+<Callout variant="danger" title="Hard-coding green-for-up colours half a dashboard wrong">
+  A 6% rise in average response time is bad news shown in green if you leave the
+  default in place. Set `deltaDirection` on every metric where falling is the
+  win — the demo above does exactly this for response time.
+</Callout>
+
+## The delta never relies on colour alone
+
+An arrow icon carries the direction visually, and an `sr-only`
+"increased"/"decreased" carries it to assistive tech. The green or red is
+**reinforcement**, not the signal (WCAG 1.4.1).
+
+## Trend
+
+`trend` renders a [`Sparkline`](/docs/components/sparkline) under the value. Ten
+to fifteen points reads best; the sparkline is decorative, since the number it
+trends is already stated right above it.
+
+## Typography
+
+The value uses the font's default proportional figures, deliberately **not**
+`tabular-nums`: tabular figures give every digit a zero's width, which reads
+loose at display sizes. Tabular figures belong in
+[`Table`](/docs/components/table)'s columns, where digits must line up between
+rows.
+
+## Loading
+
+`StatCard` is presentation only — no fetching, polling, or loading state. Show
+one before its data arrives by composing a
+[`Skeleton`](/docs/components/skeleton) into the `value` slot:
+
+```tsx
+<StatCard label="Active users" value={<Skeleton className="h-8 w-20" />} />
+```
 
 ## Keyboard
 
-{/* TODO: fill in this component's keyboard interactions. */}
-
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves focus to the component." },
+    { keys: "Tab", description: "Not focusable. A stat card is a readout — wrap it in a link yourself if it should drill through." },
   ]}
 />
 
 ## Accessibility
 
-{/* TODO: describe the ARIA pattern, roles, and focus behaviour. */}
+- The delta's direction is available three ways: the arrow's shape, the
+  `sr-only` "increased"/"decreased" text, and the sign in the formatted
+  percentage. Colour is the fourth, not the first.
+- `icon` is decorative and hidden from assistive tech — it always duplicates the
+  label beside it.
+- The sparkline is `aria-hidden`, since the headline value states the same thing
+  in words.
+- `deltaLabel` names the comparison period. A delta without one is a number the
+  reader cannot interpret — always say what it is measured against.
 
 ## API reference
 
-### StatCard
-
 <PropsTable name="StatCard" />
+
+Also accepts every native `<div>` attribute except `title`, which is replaced by
+`label`.
