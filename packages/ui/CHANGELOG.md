@@ -1,5 +1,11 @@
 # @neelamkhan21/ui
 
+## 1.2.2
+
+### Patch Changes
+
+- 6c536c3: Packaging metadata only — no functional change to any component. `repository.url` drops its `git+` prefix so npm's OIDC trusted-publishing match is unambiguous, `publishConfig.access` is declared explicitly as `public`, and a `prepublishOnly` script now rebuilds `dist` before any publish, so a stale build can no longer be shipped.
+
 ## 1.2.1
 
 ### Patch Changes
