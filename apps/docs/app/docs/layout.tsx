@@ -2,7 +2,11 @@ import { DocsSidebar } from "@/components/docs-sidebar";
 import { TableOfContents } from "@/components/toc";
 import { DocsPager } from "@/components/docs-pager";
 
-export default function DocsLayout({ children }: { children: React.ReactNode }) {
+export default function DocsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <div className="mx-auto flex max-w-[100rem] px-4 sm:px-6">
       <DocsSidebar />

@@ -61,7 +61,7 @@ export default function HomePage() {
             className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60rem_35rem_at_50%_-10%,var(--color-accent-100),transparent)] dark:bg-[radial-gradient(60rem_35rem_at_50%_-10%,var(--color-accent-950),transparent)]"
           />
           <div className="mx-auto max-w-[100rem] px-4 py-16 sm:px-6 sm:py-32">
-            <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+            <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16 ">
               <div>
                 <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                   Accessible React components,
