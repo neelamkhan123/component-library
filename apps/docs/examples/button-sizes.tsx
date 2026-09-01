@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { Button } from "@neelamkhan21/ui";
+import { Button } from "neelam-ui";
 
 export default function ButtonSizes() {
   return (

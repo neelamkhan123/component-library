@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, toast, Toaster } from "@neelamkhan21/ui";
+import { Button, toast, Toaster } from "neelam-ui";
 
 export default function ToastVariants() {
   return (

@@ -1,7 +1,7 @@
 "use client";
 
 import { Download, Trash2 } from "lucide-react";
-import { Button } from "@neelamkhan21/ui";
+import { Button } from "neelam-ui";
 
 export default function ButtonIcon() {
   return (

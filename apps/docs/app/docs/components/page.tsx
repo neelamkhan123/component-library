@@ -5,7 +5,7 @@ import { components } from "@/lib/nav";
 
 export const metadata: Metadata = {
   title: "Components",
-  description: "Every component in @neelamkhan21/ui, grouped by what it is for.",
+  description: "Every component in neelam-ui, grouped by what it is for.",
 };
 
 export default function ComponentsIndexPage() {

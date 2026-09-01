@@ -8,7 +8,7 @@ const prefixes: Record<PackageManager, string> = {
   bun: "bun add",
 };
 
-export function InstallCommand({ packages = "@neelamkhan21/ui" }: { packages?: string }) {
+export function InstallCommand({ packages = "neelam-ui" }: { packages?: string }) {
   return (
     <InstallTabs
       blocks={

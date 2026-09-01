@@ -10,7 +10,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@neelamkhan21/ui";
+} from "neelam-ui";
 import { sidebarNav } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 

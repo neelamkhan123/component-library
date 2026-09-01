@@ -1,5 +1,5 @@
 {
-  "name": "@neelamkhan21/ui",
+  "name": "neelam-ui",
   "version": "1.2.2",
   "description": "An accessible React component library",
   "keywords": [
@@ -31,7 +31,7 @@
     "LICENSE",
     "THIRD-PARTY-NOTICES.md"
   ],
-  "homepage": "https://df22wszov2zdy.cloudfront.net",
+  "homepage": "https://df22wszov2zdy.cloudfront.net/preview",
   "repository": {
     "type": "git",
     "url": "https://github.com/neelamkhan123/component-library.git",

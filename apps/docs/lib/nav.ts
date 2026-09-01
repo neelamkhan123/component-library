@@ -12,7 +12,7 @@ export type NavGroup = {
 };
 
 export type ComponentMeta = {
-  /** Exported name in `@neelamkhan21/ui`, e.g. `AlertDialog`. */
+  /** Exported name in `neelam-ui`, e.g. `AlertDialog`. */
   name: string;
   /** URL segment under /docs/components. */
   slug: string;

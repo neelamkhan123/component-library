@@ -27,7 +27,7 @@ import {
   TabsTrigger,
   toast,
   Toaster,
-} from "@neelamkhan21/ui";
+} from "neelam-ui";
 
 const regions = ["Europe", "North America", "South America", "Asia Pacific"];
 

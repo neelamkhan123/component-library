@@ -1,6 +1,6 @@
 "use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@neelamkhan21/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "neelam-ui";
 import type { ReactNode } from "react";
 
 const managers = ["npm", "pnpm", "yarn", "bun"] as const;

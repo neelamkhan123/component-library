@@ -69,7 +69,7 @@ for (const component of entries) {
 ## Usage
 
 \`\`\`tsx
-import { ${related.length ? related.join(", ") : component.name} } from "@neelamkhan21/ui";
+import { ${related.length ? related.join(", ") : component.name} } from "neelam-ui";
 \`\`\`
 
 {/* TODO: replace with a real usage snippet. */}
