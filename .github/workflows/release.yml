@@ -1,0 +1,107 @@
+name: Release
+
+# NOTE: this filename is registered with npm as a trusted publisher for
+# @neelamkhan21/ui. Renaming this file breaks publishing until the trusted
+# publisher config on npmjs.com is updated to match.
+
+on:
+  push:
+    branches: [main]
+
+# Two pushes to main racing each other could otherwise both try to publish the
+# same version — the second would fail, but only after npm had already accepted
+# the first, which is unrecoverable (a published version can never be reused).
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: write # commit the version bump, push the release tag
+  pull-requests: write # open and update the "Version packages" PR
+  id-token: write # exchanged for a short-lived npm token via OIDC
+
+jobs:
+  release:
+    runs-on: ubuntu-latest # trusted publishing does not support self-hosted runners
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # changesets reads history back to the last release to work out what
+          # changed; a shallow clone makes it version nothing.
+          fetch-depth: 0
+
+      # Node 24 for npm >= 11.5.1, which is the floor for OIDC trusted
+      # publishing. Deliberately no `registry-url`: setting it writes an
+      # .npmrc containing _authToken=${NODE_AUTH_TOKEN}, and npm prefers that
+      # (empty) placeholder over the OIDC exchange, which surfaces as a
+      # misleading 404 on publish. See npm/cli#8730.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - run: npm ci
+
+      # The tarball is `files: ["dist", ...]`, so dist must exist and be
+      # current. packages/ui also has a prepublishOnly that rebuilds it.
+      - run: npm run build -w @neelamkhan21/ui
+
+      # Only opens or updates the "Version packages" PR — no `publish:` input.
+      # Letting this action run the publish command means npm publish is
+      # spawned through a wrapper chain that does not forward
+      # ACTIONS_ID_TOKEN_REQUEST_TOKEN/URL, so npm sees no OIDC credentials
+      # and fails. See npm/cli#8976.
+      - name: Open or update the version PR
+        uses: changesets/action@v1
+        with:
+          version: npm run version-packages
+          commit: "Version packages"
+          title: "Version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Publishing is guarded on the version not already being on the registry
+      # rather than on "were there changesets", because every ordinary push to
+      # main also arrives here with nothing pending. This makes the job
+      # idempotent: re-running it after a partial failure is safe.
+      - name: Decide whether there is a new version to publish
+        id: check
+        run: |
+          version=$(node -p "require('./packages/ui/package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if npm view "@neelamkhan21/ui@$version" version >/dev/null 2>&1; then
+            echo "Version $version is already published; nothing to do."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Version $version is not on the registry; publishing."
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # A plain `npm publish`, run directly in the package directory, is the
+      # shape npm documents for OIDC — the token exchange happens in this
+      # process rather than in one spawned two layers down.
+      - name: Publish to npm
+        if: steps.check.outputs.publish == 'true'
+        working-directory: packages/ui
+        run: npm publish
+        env:
+          # Signs the tarball with an attestation tying it to this repo and
+          # commit. Requires a public repo, which this is.
+          NPM_CONFIG_PROVENANCE: "true"
+
+      # Tagged only after npm has accepted the publish, so a tag never points
+      # at a release that does not exist. `v1.2.1` matches the convention the
+      # first two releases already used.
+      - name: Tag the release and publish release notes
+        if: steps.check.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.check.outputs.version }}
+        run: |
+          awk -v v="## $VERSION" '
+            $0 == v { found = 1; next }
+            /^## / && found { exit }
+            found { print }
+          ' packages/ui/CHANGELOG.md > release-notes.md
+
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
+          gh release create "v$VERSION" --title "v$VERSION" --notes-file release-notes.md

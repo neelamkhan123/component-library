@@ -34,7 +34,7 @@
   "homepage": "https://df22wszov2zdy.cloudfront.net",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/neelamkhan123/component-library.git",
+    "url": "https://github.com/neelamkhan123/component-library.git",
     "directory": "packages/ui"
   },
   "author": "Neelam Khan",
@@ -51,6 +51,7 @@
   },
   "scripts": {
     "build": "tsup",
+    "prepublishOnly": "npm run build",
     "dev": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "test": "vitest run",

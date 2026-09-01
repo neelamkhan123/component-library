@@ -24,6 +24,13 @@ jobs:
           npx http-server packages/ui/storybook-static --port 6006 --silent &
           npx wait-on tcp:6006
           npm run test-storybook
+      # Deployment promotes this exact artifact rather than rebuilding, so
+      # what reaches production is the build axe-core just passed over.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: storybook-static
+          path: packages/ui/storybook-static
+          retention-days: 7
 
   docs:
     runs-on: ubuntu-latest
@@ -50,19 +57,18 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # No checkout, no npm install, no rebuild — this job only moves bytes
+      # that the test job already produced and verified.
+      - uses: actions/download-artifact@v4
         with:
-          node-version: 20
-          cache: "npm"
-      - run: npm ci
-      - run: npm run build-storybook
+          name: storybook-static
+          path: storybook-static
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      - run: aws s3 sync packages/ui/storybook-static/ s3://${{ secrets.AWS_S3_BUCKET }} --delete
+      - run: aws s3 sync storybook-static/ s3://${{ secrets.AWS_S3_BUCKET }} --delete
       - run: aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CLOUDFRONT_DIST_ID }} --paths "/*"
 
   # Opt-in: runs only once AWS_S3_BUCKET_DOCS is set, so it cannot overwrite
@@ -73,13 +79,10 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/download-artifact@v4
         with:
-          node-version: 20
-          cache: "npm"
-      - run: npm ci
-      - run: npm run build:docs
+          name: docs-static
+          path: docs-static
       - name: Check the docs bucket is configured
         id: check
         run: echo "enabled=${{ secrets.AWS_S3_BUCKET_DOCS != '' }}" >> "$GITHUB_OUTPUT"
@@ -91,7 +94,7 @@ jobs:
           aws-region: us-east-1
       - name: Sync to S3
         if: steps.check.outputs.enabled == 'true'
-        run: aws s3 sync apps/docs/out/ s3://${{ secrets.AWS_S3_BUCKET_DOCS }} --delete
+        run: aws s3 sync docs-static/ s3://${{ secrets.AWS_S3_BUCKET_DOCS }} --delete
       - name: Invalidate CloudFront
         if: steps.check.outputs.enabled == 'true'
         run: aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CLOUDFRONT_DIST_ID_DOCS }} --paths "/*"
