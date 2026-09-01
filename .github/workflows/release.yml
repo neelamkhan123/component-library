@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+# Two pushes to main racing each other could otherwise both try to publish the
+# same version — the second would fail, but only after npm had already accepted
+# the first, which is unrecoverable (a published version can never be reused).
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: write # commit the version bump, push the release tag
+  pull-requests: write # open and update the "Version Packages" PR
+  id-token: write # mint the OIDC token npm provenance is signed with
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # changesets reads the history back to the last release to work out
+          # which packages changed; a shallow clone makes it version nothing.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          # Writes the .npmrc that NODE_AUTH_TOKEN is read against. Without it
+          # the publish fails as anonymous even with the secret set.
+          registry-url: "https://registry.npmjs.org"
+
+      - run: npm ci
+
+      # The published tarball is `files: ["dist", ...]`, so dist has to exist
+      # and be current before publish. packages/ui also has a prepublishOnly
+      # that rebuilds it — this keeps the version PR's diff honest too.
+      - run: npm run build -w @neelamkhan21/ui
+
+      - name: Create the version PR, or publish an already-merged one
+        uses: changesets/action@v1
+        with:
+          # With changeset files pending, this opens/updates the version PR.
+          version: npm run version-packages
+          # With none pending — i.e. the version PR was just merged — this
+          # publishes, tags the release, and creates the GitHub release.
+          publish: npm run release
+          commit: "Version packages"
+          title: "Version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # Signs the tarball with an attestation tying it to this repo and
+          # commit, shown as a "Provenance" badge on npm.
+          NPM_CONFIG_PROVENANCE: "true"
