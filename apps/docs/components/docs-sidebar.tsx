@@ -9,7 +9,7 @@ export function DocsSidebar() {
   const pathname = normalizePath(usePathname());
 
   return (
-    <aside className="sticky top-header hidden h-[calc(100dvh-var(--spacing-header))] w-sidebar shrink-0 overflow-y-auto border-r border-slate-200 py-8 pr-4 lg:block dark:border-slate-800">
+    <aside className="sticky top-header hidden h-[calc(100dvh-var(--spacing-header))] w-56 shrink-0 overflow-y-auto border-r border-slate-200 py-8 pr-4 lg:block dark:border-slate-800">
       <nav aria-label="Documentation">
         {sidebarNav.map((group) => (
           <div key={group.title} className="mb-6">
