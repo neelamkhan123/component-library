@@ -5,6 +5,11 @@
 Monorepo for **[neelam-ui](./packages/ui)** — an accessible React
 component library — and its documentation site.
 
+> [!NOTE]
+> The package was renamed from `@neelamkhan21/ui` to `neelam-ui`. The old
+> name is deprecated but remains on the registry, so existing installs are
+> unaffected.
+
 ```
 packages/ui     the published npm package (46 components) + Storybook
 apps/docs       the documentation site (Next.js App Router + MDX)

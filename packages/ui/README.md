@@ -8,6 +8,24 @@ navigation, focus management, and ARIA correctness.
 📖 **[Documentation](https://df22wszov2zdy.cloudfront.net/preview)** · 🧪 **[Storybook](https://df22wszov2zdy.cloudfront.net)**  
 📦 **[npm package](https://www.npmjs.com/package/neelam-ui)**
 
+> ⚠️ **This package was renamed.** It was previously published as
+> `@neelamkhan21/ui`. If you are upgrading from that package, change your
+> dependency and your imports:
+>
+> ```diff
+> - import { Button } from "@neelamkhan21/ui";
+> + import { Button } from "neelam-ui";
+> ```
+>
+> ```diff
+> - @source "../node_modules/@neelamkhan21/ui/dist";
+> + @source "../node_modules/neelam-ui/dist";
+> ```
+>
+> Nothing else changed — the component API is identical and versions carry
+> straight over. `@neelamkhan21/ui` is deprecated but stays on the registry,
+> so existing installs keep working and there is no deadline to move.
+
 ## Installation
 
 ```bash
