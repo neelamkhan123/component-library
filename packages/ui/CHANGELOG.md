@@ -1,5 +1,15 @@
 # neelam-ui
 
+## 1.3.1
+
+### Patch Changes
+
+- a7443f0: Link the documentation site's new Blocks gallery from the README — whole
+  screens (a dashboard, settings, sign-in, pricing, a chat panel) assembled from
+  these components, each with its source. No package code changed: npm only
+  refreshes a package's README when a new version is published, so this needs a
+  release to become visible on the package page.
+
 ## 1.3.0
 
 ### Minor Changes
