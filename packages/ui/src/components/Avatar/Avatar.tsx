@@ -200,6 +200,9 @@ export const AvatarFallback = forwardRef<HTMLSpanElement, AvatarFallbackProps>(
 
     useEffect(() => {
       if (delayMs === undefined) return;
+      // Restarts the delay when `delayMs` changes. The timer this guards is
+      // itself an external system, so the reset can't be derived during render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDelayElapsed(false);
       const timer = setTimeout(() => setDelayElapsed(true), delayMs);
       return () => clearTimeout(timer);
