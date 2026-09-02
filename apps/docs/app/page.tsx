@@ -179,7 +179,10 @@ export default function HomePage() {
 
             {FeaturedBlock && featuredBlock ? (
               <figure className="mt-10">
-                <BlockFrame height="34rem">
+                <BlockFrame
+                  height={featuredBlock.height}
+                  fills={featuredBlock.fills}
+                >
                   <FeaturedBlock />
                 </BlockFrame>
                 <figcaption className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400">

@@ -17,6 +17,13 @@ export type BlockMeta = {
    * the full-width page renders them at their natural height instead.
    */
   height: string;
+  /**
+   * True for app shells that already scroll a region of their own inside
+   * fixed chrome. The frame hands them its exact height and stops scrolling,
+   * so the sidebar and header stay put while only the content moves — which
+   * means `height` has to clear the block's own `min-h`.
+   */
+  fills?: boolean;
 };
 
 const b = (
@@ -26,7 +33,8 @@ const b = (
   category: string,
   uses: string[],
   height: string,
-): BlockMeta => ({ slug, title, description, category, uses, height });
+  fills = false,
+): BlockMeta => ({ slug, title, description, category, uses, height, fills });
 
 export const blocks: BlockMeta[] = [
   // Application
@@ -37,6 +45,7 @@ export const blocks: BlockMeta[] = [
     "Application",
     ["Sidebar", "StatCard", "Chart", "DataTable", "Badge", "Avatar", "DropdownMenu", "Button"],
     "46rem",
+    true,
   ),
   b(
     "settings-01",
@@ -99,6 +108,7 @@ export const blocks: BlockMeta[] = [
     "AI & Chat",
     ["Message", "Bubble", "Composer", "TypingIndicator", "Attachment", "Avatar", "Badge", "Button"],
     "44rem",
+    true,
   ),
 ];
 

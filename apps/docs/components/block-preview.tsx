@@ -79,7 +79,7 @@ export function BlockPreview({
 
       <PreviewTabs
         preview={
-          <BlockFrame height={block.height}>
+          <BlockFrame height={block.height} fills={block.fills}>
             <Component />
           </BlockFrame>
         }
