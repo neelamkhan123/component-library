@@ -272,6 +272,8 @@ export const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
     // `createPortal` needs `document`, unavailable during server rendering —
     // deferred to an effect the same way `Toaster` does, for the same reason.
     const [mounted, setMounted] = useState(false);
+    // Same deliberate mount gate as `Toaster`, for the same hydration reason.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => setMounted(true), []);
 
     // Deferred a frame past the triggering event before calling

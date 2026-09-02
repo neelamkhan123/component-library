@@ -244,6 +244,9 @@ export function Toaster({ position = "bottom-right" }: ToasterProps) {
   // this library needs this, since none of them touch `document` during
   // render itself, only inside effects.
   const [mounted, setMounted] = useState(false);
+  // The one cascading render here is the point: the first client render has
+  // to match the server's empty output for hydration to succeed.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 

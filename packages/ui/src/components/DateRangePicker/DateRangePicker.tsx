@@ -160,18 +160,18 @@ export const DateRangePicker = forwardRef<HTMLButtonElement, DateRangePickerProp
     // happened to be open rather than jumping to the new range.
     const [startMonth, setStartMonth] = useState(() => range?.from ?? new Date());
     const [endMonth, setEndMonth] = useState(() => range?.to ?? new Date());
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the
-    // timestamp, not the Date object: a preset's getRange() (and a caller
-    // re-rendering with an equivalent but new `value` object) produces a
-    // fresh Date instance every time even when the day itself hasn't
-    // changed, and re-syncing on every such render would fight the user's
-    // own in-progress month navigation for no reason.
+    // Keyed on the timestamp, not the Date object: a preset's getRange() (and
+    // a caller re-rendering with an equivalent but new `value` object)
+    // produces a fresh Date instance every time even when the day itself
+    // hasn't changed, and re-syncing on every such render would fight the
+    // user's own in-progress month navigation for no reason.
     useEffect(() => {
       if (range?.from) setStartMonth(range.from);
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
     }, [range?.from?.getTime()]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
     useEffect(() => {
       if (range?.to) setEndMonth(range.to);
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
     }, [range?.to?.getTime()]);
 
     // Which preset row is checked — derived from the range itself rather than

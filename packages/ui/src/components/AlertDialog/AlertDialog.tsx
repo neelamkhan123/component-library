@@ -5,7 +5,7 @@ import {
   type ReactEventHandler,
   type Ref,
 } from "react";
-import { cva, type VariantProps } from "class-variance-authority";
+import { type VariantProps } from "class-variance-authority";
 import {
   Dialog,
   DialogDescription,
