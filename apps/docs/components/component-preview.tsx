@@ -8,10 +8,13 @@ export function ComponentPreview({
   className,
   /** Demos that need room (tables, charts) read better left-aligned and full width. */
   align = "center",
+  /** Off for a demo that is its own framed surface — an app shell, a full-bleed layout. */
+  padded = true,
 }: {
   name: string;
   className?: string;
   align?: "center" | "start";
+  padded?: boolean;
 }) {
   const example = getExample(name);
 
@@ -32,7 +35,11 @@ export function ComponentPreview({
       preview={
         <div
           className={cn(
-            "flex min-h-[22rem] w-full rounded-xl border border-slate-200 bg-white p-8 dark:border-slate-800 dark:bg-slate-950",
+            "flex min-h-[22rem] w-full rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950",
+            // Written as one or the other rather than an override: `cn` joins
+            // classes without resolving conflicts, so `p-8` and `p-0` both
+            // landing on the element would leave the winner up to CSS order.
+            padded ? "p-8" : "p-0",
             align === "center"
               ? "items-center justify-center"
               : "items-start justify-start overflow-x-auto",
