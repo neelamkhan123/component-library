@@ -442,7 +442,7 @@ export const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
         el.style.minWidth = `${position.width}px`;
       });
       return () => cancelAnimationFrame(frame);
-    }, [open, position, contentRef]);
+    }, [open, position, contentRef, inputRef]);
 
     // Recomputed after every render filterText could have changed — each
     // ComboboxItem decides for itself (synchronously, at render time)
