@@ -1,5 +1,6 @@
 import { forwardRef, type HTMLAttributes } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 export const badgeVariants = cva(
   "inline-flex w-fit shrink-0 items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium",
@@ -35,6 +36,6 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement>, VariantProp
  * features nothing in this library yet asks for.
  */
 export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(({ variant, className, ...props }, ref) => (
-  <span ref={ref} className={badgeVariants({ variant, className })} {...props} />
+  <span ref={ref} className={mergeClassNames(badgeVariants({ variant }), className)} {...props} />
 ));
 Badge.displayName = "Badge";

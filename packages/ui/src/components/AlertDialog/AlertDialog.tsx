@@ -138,7 +138,7 @@ export const AlertDialogAction = forwardRef<HTMLButtonElement, AlertDialogAction
           if (event.defaultPrevented) return;
           onOpenChange(false);
         }}
-        className={buttonVariants({ variant, size, className })}
+        className={mergeClassNames(buttonVariants({ variant, size }), className)}
         {...props}
       />
     );
@@ -163,7 +163,7 @@ export const AlertDialogCancel = forwardRef<HTMLButtonElement, AlertDialogCancel
           if (event.defaultPrevented) return;
           onOpenChange(false);
         }}
-        className={buttonVariants({ variant, size, className })}
+        className={mergeClassNames(buttonVariants({ variant, size }), className)}
         {...props}
       />
     );
