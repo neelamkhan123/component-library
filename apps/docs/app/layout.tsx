@@ -29,6 +29,9 @@ export const metadata: Metadata = {
     "typescript",
   ],
   authors: [{ name: siteConfig.author }],
+  icons: {
+    icon: "/nui-favicon.png",
+  },
   openGraph: {
     type: "website",
     url: siteConfig.url,
