@@ -1,5 +1,6 @@
 import { forwardRef, useState, type ButtonHTMLAttributes } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 const toggleVariants = cva(
   // Pressed state is driven by `aria-pressed` directly (a Tailwind
@@ -84,7 +85,7 @@ export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
           if (!isControlled) setUncontrolledPressed(next);
           onPressedChange?.(next);
         }}
-        className={toggleVariants({ variant, size, className })}
+        className={mergeClassNames(toggleVariants({ variant, size }), className)}
         {...props}
       />
     );
