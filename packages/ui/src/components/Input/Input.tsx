@@ -1,5 +1,6 @@
 import { forwardRef, type InputHTMLAttributes } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 const inputVariants = cva(
   [
@@ -52,7 +53,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     <input
       ref={ref}
       type={type}
-      className={inputVariants({ size, className })}
+      className={mergeClassNames(inputVariants({ size }), className)}
       {...props}
     />
   ),
