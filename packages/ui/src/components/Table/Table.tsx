@@ -4,10 +4,7 @@ import {
   type TdHTMLAttributes,
   type ThHTMLAttributes,
 } from "react";
-
-function mergeClassNames(...classNames: Array<string | undefined>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 export type TableProps = HTMLAttributes<HTMLTableElement>;
 

@@ -6,10 +6,7 @@ import {
   type Ref,
 } from "react";
 import { Check, Minus } from "lucide-react";
-
-function mergeClassNames(...classNames: Array<string | undefined>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 function mergeRefs<T>(...refs: Array<Ref<T> | undefined>) {
   return (node: T | null) => {

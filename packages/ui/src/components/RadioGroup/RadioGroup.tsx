@@ -8,10 +8,7 @@ import {
   type HTMLAttributes,
   type InputHTMLAttributes,
 } from "react";
-
-function mergeClassNames(...classNames: Array<string | undefined>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 interface RadioGroupContextValue {
   name: string;

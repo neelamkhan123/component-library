@@ -8,10 +8,7 @@ import {
   type HTMLAttributes,
 } from "react";
 import { ChevronDown } from "lucide-react";
-
-function mergeClassNames(...classNames: Array<string | undefined | false>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 function normalizeValue(value: string | string[] | undefined): string[] {
   if (value === undefined) return [];

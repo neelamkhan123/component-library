@@ -14,10 +14,7 @@ import {
   type SetStateAction,
 } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-
-function mergeClassNames(...classNames: Array<string | undefined>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 function assignRef<T>(ref: ForwardedRef<T>, value: T | null): void {
   if (typeof ref === "function") {

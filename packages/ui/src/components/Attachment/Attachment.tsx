@@ -1,9 +1,6 @@
 import { forwardRef, type HTMLAttributes } from "react";
 import { File, X } from "lucide-react";
-
-function mergeClassNames(...classNames: Array<string | undefined>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 export interface AttachmentProps extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
   /** The file's name — shown in the file row, and used as the image's `alt` text for an image attachment. */

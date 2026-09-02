@@ -6,12 +6,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-
-function mergeClassNames(
-  ...classNames: Array<string | undefined | false>
-): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 export type ToastVariant = "default" | "destructive" | "success";
 

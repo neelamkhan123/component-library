@@ -13,10 +13,7 @@ import {
   type DialogProps,
 } from "../Dialog/Dialog";
 import { X } from "lucide-react";
-
-function mergeClassNames(...classNames: Array<string | undefined>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 function mergeRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
   return (node: T | null) => {

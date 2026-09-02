@@ -1,8 +1,5 @@
 import { forwardRef, type HTMLAttributes } from "react";
-
-function mergeClassNames(...classNames: Array<string | undefined | false>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 export interface ProgressProps extends HTMLAttributes<HTMLDivElement> {
   /** Current progress, from `0` to `max`. Omitted (or `undefined`) renders an indeterminate/loading bar instead. */

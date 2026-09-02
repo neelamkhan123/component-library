@@ -62,6 +62,25 @@ package included as a source:
 @source "../node_modules/neelam-ui/dist";
 ```
 
+### Overriding styles
+
+Every component takes a `className`, and passing a utility that conflicts with
+one of the component's own defaults overrides it — the class you pass wins:
+
+```tsx
+<Badge className="rounded-full bg-slate-900 px-6">Beta</Badge>
+```
+
+Class names are combined with [`tailwind-merge`](https://github.com/dcastil/tailwind-merge),
+so conflicting utilities are resolved rather than concatenated. This matters
+because components ship raw utility strings that your app's Tailwind compiles:
+a default and an override are both single-class selectors of equal specificity,
+so without conflict resolution the winner would come down to Tailwind's own
+ordering of the generated stylesheet, not to what you passed.
+
+Utilities that *don't* conflict are additive as usual, so a component's defaults
+stay in place unless you replace them.
+
 ## Accessibility approach
 
 - **Semantic HTML first** — native elements are used wherever possible;

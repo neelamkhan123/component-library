@@ -1,8 +1,5 @@
 import { forwardRef, type TextareaHTMLAttributes } from "react";
-
-function mergeClassNames(...classNames: Array<string | undefined>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement>;
 

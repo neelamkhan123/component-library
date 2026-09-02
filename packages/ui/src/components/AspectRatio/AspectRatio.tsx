@@ -1,8 +1,5 @@
 import { forwardRef, type HTMLAttributes } from "react";
-
-function mergeClassNames(...classNames: Array<string | undefined>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 export interface AspectRatioProps extends HTMLAttributes<HTMLDivElement> {
   /** Width-to-height ratio, e.g. `16 / 9` or `4 / 3`. Defaults to `1` (square). */

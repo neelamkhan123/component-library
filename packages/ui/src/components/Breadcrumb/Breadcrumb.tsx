@@ -4,10 +4,7 @@ import {
   type HTMLAttributes,
 } from "react";
 import { ChevronRight, MoreHorizontal } from "lucide-react";
-
-function mergeClassNames(...classNames: Array<string | undefined>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 export type BreadcrumbProps = HTMLAttributes<HTMLElement>;
 

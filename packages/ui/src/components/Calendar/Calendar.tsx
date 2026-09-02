@@ -1,9 +1,6 @@
 import { forwardRef, useCallback, useEffect, useId, useRef, useState, type HTMLAttributes } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
-function mergeClassNames(...classNames: Array<string | undefined | false>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 // Calendar-day arithmetic, deliberately not pulled in from a date library —
 // every operation this component needs (compare, add days/months, find the

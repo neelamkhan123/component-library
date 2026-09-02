@@ -1,9 +1,6 @@
 import { forwardRef, type ButtonHTMLAttributes, type HTMLAttributes } from "react";
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
-
-function mergeClassNames(...classNames: Array<string | undefined>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 export type PaginationRangeItem = number | "ellipsis";
 

@@ -1,8 +1,5 @@
 import { forwardRef, useId, type SVGAttributes } from "react";
-
-function mergeClassNames(...classNames: Array<string | undefined | false>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 export interface SparklineProps extends Omit<SVGAttributes<SVGSVGElement>, "children" | "width" | "height"> {
   /** The series, oldest value first. Fewer than two points renders nothing. */

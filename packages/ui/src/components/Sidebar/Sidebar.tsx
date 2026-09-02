@@ -10,10 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { PanelLeft } from "lucide-react";
-
-function mergeClassNames(...classNames: Array<string | undefined | false>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 interface SidebarContextValue {
   open: boolean;
@@ -94,14 +91,16 @@ export interface SidebarProps extends HTMLAttributes<HTMLElement> {
  * — its implicit `complementary` landmark role needs no `role` attribute of
  * its own, the same reasoning `Breadcrumb` renders a plain `<nav>`.
  *
- * Width is set via inline `style`, not a Tailwind `w-*` class, deliberately:
- * `Resizable` hit a real bug where a component's own default `className`
- * (`h-full`) silently beat a caller's override of the same CSS property,
- * because which of two equal-specificity classes wins is decided by their
- * order in the *generated* stylesheet, not by anything in the `className`
- * string. An inline style has no such ambiguity, and this component's width
- * is exactly the kind of same-property value a caller commonly wants to
- * change (via the `width` prop, not by fighting a default class).
+ * Width is set via inline `style`, not a Tailwind `w-*` class, because it is
+ * animated per-`open`-state rather than fixed — a caller changes it with the
+ * `width` prop. (Overriding it with a `w-*` class works too: `mergeClassNames`
+ * resolves conflicting utilities so the caller's class wins.)
+ *
+ * The `<aside>` carries no height utility of its own; as a flex item of
+ * `SidebarProvider` it stretches to whatever height that container has. That
+ * keeps it viewport-tall in a normal app shell (where the provider's
+ * `min-h-svh` applies) without forcing `100svh` on it when the provider is
+ * deliberately sized smaller — an embedded preview, a card, a split pane.
  *
  * The `open`-driven width collapses on the `<aside>` itself (`overflow-hidden`,
  * `transition-[width]`); its children sit inside an inner `<div>` held at a
@@ -123,7 +122,7 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(
         data-state={open ? "open" : "collapsed"}
         style={{ width: open ? width : "0", ...style }}
         className={mergeClassNames(
-          "flex h-svh shrink-0 flex-col overflow-hidden bg-white text-slate-950 transition-[width] duration-200 ease-out motion-reduce:transition-none dark:bg-slate-950 dark:text-white",
+          "flex shrink-0 flex-col overflow-hidden bg-white text-slate-950 transition-[width] duration-200 ease-out motion-reduce:transition-none dark:bg-slate-950 dark:text-white",
           side === "right"
             ? "order-last border-l border-slate-200 dark:border-slate-800"
             : "border-r border-slate-200 dark:border-slate-800",

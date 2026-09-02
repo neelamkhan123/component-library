@@ -1,8 +1,5 @@
 import { forwardRef, type HTMLAttributes, type ReactNode } from "react";
-
-function mergeClassNames(...classNames: Array<string | undefined | false>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 export interface EmptyStateProps extends Omit<HTMLAttributes<HTMLDivElement>, "title"> {
   /** A decorative illustration or icon above the title. Hidden from assistive tech. */

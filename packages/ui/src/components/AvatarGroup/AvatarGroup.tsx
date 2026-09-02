@@ -1,9 +1,6 @@
 import { Children, cloneElement, forwardRef, isValidElement, type HTMLAttributes, type ReactElement } from "react";
 import { Avatar, type AvatarProps } from "../Avatar/Avatar";
-
-function mergeClassNames(...classNames: Array<string | undefined | false>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 type AvatarSize = NonNullable<AvatarProps["size"]>;
 
