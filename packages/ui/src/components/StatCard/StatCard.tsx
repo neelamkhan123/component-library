@@ -2,10 +2,7 @@ import { forwardRef, type HTMLAttributes, type ReactNode } from "react";
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { Card } from "../Card/Card";
 import { Sparkline } from "../Sparkline/Sparkline";
-
-function mergeClassNames(...classNames: Array<string | undefined | false>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 /** Whether a rise in this metric is good news, bad news, or neither. */
 export type StatCardDeltaDirection = "up-is-good" | "down-is-good" | "neutral";

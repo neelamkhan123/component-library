@@ -4,10 +4,7 @@ import { buttonVariants } from "../Button/Button";
 import { Calendar } from "../Calendar/Calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../Popover/Popover";
 import { RadioGroup, RadioGroupItem } from "../RadioGroup/RadioGroup";
-
-function mergeClassNames(...classNames: Array<string | undefined | false>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 // The same "plain `Date` arithmetic beats a date dependency" position
 // `Calendar` documents — every operation here is a couple of lines, and

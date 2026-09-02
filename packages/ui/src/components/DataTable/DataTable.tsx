@@ -12,10 +12,7 @@ import {
   PaginationPrevious,
   getPaginationRange,
 } from "../Pagination/Pagination";
-
-function mergeClassNames(...classNames: Array<string | undefined | false>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 type SortDirection = "asc" | "desc";
 type Align = "left" | "center" | "right";

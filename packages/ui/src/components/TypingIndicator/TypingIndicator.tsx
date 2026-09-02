@@ -1,8 +1,5 @@
 import { forwardRef, type HTMLAttributes } from "react";
-
-function mergeClassNames(...classNames: Array<string | undefined>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 export interface TypingIndicatorProps extends HTMLAttributes<HTMLDivElement> {
   /** Announced to assistive tech in place of visible text. Defaults to `"Typing…"` — pass something like `"Jane is typing…"` when the chat UI knows who. */

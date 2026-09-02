@@ -1,9 +1,6 @@
 import { forwardRef, useId, type HTMLAttributes, type ReactNode } from "react";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../Table/Table";
-
-function mergeClassNames(...classNames: Array<string | undefined | false>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 /**
  * The categorical series palette, in fixed slot order. Assign slots in order

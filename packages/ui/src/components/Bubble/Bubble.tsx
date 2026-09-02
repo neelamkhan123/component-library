@@ -1,8 +1,5 @@
 import { forwardRef, type HTMLAttributes } from "react";
-
-function mergeClassNames(...classNames: Array<string | undefined>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 export interface BubbleProps extends HTMLAttributes<HTMLDivElement> {
   /** Whose message this is — which side it aligns to and which color it takes. Defaults to `"incoming"`. */

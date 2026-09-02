@@ -1,8 +1,5 @@
 import { forwardRef, type HTMLAttributes } from "react";
-
-function mergeClassNames(...classNames: Array<string | undefined>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 export type SkeletonProps = HTMLAttributes<HTMLDivElement>;
 

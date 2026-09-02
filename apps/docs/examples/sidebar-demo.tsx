@@ -16,11 +16,11 @@ import {
 
 export default function SidebarDemo() {
   return (
-    <SidebarProvider className="h-72 w-full overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+    <SidebarProvider className="h-72 min-h-0 w-full overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
       <Sidebar className="border-r border-slate-200 dark:border-slate-800">
-        <SidebarHeader className="flex items-center justify-between">
+        <SidebarHeader className="flex items-center">
           <span className="text-sm font-semibold text-slate-950 dark:text-white">
-            Acme
+            Header
           </span>
         </SidebarHeader>
         <SidebarContent>

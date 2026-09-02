@@ -1,8 +1,5 @@
 import { forwardRef, type HTMLAttributes, type ReactNode } from "react";
-
-function mergeClassNames(...classNames: Array<string | undefined | false>): string {
-  return classNames.filter(Boolean).join(" ");
-}
+import { mergeClassNames } from "../../utils/mergeClassNames";
 
 export interface MessageProps extends HTMLAttributes<HTMLDivElement> {
   /** Whose message this is — which side the avatar and content align to. Defaults to `"incoming"`. Match it to any `Bubble` children's own `variant`. */
