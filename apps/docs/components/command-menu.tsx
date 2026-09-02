@@ -11,6 +11,7 @@ import {
   CommandItem,
   CommandList,
 } from "neelam-ui";
+import { blocks } from "@/lib/blocks";
 import { sidebarNav } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
@@ -87,6 +88,17 @@ export function CommandMenu() {
               ))}
             </CommandGroup>
           ))}
+          <CommandGroup heading="Blocks">
+            {blocks.map((block) => (
+              <CommandItem
+                key={block.slug}
+                value={block.title}
+                onSelect={() => go(`/blocks/${block.slug}`)}
+              >
+                {block.title}
+              </CommandItem>
+            ))}
+          </CommandGroup>
         </CommandList>
       </CommandDialog>
     </>

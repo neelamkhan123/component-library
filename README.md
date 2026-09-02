@@ -12,7 +12,8 @@ component library — and its documentation site.
 
 ```
 packages/ui     the published npm package (46 components) + Storybook
-apps/docs       the documentation site (Next.js App Router + MDX)
+apps/docs       the documentation site (Next.js App Router + MDX),
+                including the /blocks gallery of composed screens
 ```
 
 ## Getting started
@@ -53,13 +54,15 @@ means **the library must be built before the docs will pick up a change**:
 npm run build -w neelam-ui    # or `npm run build -w neelam-ui -- --watch`
 ```
 
-Two files under `apps/docs/lib` are generated at build time and git-ignored:
+Three files under `apps/docs/lib` are generated at build time and git-ignored:
 
 - `props.generated.json` — prop tables extracted from the library's own TSDoc
 - `examples.generated.ts` — the demo registry, pairing each example component
   with its verbatim source
+- `blocks.generated.ts` — the same, for the multi-component blocks on `/blocks`
 
-`npm run gen -w docs` rebuilds both; `prebuild` and `predev` run it for you.
+`npm run gen -w docs` rebuilds all three; `prebuild` and `predev` run it for
+you.
 
 ## Adding documentation for a component
 
@@ -71,6 +74,19 @@ Two files under `apps/docs/lib` are generated at build time and git-ignored:
 
 `npm run scaffold -w docs` creates a page for any component in the registry
 that does not have one yet, and never touches an existing page.
+
+## Adding a block
+
+Blocks are the whole-screen compositions on `/blocks` — a dashboard, a
+sign-in screen, a pricing table — built from the same published components.
+
+1. Write it at `apps/docs/blocks/<slug>.tsx`, self-contained and with its own
+   `"use client"`. Keep it copy-pasteable: nothing from `@/` and no token the
+   library doesn't ship, since a reader is meant to paste it into their app.
+2. Register it in `apps/docs/lib/blocks.ts` — title, description, category,
+   the components it uses, and the height of its preview frame.
+3. Run `npm run gen -w docs`. The index, the full-width page, the command
+   menu, and the home page pick it up from the registry.
 
 ## License
 

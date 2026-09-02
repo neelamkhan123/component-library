@@ -17,6 +17,11 @@ const links = [
     label: "Components",
     match: (p: string) => p.startsWith("/docs/components"),
   },
+  {
+    href: "/blocks",
+    label: "Blocks",
+    match: (p: string) => p.startsWith("/blocks"),
+  },
 ];
 
 export function MainNavLinks() {

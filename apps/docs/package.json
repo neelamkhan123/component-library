@@ -6,7 +6,7 @@
   "scripts": {
     "predev": "npm run gen",
     "dev": "next dev",
-    "gen": "node scripts/gen-examples.mjs && node scripts/gen-props.mjs",
+    "gen": "node scripts/gen-examples.mjs && node scripts/gen-blocks.mjs && node scripts/gen-props.mjs",
     "prebuild": "npm run gen",
     "build": "next build",
     "start": "next start",
