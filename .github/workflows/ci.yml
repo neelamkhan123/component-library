@@ -58,8 +58,12 @@ jobs:
           path: apps/docs/out
           retention-days: 7
 
+  # Runs after deploy-docs rather than alongside it. Both jobs write to the
+  # same bucket with --delete, and in parallel the storybook sync can delete
+  # a docs page key in the window between the docs job writing it and
+  # finishing — which is exactly how the docs homepage went missing.
   deploy-storybook:
-    needs: [test]
+    needs: [test, deploy-docs]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
@@ -76,7 +80,11 @@ jobs:
           aws-region: us-east-1
       # --exclude protects the destination prefix from --delete as well as
       # skipping it on upload; the docs live under preview/ in this bucket.
-      - run: aws s3 sync storybook-static/ s3://${{ secrets.AWS_S3_BUCKET }} --delete --exclude "preview/*"
+      # Both patterns are needed: "preview/*" covers everything beneath the
+      # prefix, but not the key `preview` itself, which is where the docs
+      # home page lives (pages are stored under extension-stripped keys, so
+      # index.html becomes `preview`, with no trailing slash to match).
+      - run: aws s3 sync storybook-static/ s3://${{ secrets.AWS_S3_BUCKET }} --delete --exclude "preview" --exclude "preview/*"
       - run: aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CLOUDFRONT_DIST_ID }} --paths "/*"
 
   # Serves the docs from the preview/ prefix of the bucket that already hosts
