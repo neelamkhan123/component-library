@@ -5,8 +5,25 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { Button, Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "neelam-ui";
-import { sidebarNav } from "@/lib/nav";
+import { blocks } from "@/lib/blocks";
+import { sidebarNav, type NavGroup } from "@/lib/nav";
 import { cn, normalizePath } from "@/lib/utils";
+
+// /blocks sits outside the documentation tree, so it isn't in `sidebarNav` —
+// but this drawer is the only navigation a small screen has, so it has to be
+// reachable from here.
+const blocksGroup: NavGroup = {
+  title: "Blocks",
+  items: [
+    { title: "All blocks", href: "/blocks" },
+    ...blocks.map((block) => ({
+      title: block.title,
+      href: `/blocks/${block.slug}`,
+    })),
+  ],
+};
+
+const nav = [...sidebarNav, blocksGroup];
 
 export function MobileNav() {
   const pathname = normalizePath(usePathname());
@@ -32,7 +49,7 @@ export function MobileNav() {
           <DrawerTitle>Documentation</DrawerTitle>
         </DrawerHeader>
         <nav aria-label="Documentation" className="mt-4 pb-10">
-          {sidebarNav.map((group) => (
+          {nav.map((group) => (
             <div key={group.title} className="mb-6">
               <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 {group.title}
