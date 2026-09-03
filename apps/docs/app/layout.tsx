@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   // No `icons` entry: the favicon is `app/icon.png`, which Next serves through
   // its own generated route. A literal URL here would be emitted verbatim —
   // `metadata` is one of the few places `basePath` is *not* applied — so it
-  // 404s (403, from S3) on the deployed site, which is served from /preview.
+  // would break the moment the site were served from anything but a root.
   openGraph: {
     type: "website",
     url: siteConfig.url,

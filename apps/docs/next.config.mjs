@@ -23,10 +23,10 @@ const withMDX = createMDX({
   },
 });
 
-// Set when the site is served from a sub-path of a bucket it shares with
-// something else (currently /preview alongside Storybook). Empty for local
-// development and for serving at a domain root, so promoting the site later
-// is a one-line change in CI rather than a code change.
+// Empty everywhere that matters today: the site is served from the root of
+// neelamui.com, and from the root in local development. The variable is kept
+// because basePath is baked in at build time and cannot be applied at deploy
+// time, so serving from a sub-path again would otherwise mean a code change.
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 /** @type {import('next').NextConfig} */
