@@ -40,10 +40,8 @@ export function BlockFrame({
 }) {
   return (
     <div
-      style={height ? { height } : undefined}
       className={cn(
-        "w-full rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950",
-        fills ? "overflow-hidden" : "overflow-y-auto",
+        "w-full rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 h-auto",
         className,
       )}
     >
