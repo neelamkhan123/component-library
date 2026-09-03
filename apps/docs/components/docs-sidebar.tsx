@@ -9,11 +9,11 @@ export function DocsSidebar() {
   const pathname = normalizePath(usePathname());
 
   return (
-    <aside className="sticky top-header hidden h-[calc(100dvh-var(--spacing-header))] w-56 shrink-0 overflow-y-auto border-r border-slate-200 py-8 pr-4 lg:block dark:border-slate-800">
+    <aside className="sticky top-header hidden h-[calc(100dvh-var(--spacing-header))] w-48 shrink-0 overflow-y-auto border-r border-slate-200 py-8 pr-4 lg:block dark:border-slate-800">
       <nav aria-label="Documentation">
         {sidebarNav.map((group) => (
           <div key={group.title} className="mb-6">
-            <h2 className="mb-1.5 px-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <h2 className="mb-1.5 px-2 text-xs font-semibold uppercase tracking-wider text-black dark:text-white">
               {group.title}
             </h2>
             <ul className="space-y-0.5">

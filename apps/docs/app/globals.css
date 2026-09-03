@@ -86,6 +86,11 @@
     background-color: theme(--color-accent-500);
     color: white;
   }
+
+  ::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+  }
 }
 
 @layer utilities {

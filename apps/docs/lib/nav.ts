@@ -155,7 +155,7 @@ export const documented = new Set([
 ]);
 
 export const gettingStarted: NavGroup = {
-  title: "Getting Started",
+  title: "Docs",
   items: [
     { title: "Introduction", href: "/docs" },
     { title: "Installation", href: "/docs/installation" },
@@ -168,16 +168,16 @@ export const gettingStarted: NavGroup = {
 
 export const sidebarNav: NavGroup[] = [
   gettingStarted,
-  ...componentGroupOrder.map((group) => ({
-    title: group,
-    items: components
-      .filter((component) => component.group === group)
+  {
+    title: "Components",
+    items: [...components]
+      .sort((a, b) => a.title.localeCompare(b.title))
       .map((component) => ({
         title: component.title,
         href: `/docs/components/${component.slug}`,
         draft: !documented.has(component.slug),
       })),
-  })),
+  },
 ];
 
 /** Flat, in-sidebar-order list used by the previous/next pager. */
