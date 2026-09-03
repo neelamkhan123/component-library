@@ -36,6 +36,7 @@ export const components: ComponentMeta[] = [
   c("Resizable", "resizable", "Resizable", "Panels a user can resize by dragging or with the keyboard.", "Layout"),
   c("Separator", "separator", "Separator", "A semantic or decorative divider between content.", "Layout"),
   c("Sidebar", "sidebar", "Sidebar", "A collapsible application navigation region.", "Layout"),
+  c("Toolbar", "toolbar", "Toolbar", "A floating, icon-only rail of actions docked to a viewport edge.", "Layout"),
 
   // Forms
   c("Button", "button", "Button", "A versatile button with variants, sizes, icons, and a loading state.", "Forms"),
@@ -109,6 +110,7 @@ export const documented = new Set([
   "resizable",
   "separator",
   "sidebar",
+  "toolbar",
   "button",
   "checkbox",
   "combobox",

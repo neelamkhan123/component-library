@@ -1,4 +1,6 @@
 import {
+  Children,
+  cloneElement,
   createContext,
   forwardRef,
   useCallback,
@@ -9,6 +11,7 @@ import {
   useRef,
   useState,
   type HTMLAttributes,
+  type ReactElement,
   type ReactNode,
   type Ref,
   type RefObject,
@@ -117,7 +120,20 @@ export function Tooltip({
   );
 }
 
-export type TooltipTriggerProps = HTMLAttributes<HTMLSpanElement>;
+export interface TooltipTriggerProps extends HTMLAttributes<HTMLSpanElement> {
+  /**
+   * Merge this trigger's hover/focus handlers and `aria-describedby` onto
+   * its single child element instead of wrapping that child in a `<span>`.
+   * For annotating something that must stay the sole focusable/interactive
+   * node itself — a real `<a href>` or `<button>` — where the default
+   * `<span tabIndex={0}>` wrapper would add a second, redundant tab stop
+   * for what's really one control. The child is trusted to already be
+   * focusable on its own; its existing `ref` and handlers are preserved
+   * and merged with this trigger's, the same `cloneElement` composition
+   * `AvatarGroup` uses to inject props into caller-supplied children.
+   */
+  asChild?: boolean;
+}
 
 /**
  * The element being annotated. Renders a plain `<span tabIndex={0}>`, not
@@ -126,17 +142,20 @@ export type TooltipTriggerProps = HTMLAttributes<HTMLSpanElement>;
  * button semantics for content with no click behavior would misdescribe
  * it. The `tabIndex` is what makes it focusable at all, satisfying the
  * WAI-ARIA requirement that a tooltip be reachable by keyboard, not mouse
- * hover alone.
+ * hover alone. Pass `asChild` when the thing being annotated is already
+ * its own real focusable element (see `asChild`'s own doc).
  */
 export const TooltipTrigger = forwardRef<HTMLSpanElement, TooltipTriggerProps>(
   (
     {
+      asChild = false,
       onMouseEnter,
       onMouseLeave,
       onFocus,
       onBlur,
       tabIndex,
       className,
+      children,
       ...props
     },
     ref,
@@ -189,6 +208,87 @@ export const TooltipTrigger = forwardRef<HTMLSpanElement, TooltipTriggerProps>(
 
     useEffect(() => () => clearTimeout(timerRef.current), []);
 
+    if (asChild) {
+      // `Children.only` enforces the one thing this branch requires: a
+      // single real element to merge onto, not a text/fragment/multiple
+      // children `cloneElement` couldn't attach a ref or handlers to.
+      const child = Children.only(children) as ReactElement<
+        Record<string, unknown>
+      >;
+      const childProps = child.props;
+      const childOnMouseEnter = childProps.onMouseEnter as
+        | ((event: React.SyntheticEvent) => void)
+        | undefined;
+      const childOnMouseLeave = childProps.onMouseLeave as
+        | ((event: React.SyntheticEvent) => void)
+        | undefined;
+      const childOnFocus = childProps.onFocus as
+        | ((event: React.SyntheticEvent) => void)
+        | undefined;
+      const childOnBlur = childProps.onBlur as
+        | ((event: React.SyntheticEvent) => void)
+        | undefined;
+      const childRef = (childProps as { ref?: Ref<HTMLSpanElement> }).ref;
+      // A callback ref, not `mergeRefs(triggerRef, ref, childRef)` — the
+      // refs themselves are only ever touched *inside* it, which only
+      // runs when React actually commits, never during render.
+      const setRefs = (node: HTMLSpanElement | null) => {
+        triggerRef.current = node;
+        if (typeof ref === "function") ref(node);
+        else if (ref) (ref as { current: HTMLSpanElement | null }).current = node;
+        if (typeof childRef === "function") childRef(node);
+        else if (childRef) (childRef as { current: HTMLSpanElement | null }).current = node;
+      };
+      // `cloneElement`'s prop types are keyed to the child's own props,
+      // which this generic branch doesn't know ahead of time — `Record<string,
+      // unknown>` here is the same accepted trade-off `AvatarGroup`'s own
+      // `cloneElement` call makes injecting props it can't fully type
+      // either, for a caller-supplied element this component can't see
+      // the shape of statically.
+      //
+      // `react-hooks/refs` flags any props object handed to `cloneElement`
+      // that contains a `ref` key at all, on the assumption it might read a
+      // ref's `.current` during render — true of `mergeRefs(...)` called
+      // inline, which is exactly why `setRefs` above deliberately isn't
+      // that; it's a plain callback that only touches `.current` when
+      // React invokes it at commit time, the same safe shape `ref={...}`
+      // on a JSX element already has (a position this same rule does
+      // recognize as safe two branches down, for the unmodified `<span>`).
+      /* eslint-disable react-hooks/refs -- setRefs only reads/writes .current from inside the callback itself, never during this render */
+      return cloneElement(
+        child,
+        {
+          ...props,
+          ref: setRefs,
+          "aria-describedby": contentId,
+          // `cloneElement` overwrites (not merges) any prop key it's given,
+          // so `className` is combined with the child's own here — leaving
+          // it out entirely, the way every other trigger prop below does by
+          // simply not mentioning it, would instead have silently *kept
+          // only* the child's original className whenever a caller also
+          // passed one to `TooltipTrigger` itself.
+          className: mergeClassNames(childProps.className as string | undefined, className),
+          onMouseEnter: (event: React.SyntheticEvent) => {
+            childOnMouseEnter?.(event);
+            if (!event.defaultPrevented) show(false);
+          },
+          onMouseLeave: (event: React.SyntheticEvent) => {
+            childOnMouseLeave?.(event);
+            if (!event.defaultPrevented) hide();
+          },
+          onFocus: (event: React.SyntheticEvent) => {
+            childOnFocus?.(event);
+            if (!event.defaultPrevented) show(true);
+          },
+          onBlur: (event: React.SyntheticEvent) => {
+            childOnBlur?.(event);
+            if (!event.defaultPrevented) hide();
+          },
+        } as Record<string, unknown>,
+      );
+      /* eslint-enable react-hooks/refs */
+    }
+
     return (
       <span
         ref={mergeRefs(triggerRef, ref)}
@@ -224,7 +324,9 @@ export const TooltipTrigger = forwardRef<HTMLSpanElement, TooltipTriggerProps>(
           className,
         )}
         {...props}
-      />
+      >
+        {children}
+      </span>
     );
   },
 );

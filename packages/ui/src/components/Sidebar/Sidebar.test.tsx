@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 import { axe, toHaveNoViolations } from "jest-axe";
-import { expect, test, vi } from "vitest";
+import { beforeEach, afterEach, expect, test, vi } from "vitest";
 import {
   Sidebar,
   SidebarContent,
@@ -20,6 +20,32 @@ import {
 } from "./Sidebar";
 
 expect.extend(toHaveNoViolations);
+
+// jsdom doesn't implement the Popover API at all — needed here because an
+// icon-collapsed `SidebarMenuButton` renders a real `Tooltip`. Stubbed the
+// same way as `Tooltip.test.tsx` itself (see there for the full reasoning).
+const openPopovers = new WeakSet<Element>();
+let originalMatches: typeof Element.prototype.matches;
+
+beforeEach(() => {
+  originalMatches = Element.prototype.matches;
+  HTMLElement.prototype.showPopover = function (this: HTMLElement) {
+    openPopovers.add(this);
+    this.style.display = "block";
+  };
+  HTMLElement.prototype.hidePopover = function (this: HTMLElement) {
+    openPopovers.delete(this);
+    this.style.removeProperty("display");
+  };
+  Element.prototype.matches = function (this: Element, selector: string) {
+    if (selector === ":popover-open") return openPopovers.has(this);
+    return originalMatches.call(this, selector);
+  } as typeof originalMatches;
+});
+
+afterEach(() => {
+  Element.prototype.matches = originalMatches;
+});
 
 function FullSidebar(props: { defaultOpen?: boolean; onOpenChange?: (open: boolean) => void }) {
   return (
@@ -53,6 +79,12 @@ function FullSidebar(props: { defaultOpen?: boolean; onOpenChange?: (open: boole
 
 test("Sidebar renders with no accessibility violations", async () => {
   const { container } = render(<FullSidebar />);
+  const results = await axe(container);
+  expect(results).toHaveNoViolations();
+});
+
+test("an icon-collapsed Sidebar renders with no accessibility violations", async () => {
+  const { container } = render(<IconSidebar defaultOpen={false} />);
   const results = await axe(container);
   expect(results).toHaveNoViolations();
 });
@@ -192,6 +224,83 @@ test("SidebarProvider forwards its ref", () => {
   const ref = createRef<HTMLDivElement>();
   render(<SidebarProvider ref={ref} />);
   expect(ref.current).toBeInstanceOf(HTMLDivElement);
+});
+
+function IconSidebar(props: { defaultOpen?: boolean }) {
+  return (
+    <SidebarProvider defaultOpen={props.defaultOpen}>
+      <Sidebar collapsible="icon">
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Platform</SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton href="/home" icon={<span />}>
+                  Home
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+        </SidebarContent>
+      </Sidebar>
+      <main>
+        <SidebarTrigger />
+      </main>
+    </SidebarProvider>
+  );
+}
+
+test('collapsible="icon": a collapsed SidebarMenuButton is a fixed h-8 w-8 box centered with mx-auto, not a padded row', () => {
+  // Regression test for a real bug: `justify-center` alone on the full-width
+  // row wasn't enough — with the row's own `px-2` padding plus the icon
+  // together wider than what's left of a narrow rail after `SidebarContent`'s
+  // `p-3`, `justify-content` had negative free space to distribute and
+  // silently fell back to flex-start (found directly in a screenshot: the
+  // icon sat flush left, not centered). A fixed box centered via `mx-auto`
+  // doesn't depend on that arithmetic working out.
+  render(<IconSidebar defaultOpen={false} />);
+  const home = screen.getByRole("link", { name: "Home" });
+  expect(home).toHaveClass("mx-auto", "h-8", "w-8", "justify-center", "p-0");
+  expect(home).not.toHaveClass("px-2", "py-1.5");
+});
+
+test('collapsible="icon" collapses to iconWidth, not 0, and stays out of inert', () => {
+  render(<IconSidebar defaultOpen={false} />);
+  const sidebar = screen.getByRole("complementary");
+  expect(sidebar).toHaveAttribute("data-state", "collapsed");
+  expect(sidebar).toHaveAttribute("data-collapsible", "icon");
+  expect(sidebar).not.toHaveAttribute("inert");
+  expect(sidebar).toHaveStyle({ width: "4rem" });
+});
+
+test('collapsible="offcanvas" (the default) is unaffected: still collapses to 0 and inert', () => {
+  render(<FullSidebar defaultOpen={false} />);
+  const sidebar = screen.getByRole("complementary");
+  expect(sidebar).toHaveAttribute("data-collapsible", "offcanvas");
+  expect(sidebar).toHaveAttribute("inert");
+  expect(sidebar).toHaveStyle({ width: "0" });
+});
+
+test('collapsible="icon": collapsed SidebarMenuButton keeps its accessible name and shows a Tooltip label on focus', async () => {
+  render(<IconSidebar defaultOpen={false} />);
+  const home = screen.getByRole("link", { name: "Home" });
+  // Still the sole focusable node for this control — no extra
+  // `<span tabIndex={0}>` wrapper stealing a redundant tab stop (see
+  // `TooltipTrigger`'s `asChild`).
+  expect(home.tagName).toBe("A");
+  home.focus();
+  expect(await screen.findByRole("tooltip")).toHaveTextContent("Home");
+});
+
+test('collapsible="icon": SidebarGroupLabel renders nothing while collapsed', () => {
+  render(<IconSidebar defaultOpen={false} />);
+  expect(screen.queryByText("Platform")).not.toBeInTheDocument();
+});
+
+test('collapsible="icon": expanding restores the label and SidebarGroupLabel', () => {
+  render(<IconSidebar defaultOpen={true} />);
+  expect(screen.getByText("Platform")).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Home" })).toHaveTextContent("Home");
 });
 
 test("Sidebar forwards its ref", () => {

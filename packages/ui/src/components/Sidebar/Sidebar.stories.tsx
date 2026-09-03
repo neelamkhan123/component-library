@@ -167,6 +167,81 @@ export const InitiallyCollapsed: Story = {
   ),
 };
 
+export const IconCollapsible: Story = {
+  name: "Collapses to an icon rail",
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'With `collapsible="icon"`, closing the sidebar collapses it to a slim, still-interactive icon rail instead of hiding it entirely (the default `collapsible="offcanvas"` behavior — see the "Default" story). Each `SidebarMenuButton` hides its label (kept for assistive tech, shown again as a `Tooltip` on hover/focus) and `SidebarGroupLabel` hides entirely. `SidebarHeader`/`SidebarFooter` content is left to the caller to adapt — here via the same `useSidebar()` hook a custom trigger would use.',
+      },
+    },
+  },
+  render: function Render() {
+    const [open, setOpen] = useState(true);
+    return (
+      <SidebarProvider open={open} onOpenChange={setOpen}>
+        <Sidebar collapsible="icon">
+          <SidebarHeader>
+            {open ? (
+              <span className="px-2 text-sm font-semibold text-slate-950 dark:text-white">Acme Inc</span>
+            ) : null}
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupLabel>Platform</SidebarGroupLabel>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton href="#" icon={<Home />} isActive>
+                    Home
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton href="#" icon={<Inbox />}>
+                    Inbox
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton href="#" icon={<Search />}>
+                    Search
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroup>
+            <SidebarGroup>
+              <SidebarGroupLabel>Admin</SidebarGroupLabel>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton href="#" icon={<Users />}>
+                    Team
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton href="#" icon={<Settings />}>
+                    Settings
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroup>
+          </SidebarContent>
+          <SidebarFooter>
+            <div className="flex items-center gap-2 px-1">
+              <Avatar size="sm">
+                <AvatarFallback>JD</AvatarFallback>
+              </Avatar>
+              {open ? <span className="text-sm text-slate-700 dark:text-slate-300">Jane Doe</span> : null}
+            </div>
+          </SidebarFooter>
+        </Sidebar>
+        <main className="flex flex-1 flex-col">
+          <TopBar title="Dashboard" />
+          <PlaceholderBody />
+        </main>
+      </SidebarProvider>
+    );
+  },
+};
+
 export const Controlled: Story = {
   render: function Render() {
     const [open, setOpen] = useState(true);
