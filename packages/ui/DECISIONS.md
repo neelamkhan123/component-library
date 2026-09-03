@@ -1447,17 +1447,66 @@ className="flex-1">...</main></SidebarProvider>`, with no `SidebarInset`
   extra relationship for what a sighted user already reads as "this line is
   a heading for the list below it."
 - No mobile auto-collapse-to-an-overlay behavior, no viewport-width
-  detection, no cookie/`localStorage` persistence of open state, no
-  keyboard shortcut, and no icon-only collapsed mode (collapsing goes all
-  the way to hidden, not to a slim icon rail) — all genuinely separate
-  features a caller can layer on top (an overlay variant, in particular, is
-  just composing `Drawer` for narrow viewports rather than `Sidebar`
-  reimplementing it), the same "no upload progress, no lightbox" scope-cut
-  spirit as `Attachment`. Likewise, a caller wanting a _draggable_ sidebar
-  width should reach for `Resizable` (`ResizablePanelGroup` wrapping
-  `Sidebar` and the main content as `ResizablePanel`s) rather than `Sidebar`
-  growing its own drag logic — resizing by dragging is `Resizable`'s job,
-  not something worth a second implementation here.
+  detection, no cookie/`localStorage` persistence of open state, and no
+  keyboard shortcut — all genuinely separate features a caller can layer on
+  top (an overlay variant, in particular, is just composing `Drawer` for
+  narrow viewports rather than `Sidebar` reimplementing it), the same "no
+  upload progress, no lightbox" scope-cut spirit as `Attachment`. Likewise,
+  a caller wanting a _draggable_ sidebar width should reach for `Resizable`
+  (`ResizablePanelGroup` wrapping `Sidebar` and the main content as
+  `ResizablePanel`s) rather than `Sidebar` growing its own drag logic —
+  resizing by dragging is `Resizable`'s job, not something worth a second
+  implementation here.
+- `collapsible="icon"` (the icon-only collapsed mode originally scope-cut
+  above — since added) changes what "collapsed" animates *to*: the rail
+  width set by `iconWidth` instead of `0`. That one change then has to
+  ripple through everything else `collapsible="offcanvas"` (the unchanged
+  default) does *because* it collapses to nothing: `inert` no longer
+  applies while collapsed — the rail stays visible and genuinely
+  interactive, unlike a fully hidden `0`-width panel that has to be pulled
+  out of the accessibility tree — and the inner width-holding wrapper (see
+  above) tracks the rail width right along with the `<aside>` instead of
+  staying pinned at the full open `width`, since there's no slide-to-invisible
+  left to protect from text reflow; content genuinely restyles into the
+  rail instead.
+- That restyling is a new `SidebarPanelContext` (a plain default value, not
+  a `| null` + throwing hook the way `SidebarContext` itself is — reading
+  "am I inside an icon rail?" is an opt-in enhancement `SidebarMenuButton`/
+  `SidebarGroupLabel` make for themselves, not a requirement every
+  consumer must satisfy) carrying whether the panel is icon-only and which
+  `side` it's docked to. `SidebarMenuButton` keeps its label `sr-only`
+  rather than dropping it (so its accessible name is unchanged) and
+  resurfaces it as a `Tooltip` on hover/focus, opening away from the panel
+  via `side`; `SidebarGroupLabel` renders nothing at all, since a rail this
+  narrow has no room for a text heading and — unlike `SidebarMenuButton` —
+  no icon standing in for it to attach a tooltip to instead.
+- That `Tooltip` wraps the real `<a>` via `TooltipTrigger`'s `asChild`
+  (see `Tooltip`'s own entry), not an extra `<span tabIndex={0}>` around
+  it — the `<a>` stays the one and only focusable node it always was,
+  rather than gaining a second, redundant tab stop for what's still one
+  control.
+- `SidebarHeader`/`SidebarFooter` content is deliberately left for the
+  caller to adapt to the collapsed rail (shown in the "Collapses to an icon
+  rail" story via the same `useSidebar()` a custom trigger would use) —
+  unlike a menu button's icon+label shape, header/footer content has no
+  single common shape this component could reasonably restyle on a
+  caller's behalf.
+- A collapsed `SidebarMenuButton` is a fixed `h-8 w-8` box centered with
+  `mx-auto`, not a full-width row with `justify-center` — found directly
+  from a real icon-rail screenshot, where the icon sat visibly flush left
+  instead of centered. The row's own `px-2` padding plus the icon,
+  together, were wider than what was left of the rail after
+  `SidebarContent`'s own `p-3`; with negative free space to distribute,
+  `justify-content` doesn't center an overflowing item, it silently falls
+  back to flex-start (the CSS Box Alignment spec's overflow-safe
+  behavior, there specifically to keep an overflowing item's start edge
+  from becoming inaccessible). A fixed box sidesteps that arithmetic
+  entirely rather than depending on it coming out positive — the same
+  `h-8 w-8` sizing `SidebarTrigger` already uses. `iconWidth`'s default
+  moved from `"3rem"` to `"4rem"` alongside this fix: at `3rem`,
+  `SidebarContent`'s padding alone consumed most of the rail, leaving the
+  icon's box no room to actually center in even with the arithmetic
+  fixed — `4rem` leaves it real breathing room.
 
 ## Skeleton
 
@@ -1772,6 +1821,59 @@ bg-slate-950` is the one place the thumb's color changes, and it's there
   `Toggle`'s single most common real shape — a lone icon in a formatting
   toolbar — is an icon-only button, not one with a visible text label.
 
+## Toolbar
+
+- A separate component from `Sidebar`, deliberately, rather than another
+  `collapsible` mode of it — the two differ in ways that go past width.
+  `Sidebar` is a flex sibling of a page's main content (`SidebarProvider`
+  renders the shared row wrapper) that `<main>` makes room for; `Toolbar`
+  is `position: fixed`, floating over content, never part of that layout
+  at all. `Sidebar`'s icon rail is one *state* a normally-wide panel can
+  collapse into; `Toolbar` has no open/collapsed state whatsoever — it's
+  always icon-only. And `Sidebar`'s menu is just links in ordinary Tab
+  order, where `Toolbar` implements the WAI-ARIA Toolbar pattern properly
+  (below) — a genuinely different keyboard interaction model, not a
+  smaller version of the same one.
+- Roving `tabIndex` — one item in the page's Tab sequence at a time, with
+  arrow keys (matching `side`'s orientation: Up/Down for a vertical rail,
+  Left/Right for a horizontal one) plus Home/End moving the actual focus
+  and which item is next in line — the same WAI-ARIA APG pattern
+  `Calendar`/`ContextMenu`/`Select` already implement for their own
+  roving focus, applied here to a button group instead of a grid/menu.
+  Unlike `Calendar` (which fully owns and renders every cell itself, so it
+  can set each one's `tabIndex` as a normal prop off its own state), a
+  `Toolbar`'s items are declaratively composed by the caller — so which
+  item is currently `tabIndex={0}` is applied imperatively via a
+  `useLayoutEffect` DOM query instead of a `cloneElement`-injected prop,
+  the same "query the DOM directly" approach `ContextMenu`'s own keyboard
+  handling already uses, and the reason this mechanism isn't special-cased
+  to `ToolbarButton`: it manages *any* enabled `<button>` descendant it
+  finds, so a caller composing in a `Toggle` for a pressable item
+  (bold/italic-style, per `Toggle`'s own entry above) gets roving focus
+  for free, and a non-button descendant like `Separator` (used for
+  grouping — no dedicated `ToolbarSeparator` needed) is naturally skipped
+  rather than needing to be filtered out by hand.
+- `side` (`"left"`/`"right"`/`"top"`/`"bottom"`) determines orientation
+  directly — vertical for left/right, horizontal for top/bottom — rather
+  than a separate `orientation` prop alongside it. A vertical rail hugging
+  the *top* edge, or a horizontal bar hugging the *left* edge, isn't a
+  combination anyone actually wants; deriving one from the other closes
+  off a nonsensical pairing the API could otherwise express.
+- `ToolbarButton`'s single `label` prop is both the button's accessible
+  name (`aria-label`) and its `Tooltip` text — one string to write, since
+  an icon-only control needs both anyway and they're always the same
+  words in practice. The `Tooltip` wraps the real `<button>` itself via
+  `TooltipTrigger`'s `asChild` (see `Tooltip`'s own entry for why),
+  keeping it the sole focusable node rather than adding a redundant
+  second tab stop around it — the identical reasoning an icon-collapsed
+  `SidebarMenuButton`'s tooltip follows, and the tooltip opens away from
+  the dock (toward the content, not back over the rail) for the same
+  reason that one does too.
+- No draggable repositioning, no auto-hide-on-scroll, and no configurable
+  edge offset in this pass — all genuinely separate features a caller can
+  layer on top, the same "no upload progress, no lightbox" scope-cut
+  spirit as `Attachment`.
+
 ## Tooltip
 
 - Hover- and focus-triggered, not click-triggered — the one thing that
@@ -1795,6 +1897,29 @@ bg-slate-950` is the one place the thumb's color changes, and it's there
   misdescribe it. The `tabIndex` is what makes it focusable at all, which
   is what satisfies the WAI-ARIA requirement that a tooltip be reachable
   by keyboard, not mouse hover alone.
+- `TooltipTrigger`'s `asChild` (since added) is the escape hatch for the
+  opposite case: annotating something that's *already* its own real
+  focusable element — a real `<a href>` or `<button>`, as `Sidebar`'s
+  icon-collapsed `SidebarMenuButton` and `Toolbar`'s `ToolbarButton` both
+  need. Wrapping either in the default `<span tabIndex={0}>` would add a
+  second, redundant tab stop for what's really one control (confirmed
+  directly while building both: two sequential Tab stops for a single
+  link/button). `asChild` instead `cloneElement`s the trigger's handlers
+  and `aria-describedby` onto the single child element — the same
+  composition `AvatarGroup` already uses to inject props into
+  caller-supplied children — merging with (not replacing) that child's own
+  ref, handlers, and `className`.
+- That merge uses a plain callback ref, not this file's existing
+  `mergeRefs(triggerRef, ref)` helper (used two branches down, for the
+  default `<span>`) — `react-hooks/refs` flags any props object handed to
+  `cloneElement` that contains a `ref` key as a possible during-render
+  read, a position the lint rule doesn't recognize as safe the way it does
+  a JSX `ref={...}` attribute. The callback sidesteps that structurally
+  (refs are only ever touched from *inside* it, which only runs at React's
+  commit, never during render) but the object literal position itself
+  still trips the rule, so that one call is wrapped in a scoped
+  `eslint-disable`/`-enable` pair rather than left unaddressed or
+  suppressed file-wide.
 - `TooltipContent` is a native popover (`popover="manual"`, not `"auto"`)
   — top-layer rendering (escaping a scrolling ancestor's `overflow:hidden`
   the way `ContextMenu`'s does) still comes from the browser, but light-

@@ -1,0 +1,145 @@
+export const metadata = {
+  title: "Toolbar",
+  description: "A floating, icon-only rail of actions docked to a viewport edge.",
+};
+
+<PageHeader
+  title="Toolbar"
+  description="A floating, always-icon-only rail of actions docked to a viewport edge — for a persistent quick-actions dock, the way an editor's formatting bar or an app's activity rail behaves."
+  componentName="Toolbar"
+/>
+
+<ComponentPreview name="toolbar-demo" align="start" padded={false} />
+
+## Usage
+
+```tsx
+import { Separator, Toolbar, ToolbarButton } from "neelam-ui";
+import { MessageCircle, Plus, Settings } from "lucide-react";
+
+<Toolbar label="Quick actions">
+  <ToolbarButton icon={<Plus />} label="New" />
+  <ToolbarButton icon={<MessageCircle />} label="Comments" />
+  <Separator className="mx-0.5" />
+  <ToolbarButton icon={<Settings />} label="Settings" />
+</Toolbar>
+```
+
+`label` is required on `Toolbar` — `role="toolbar"` has no name-from-content the
+way a `<button>` does, so it needs one explicitly. `ToolbarButton`'s own `label`
+does double duty: it's both the button's accessible name and the text shown in
+its tooltip.
+
+## Not a Sidebar variant
+
+`Toolbar` is a separate component from [`Sidebar`](/docs/components/sidebar)
+rather than another `collapsible` mode of it, because the two differ in ways
+that go past width:
+
+- `Sidebar` is a flex sibling of your page's main content — `SidebarProvider`
+  renders the shared row wrapper, and `<main>` makes room for it. `Toolbar` is
+  `position: fixed`, floating over content; it never participates in page
+  layout at all.
+- `Sidebar`'s icon rail (`collapsible="icon"`) is one *state* a normally-wide
+  panel can collapse into. `Toolbar` has no open/collapsed state whatsoever —
+  it's always icon-only.
+- `Sidebar`'s menu is just links in ordinary Tab order. `Toolbar` implements
+  the WAI-ARIA Toolbar pattern, a genuinely different keyboard model — see
+  below.
+
+## Docking to an edge
+
+`side` — `"left"` (default), `"right"`, `"top"`, or `"bottom"` — picks which
+viewport edge to float against. Orientation follows directly from the edge
+rather than a separate setting: `"left"`/`"right"` render a vertical rail,
+`"top"`/`"bottom"` a horizontal one.
+
+<ComponentPreview name="toolbar-orientation" align="start" padded={false} />
+
+<Callout variant="note" title="Fixed to the viewport">
+  `Toolbar` renders with `position: fixed`, so in a real app it's typically
+  mounted once, near your root — not re-created per page. The demos on this
+  page override that to `absolute` (via `className`) purely so they stay
+  inside their preview card instead of docking to the actual page edge.
+</Callout>
+
+## Grouping items
+
+There's no dedicated `ToolbarSeparator` — compose the existing
+[`Separator`](/docs/components/separator) directly, the same component a
+vertical toolbar divider anywhere else in the library already uses.
+
+```tsx
+<Toolbar label="Formatting" side="top">
+  <ToolbarButton icon={<Bold />} label="Bold" />
+  <Separator orientation="vertical" className="my-0.5" />
+  <ToolbarButton icon={<Underline />} label="Underline" />
+</Toolbar>
+```
+
+For a vertical rail, use the default horizontal `Separator` instead (it
+stretches across the rail's width); a horizontal rail wants
+`orientation="vertical"` (it stretches to the rail's height).
+
+## Not limited to ToolbarButton
+
+The roving-focus mechanism below isn't special-cased to `ToolbarButton` — it
+manages *any* enabled `<button>` descendant it finds. Composing in a
+[`Toggle`](/docs/components/toggle) for a pressable item (bold/italic-style)
+still participates for free:
+
+```tsx
+<Toolbar label="Formatting" side="top">
+  <Toggle aria-label="Bold" pressed={bold} onPressedChange={setBold}>
+    <Bold className="h-4 w-4" />
+  </Toggle>
+  <ToolbarButton icon={<Italic />} label="Italic" />
+</Toolbar>
+```
+
+## Keyboard
+
+<KeyboardTable
+  shortcuts={[
+    { keys: "Tab", description: "Moves to the toolbar as one stop — only one item is in the page's Tab sequence at a time." },
+    { keys: "→ / ↓", description: "Moves focus to the next item. Left/Right for a horizontal toolbar (side=\"top\"/\"bottom\"), Up/Down for a vertical one." },
+    { keys: "← / ↑", description: "Moves focus to the previous item, matching the toolbar's orientation the same way." },
+    { keys: "Home / End", description: "Jumps to the first / last item." },
+    { keys: "Enter / Space", description: "Activates the focused button." },
+  ]}
+/>
+
+This is the WAI-ARIA Toolbar pattern's roving `tabIndex`: exactly one item is
+ever `tabIndex={0}`, so `Tab` moves past the whole toolbar in a single stop and
+arrow keys move between items inside it — the same pattern
+[`Calendar`](/docs/components/calendar) and
+[`Context Menu`](/docs/components/context-menu) use for their own roving
+focus, applied here to a button group.
+
+## Accessibility
+
+- The container is `role="toolbar"` with `aria-label` set from your `label`
+  prop, and `aria-orientation` set automatically from `side`.
+- `ToolbarButton` sets `aria-label` from its own `label` prop — required,
+  since an icon-only button has no accessible name from its content alone.
+- The `Tooltip` showing that same `label` wraps the real `<button>` itself via
+  `TooltipTrigger`'s `asChild` (see [Tooltip](/docs/components/tooltip)),
+  rather than an extra `<span tabIndex={0}>` around it — so it stays the one
+  and only focusable node for the control, not two redundant tab stops.
+- A `disabled` `ToolbarButton` is skipped by arrow-key navigation, the same as
+  a `disabled` cell in `Calendar`'s grid.
+
+<Callout variant="tip" title="It's still just a button underneath">
+  `ToolbarButton` renders a real `<button>`, so anything that already works on
+  a button — `disabled`, `onClick`, `form`, a ref — works here unchanged.
+</Callout>
+
+## API reference
+
+### Toolbar
+
+<PropsTable name="Toolbar" />
+
+### ToolbarButton
+
+<PropsTable name="ToolbarButton" />

@@ -55,10 +55,38 @@ which WAI-ARIA requires: a tooltip must not be mouse-only.
   field, not a hint beside it.
 </Callout>
 
-<Callout variant="tip" title="Wrapping a real button">
-  To annotate something actionable, put the interactive element *inside*
-  `TooltipTrigger`. Nesting a `<button>` inside another button would be invalid
-  HTML — this is exactly why the trigger is a `<span>`.
+## Annotating something already interactive
+
+Putting a real `<a>` or `<button>` *inside* `TooltipTrigger`'s `<span>` seems
+like the obvious way to add a tooltip to an existing control — but it creates
+two separate focusable elements for what is really one control: `Tab` would
+stop on the outer `<span tabIndex={0}>`, then stop *again* on the `<button>`
+inside it.
+
+Pass `asChild` instead. It merges the trigger's hover/focus handling and
+`aria-describedby` directly onto your single child element rather than
+wrapping it, so that element stays the one and only focusable node it always
+was:
+
+```tsx
+<Tooltip>
+  <TooltipTrigger asChild>
+    <a href="/settings" aria-label="Settings">
+      <SettingsIcon />
+    </a>
+  </TooltipTrigger>
+  <TooltipContent>Settings</TooltipContent>
+</Tooltip>
+```
+
+This is exactly how [`Sidebar`](/docs/components/sidebar)'s icon-collapsed
+`SidebarMenuButton` and [`Toolbar`](/docs/components/toolbar)'s
+`ToolbarButton` attach their own tooltips.
+
+<Callout variant="tip" title="The child must forward its own ref">
+  `asChild` merges this trigger's `ref` with the child's — pass a real DOM
+  element or a component built with `forwardRef`, the same requirement any
+  `asChild`-style API has.
 </Callout>
 
 ## Why it portals
@@ -104,8 +132,10 @@ right mechanism for.
 
 ### TooltipTrigger
 
-Adds no props of its own — it renders a `<span tabIndex={0}>` and accepts every
-native `<span>` attribute. `aria-describedby` is wired to the bubble for you.
+Renders a `<span tabIndex={0}>` and accepts every native `<span>` attribute;
+`aria-describedby` is wired to the bubble for you. Its one prop of its own is
+`asChild` (`boolean`, default `false`) — see [above](#annotating-something-already-interactive)
+for what it does and when to reach for it.
 
 ### TooltipContent
 

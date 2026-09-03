@@ -69,6 +69,20 @@ export const OnPlainText: Story = {
   ),
 };
 
+export const AsChild: Story = {
+  name: "On an already-interactive element (asChild)",
+  render: () => (
+    <Tooltip>
+      <TooltipTrigger asChild className={buttonVariants({ variant: "outline", size: "icon" })}>
+        <a href="#" aria-label="Settings">
+          ⚙️
+        </a>
+      </TooltipTrigger>
+      <TooltipContent>Settings</TooltipContent>
+    </Tooltip>
+  ),
+};
+
 export const NoDelay: Story = {
   name: "No hover delay",
   render: () => (

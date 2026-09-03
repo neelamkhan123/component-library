@@ -72,6 +72,45 @@ crosses toward zero.
   problem `Dialog` and `Drawer` solve by inerting the page behind them.
 </Callout>
 
+## Collapsing to an icon rail
+
+By default (`collapsible="offcanvas"`), closing collapses the panel all the way
+to a hidden, `inert` `0`-width panel — the behaviour above. Pass
+`collapsible="icon"` and it collapses to a slim, still-visible-and-interactive
+rail instead:
+
+<ComponentPreview name="sidebar-icon-demo" align="start" padded={false} />
+
+```tsx
+<Sidebar collapsible="icon">…</Sidebar>
+```
+
+Because the rail stays interactive, it's no longer `inert` while collapsed —
+unlike the offcanvas default, there's nothing invisible here for `Tab` to skip.
+Each `SidebarMenuButton`'s label isn't dropped, either: it's kept `sr-only` (so
+the link's accessible name is unchanged) and resurfaces as a
+[`Tooltip`](/docs/components/tooltip) on hover or focus, wrapping the `<a>`
+itself via `TooltipTrigger`'s `asChild` rather than an extra focusable wrapper
+around it. `SidebarGroupLabel` renders nothing at all while collapsed — a rail
+that narrow has no room for a text heading, and unlike a menu button there's no
+icon standing in for it to attach a tooltip to instead.
+
+`iconWidth` (default `"4rem"`) sets the rail's width, the same way `width` sets
+the open one. It's deliberately roomier than a single icon looks like it needs
+— `SidebarContent`'s own `p-3` padding still applies inside the rail, so a
+tighter width leaves the icon's `h-8 w-8` box no space to actually center in:
+
+```tsx
+<Sidebar collapsible="icon" iconWidth="4.5rem" />
+```
+
+<Callout variant="note" title="Header and footer content is yours to adapt">
+  Unlike a menu button's icon+label shape, `SidebarHeader`/`SidebarFooter`
+  content has no single common shape this component could restyle for you. The
+  demo above reads `open` from `useSidebar()` — the same hook a custom trigger
+  would use — to hide its header/footer text while collapsed.
+</Callout>
+
 ## Width
 
 `width` is a CSS length (default `"16rem"`) applied as an inline style, not a
@@ -98,7 +137,7 @@ it is placed and hidden from assistive tech for you.
 
 <KeyboardTable
   shortcuts={[
-    { keys: "Tab", description: "Moves through the sidebar's links in order. A collapsed sidebar is inert and skipped entirely." },
+    { keys: "Tab", description: "Moves through the sidebar's links in order. With the default collapsible=\"offcanvas\", a collapsed sidebar is inert and skipped entirely; with collapsible=\"icon\" it stays reachable, and Tab shows each link's Tooltip label as it's focused." },
     { keys: "Enter", description: "Follows the focused link. Native anchor behaviour." },
     { keys: "Enter / Space", description: "Toggles the sidebar when focus is on SidebarTrigger." },
   ]}
@@ -118,8 +157,12 @@ find-in-page works normally.
 - The current page carries `aria-current="page"`, not just a colour.
 - `SidebarTrigger` is an icon-only button with a default
   `aria-label="Toggle sidebar"` — override it if that does not fit.
-- The collapsed panel is `inert`, so it never becomes a set of invisible tab
-  stops.
+- With the default `collapsible="offcanvas"`, the collapsed panel is `inert`,
+  so it never becomes a set of invisible tab stops. With `collapsible="icon"`,
+  it deliberately isn't — the rail is real, visible content, so it stays in
+  the accessibility tree, and each link's accessible name is unchanged (its
+  label stays `sr-only`, not removed) even though the rail is too narrow to
+  show it.
 
 <Callout variant="tip" title="Two landmarks, not one">
   `<aside>` marks the sidebar; give your main region a real `<main>`, as the

@@ -1,5 +1,6 @@
 import { createRef } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
@@ -200,6 +201,46 @@ test("TooltipTrigger forwards its ref to the underlying span", () => {
     </Tooltip>,
   );
   expect(triggerRef.current).toBeInstanceOf(HTMLSpanElement);
+});
+
+test("TooltipTrigger asChild merges its handlers onto the child instead of wrapping it in a span", async () => {
+  render(
+    <Tooltip delayDuration={0}>
+      <TooltipTrigger asChild>
+        <a href="/settings">Settings</a>
+      </TooltipTrigger>
+      <TooltipContent>Manage your account</TooltipContent>
+    </Tooltip>,
+  );
+  const link = screen.getByRole("link", { name: "Settings" });
+  expect(link.tagName).toBe("A");
+  // No extra `<span>` wrapper: the link is its own parent's only child.
+  expect(link.parentElement?.children).toHaveLength(1);
+
+  act(() => {
+    fireEvent.focus(link);
+  });
+  const tooltip = await screen.findByRole("tooltip");
+  expect(tooltip).toHaveTextContent("Manage your account");
+  expect(link).toHaveAttribute("aria-describedby", tooltip.id);
+});
+
+test("TooltipTrigger asChild preserves the child's own ref and event handlers", async () => {
+  const linkRef = createRef<HTMLAnchorElement>();
+  const onClick = vi.fn();
+  render(
+    <Tooltip delayDuration={0}>
+      <TooltipTrigger asChild>
+        <a href="/settings" ref={linkRef} onClick={onClick}>
+          Settings
+        </a>
+      </TooltipTrigger>
+      <TooltipContent>Manage your account</TooltipContent>
+    </Tooltip>,
+  );
+  expect(linkRef.current).toBeInstanceOf(HTMLAnchorElement);
+  await userEvent.click(screen.getByRole("link", { name: "Settings" }));
+  expect(onClick).toHaveBeenCalledTimes(1);
 });
 
 test("TooltipTrigger throws outside of a Tooltip", () => {
