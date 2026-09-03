@@ -60,7 +60,7 @@ for (const component of entries) {
   The API reference below is generated from the library's own source, so it is
   accurate and current. The prose, examples, and keyboard table on this page are
   still placeholders — see the component's
-  [Storybook entry](https://df22wszov2zdy.cloudfront.net) for working examples
+  [Storybook entry](https://storybook.neelamui.com) for working examples
   in the meantime.
 </Callout>
 

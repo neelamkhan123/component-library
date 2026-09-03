@@ -46,24 +46,23 @@ jobs:
       # so the library has to be built before Next can resolve or scan it.
       - run: npm run build -w neelam-ui
       - run: npm run typecheck -w docs
-      # The deployed site lives under /preview in a shared bucket, so the
-      # artifact has to be built for that path — basePath is baked in at build
-      # time and cannot be applied at deploy time.
+      # No NEXT_PUBLIC_BASE_PATH: the docs are served from the root of
+      # neelamui.com now, and next.config.mjs already defaults basePath to the
+      # empty string, which is exactly what serving at a domain root wants.
       - run: npm run build -w docs
-        env:
-          NEXT_PUBLIC_BASE_PATH: /preview
       - uses: actions/upload-artifact@v4
         with:
           name: docs-static
           path: apps/docs/out
           retention-days: 7
 
-  # Runs after deploy-docs rather than alongside it. Both jobs write to the
-  # same bucket with --delete, and in parallel the storybook sync can delete
-  # a docs page key in the window between the docs job writing it and
-  # finishing — which is exactly how the docs homepage went missing.
+  # Serves storybook.neelamui.com from the storybook/ prefix of the bucket,
+  # through a distribution whose origin path is /storybook. The two deploy
+  # jobs now write to disjoint prefixes — this one confined to storybook/,
+  # the docs one excluding it — so they no longer race and can run in
+  # parallel again.
   deploy-storybook:
-    needs: [test, deploy-docs]
+    needs: [test]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
@@ -78,24 +77,20 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      # --exclude protects the destination prefix from --delete as well as
-      # skipping it on upload; the docs live under preview/ in this bucket.
-      # Both patterns are needed: "preview/*" covers everything beneath the
-      # prefix, but not the key `preview` itself, which is where the docs
-      # home page lives (pages are stored under extension-stripped keys, so
-      # index.html becomes `preview`, with no trailing slash to match).
-      - run: aws s3 sync storybook-static/ s3://${{ secrets.AWS_S3_BUCKET }} --delete --exclude "preview" --exclude "preview/*"
-      - run: aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CLOUDFRONT_DIST_ID }} --paths "/*"
+      # --delete is scoped to the storybook/ prefix by the destination, so it
+      # can no longer reach a docs key no matter when this job runs.
+      - run: aws s3 sync storybook-static/ "s3://${{ secrets.AWS_S3_BUCKET }}/storybook/" --delete
+      - run: aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CLOUDFRONT_STORYBOOK_DIST_ID }} --paths "/*"
 
-  # Serves the docs from the preview/ prefix of the bucket that already hosts
-  # Storybook, so this needs no new bucket, distribution, certificate or DNS.
+  # Serves the docs from the root of the bucket, at neelamui.com.
   #
   # The origin is S3 over REST, which resolves exact object keys only — it has
   # no directory-index behaviour and returns 403 for anything else. Next
   # exports pages as flat `.html` files but links to them without the
   # extension, so the files are uploaded under extension-stripped keys that
-  # match those links exactly. Entry point is /preview (no trailing slash;
-  # /preview/ would need a CloudFront function to rewrite).
+  # match those links exactly. The home page is the one exception: it keeps
+  # its `.html`, because `/` is resolved by the distribution's default root
+  # object, which names a literal key.
   deploy-docs:
     needs: [docs, test]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -116,19 +111,21 @@ jobs:
       # which the next step immediately rewrites.
       - name: Sync assets
         run: |
-          aws s3 sync docs-static/ "s3://${{ secrets.AWS_S3_BUCKET }}/preview/" \
-            --delete --exclude "*.html"
+          aws s3 sync docs-static/ "s3://${{ secrets.AWS_S3_BUCKET }}/" \
+            --delete --exclude "*.html" --exclude "storybook/*"
 
-      # Pages, uploaded under extension-stripped keys. Content type has to be
-      # set explicitly: without an extension the CLI would label them
-      # binary/octet-stream and browsers would download rather than render.
+      # Pages, uploaded under extension-stripped keys — except the home page,
+      # which stays index.html for the default root object to resolve. Content
+      # type has to be set explicitly: without an extension the CLI would
+      # label them binary/octet-stream and browsers would download rather
+      # than render.
       - name: Upload pages under extensionless keys
         working-directory: docs-static
         run: |
           find . -name "*.html" -print0 | while IFS= read -r -d "" file; do
             rel="${file#./}"
             stem="${rel%.html}"
-            if [ "$stem" = "index" ]; then key="preview"; else key="preview/$stem"; fi
+            if [ "$stem" = "index" ]; then key="index.html"; else key="$stem"; fi
             aws s3 cp "$file" "s3://${{ secrets.AWS_S3_BUCKET }}/$key" \
               --content-type "text/html; charset=utf-8" \
               --cache-control "public, max-age=0, must-revalidate" \
@@ -136,8 +133,8 @@ jobs:
           done
           echo "uploaded $(find . -name '*.html' | wc -l) pages"
 
-      - name: Invalidate the docs path
+      - name: Invalidate the docs
         run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ secrets.AWS_CLOUDFRONT_DIST_ID }} \
-            --paths "/preview" "/preview/*"
+            --paths "/*"

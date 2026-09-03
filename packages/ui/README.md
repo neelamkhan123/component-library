@@ -5,7 +5,7 @@
 An accessible React component library, built with a focus on keyboard
 navigation, focus management, and ARIA correctness.
 
-📖 **[Documentation](https://df22wszov2zdy.cloudfront.net/preview)** · 🧱 **[Blocks](https://df22wszov2zdy.cloudfront.net/preview/blocks)** · 🧪 **[Storybook](https://df22wszov2zdy.cloudfront.net)**  
+📖 **[Documentation](https://neelamui.com)** · 🧱 **[Blocks](https://neelamui.com/blocks)** · 🧪 **[Storybook](https://storybook.neelamui.com)**  
 📦 **[npm package](https://www.npmjs.com/package/neelam-ui)**
 
 > ⚠️ **This package was renamed.** It was previously published as
