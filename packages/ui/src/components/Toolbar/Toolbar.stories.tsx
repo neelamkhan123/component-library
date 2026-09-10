@@ -123,9 +123,22 @@ export const Interactive: Story = {
 
     // The Tooltip attached via `TooltipTrigger`'s `asChild` still shows on
     // focus, portaled to `document.body` (see `Tooltip.tsx` for why).
-    const body = within(document.body);
-    const tooltip = await body.findByRole("tooltip");
-    await waitFor(() => expect(tooltip).toBeVisible());
-    expect(tooltip).toHaveTextContent("Bold");
+    //
+    // Found through the trigger's own `aria-describedby` rather than by
+    // role: all three buttons portal a tooltip into the body, and the two
+    // this sequence just moved focus away from stay `display: block` — so
+    // still in the a11y tree — for the length of their exit transition.
+    // Querying the body for "the tooltip" therefore races that transition,
+    // and can land on one that is on its way out and will never be visible
+    // again. The id is stable and unambiguous. Re-read inside `waitFor` so
+    // each attempt re-checks the live element rather than a handle grabbed
+    // before the popover had opened.
+    const tooltipId = bold.getAttribute("aria-describedby");
+    expect(tooltipId).toBeTruthy();
+    await waitFor(() => {
+      const tooltip = document.getElementById(tooltipId!);
+      expect(tooltip).toBeVisible();
+      expect(tooltip).toHaveTextContent("Bold");
+    });
   },
 };
