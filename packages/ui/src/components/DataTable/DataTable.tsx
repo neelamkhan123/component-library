@@ -307,7 +307,11 @@ export function DataTable<T>({
       </Table>
       {!hidePagination && pageSize && totalPages > 1 ? (
         <Pagination>
-          <PaginationContent>
+          {/* Centred under the table, rather than PaginationContent's own
+              left-aligned default — the standalone Pagination is
+              presentational and leaves alignment to its caller, and here
+              DataTable is that caller. */}
+          <PaginationContent className="justify-center">
             <PaginationItem>
               <PaginationPrevious
                 disabled={clampedPage === 1}

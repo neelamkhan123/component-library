@@ -12,7 +12,7 @@ export default function RadioGroupDemo() {
   return (
     // The group needs its own name — role="radiogroup" carries no label of
     // its own, and the visible heading is the natural one to point at.
-    <div className="w-72">
+    <div className="w-fit">
       <p
         id="plan-label"
         className="mb-3 text-sm font-medium text-slate-950 dark:text-white"

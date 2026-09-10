@@ -108,36 +108,31 @@ export const RadioGroupItem = forwardRef<HTMLInputElement, RadioGroupItemProps>(
     const context = useRadioGroupContext("RadioGroupItem");
 
     return (
-      <span className="relative inline-flex h-4 w-4 shrink-0">
-        <input
-          ref={ref}
-          type="radio"
-          name={context.name}
-          value={value}
-          checked={context.value === value}
-          disabled={disabled ?? context.disabled}
-          onChange={(event) => {
-            onChange?.(event);
-            if (event.target.checked) context.onValueChange(value);
-          }}
-          className={mergeClassNames(
-            "peer h-4 w-4 shrink-0 appearance-none rounded-full border border-slate-300 bg-white transition-colors checked:border-slate-950 hover:border-slate-400 focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 dark:border-slate-600 dark:bg-slate-950 dark:checked:border-white dark:hover:border-slate-500 dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px] dark:disabled:border-slate-700 dark:disabled:bg-slate-900",
-            className,
-          )}
-          {...props}
-        />
-        {/*
-          Purely visual, same as Checkbox's overlaid Check/Minus icons: the
-          selected state is already communicated by the native input's own
-          checked property, so this dot adds nothing for assistive tech.
-        */}
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity peer-checked:opacity-100"
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-slate-950 dark:bg-white" />
-        </span>
-      </span>
+      <input
+        ref={ref}
+        type="radio"
+        name={context.name}
+        value={value}
+        checked={context.value === value}
+        disabled={disabled ?? context.disabled}
+        onChange={(event) => {
+          onChange?.(event);
+          if (event.target.checked) context.onValueChange(value);
+        }}
+        className={mergeClassNames(
+          // The selected dot is a background on the input itself, not an
+          // overlaid element the way Checkbox draws its Check/Minus icons.
+          // A radio's dot is a plain circle, so a gradient can draw it — and
+          // painting it *on* the control keeps the two from drifting apart
+          // when a caller nudges the input (`className="mt-0.5"`, to sit it
+          // on the first line of a wrapping label), which an absolutely
+          // positioned sibling would not survive. It is purely visual
+          // either way: the checked state is already the input's own.
+          "peer h-4 w-4 shrink-0 appearance-none rounded-full border border-slate-300 bg-white text-slate-950 transition-colors checked:border-slate-950 checked:bg-[radial-gradient(circle,currentColor_2.5px,transparent_3px)] hover:border-slate-400 focus-visible:outline-none focus-visible:shadow-[rgba(15,23,42,0.08)_0px_0px_0px_3px,rgba(15,23,42,0.16)_0px_0px_12px_2px] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 dark:border-slate-600 dark:bg-slate-950 dark:text-white dark:checked:border-white dark:hover:border-slate-500 dark:focus-visible:shadow-[rgba(255,255,255,0.1)_0px_0px_0px_3px,rgba(255,255,255,0.2)_0px_0px_12px_2px] dark:disabled:border-slate-700 dark:disabled:bg-slate-900 dark:disabled:text-slate-600",
+          className,
+        )}
+        {...props}
+      />
     );
   },
 );

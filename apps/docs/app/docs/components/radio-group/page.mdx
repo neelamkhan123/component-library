@@ -9,7 +9,7 @@ export const metadata = {
   componentName="RadioGroup"
 />
 
-<ComponentPreview name="radio-group-demo" align="start" />
+<ComponentPreview name="radio-group-demo" />
 
 ## Usage
 
@@ -88,8 +88,9 @@ keys are intercepted.
 - The whole group is a **single tab stop**. `Tab` enters and leaves it; the
   arrow keys move within. This is the roving-focus behaviour the APG specifies,
   and here it is the browser's own.
-- The selected dot is `aria-hidden` — the input's `checked` property already
-  carries the state.
+- The selected dot is a background on the input, not an element of its own —
+  nothing extra reaches assistive tech, since the input's `checked` property
+  already carries the state.
 - Selection follows focus, as it does for native radios. If choosing an option
   triggers something expensive, debounce the effect rather than changing the
   interaction.
